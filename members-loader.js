@@ -1,87 +1,16 @@
 // Members Data Loader
-// Loads and displays member data from data/members.csv file
+// Loads and displays member data from local data/members.js file
 
-// Simple CSV parser
-function parseCSV(csvText) {
-    const lines = csvText.trim().split('\n');
-    if (lines.length < 2) return [];
-    
-    // Parse header row
-    const headers = parseCSVLine(lines[0]);
-    
-    // Parse data rows
-    const data = [];
-    for (let i = 1; i < lines.length; i++) {
-        const values = parseCSVLine(lines[i]);
-        if (values.length === 0) continue; // Skip empty lines
-        
-        const obj = {};
-        headers.forEach((header, index) => {
-            obj[header] = values[index] || '';
-        });
-        data.push(obj);
-    }
-    
-    return data;
-}
-
-// Parse a single CSV line, handling quoted fields
-function parseCSVLine(line) {
-    const result = [];
-    let current = '';
-    let inQuotes = false;
-    
-    for (let i = 0; i < line.length; i++) {
-        const char = line[i];
-        
-        if (char === '"') {
-            if (inQuotes && line[i + 1] === '"') {
-                // Escaped quote
-                current += '"';
-                i++; // Skip next quote
-            } else {
-                // Toggle quote state
-                inQuotes = !inQuotes;
-            }
-        } else if (char === ',' && !inQuotes) {
-            // End of field
-            result.push(current.trim());
-            current = '';
-        } else {
-            current += char;
-        }
-    }
-    
-    // Add last field
-    result.push(current.trim());
-    
-    return result;
-}
-
-// Load and display members from CSV
-async function loadMembers() {
+// Load and display members
+function loadMembers() {
     try {
-        // Fetch CSV file - try relative path first
-        let csvPath = 'data/members.csv';
-        
-        // If we're in a subdirectory, adjust path
-        const currentPath = window.location.pathname;
-        if (currentPath.includes('/') && currentPath.split('/').length > 2) {
-            // We're in a subdirectory, go up one level
-            csvPath = '../data/members.csv';
+        // Use members data from data/members.js (loaded via script tag in HTML)
+        // The data is available as window.membersData
+        if (typeof window.membersData === 'undefined') {
+            throw new Error('Members data not found. Make sure data/members.js is loaded.');
         }
         
-        const response = await fetch(csvPath);
-        if (!response.ok) {
-            throw new Error(`Failed to load members.csv: ${response.status} ${response.statusText}. Make sure you're running from a web server (not file:// protocol).`);
-        }
-        
-        const csvText = await response.text();
-        const members = parseCSV(csvText);
-        
-        if (members.length === 0) {
-            throw new Error('No members data found in CSV file');
-        }
+        const members = window.membersData;
         
         // Separate members by type
         const officers = members.filter(m => m.Type === 'Officer');
@@ -102,14 +31,11 @@ async function loadMembers() {
         displayAssociateMembers(associateMembers);
         
     } catch (error) {
-        console.error('Error loading members from CSV:', error);
+        console.error('Error loading members:', error);
         // Show error message on page
         const grid = document.getElementById('stakeholder-members-grid');
         if (grid) {
-            const errorMsg = error.message.includes('file://') || error.message.includes('Failed to fetch') 
-                ? '<p style="color: var(--text-secondary); text-align: center; padding: 2rem;">Unable to load members data. Please use a web server (not file://). The CSV file requires HTTP/HTTPS protocol.</p>'
-                : `<p style="color: var(--text-secondary); text-align: center; padding: 2rem;">Unable to load members data: ${error.message}</p>`;
-            grid.innerHTML = errorMsg;
+            grid.innerHTML = '<p style="color: var(--text-secondary); text-align: center; padding: 2rem;">Unable to load members data. Please try again later.</p>';
         }
     }
 }
