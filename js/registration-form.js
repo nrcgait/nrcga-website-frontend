@@ -1,12 +1,7 @@
 // Registration Form Handler
 // Handles form submission to backend API
 
-const API_BASE_URL = (function() {
-  if (typeof window.API_BASE_URL === 'undefined') {
-    window.API_BASE_URL = 'http://localhost:3000/api';
-  }
-  return window.API_BASE_URL;
-})();
+var API_BASE_URL = window.API_BASE_URL || 'http://localhost:3000/api';
 
 // Get URL parameters
 function getUrlParameter(name) {
