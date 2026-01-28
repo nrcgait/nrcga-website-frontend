@@ -249,14 +249,18 @@ function formatLength(minutes) {
 }
 
 // Fetch event availability from backend
-async function fetchEventAvailability(eventId) {
+async function fetchEventAvailability(eventId, instanceDate = null) {
     try {
         // Ensure eventId is a number (database uses integer IDs)
         const id = typeof eventId === 'string' ? parseInt(eventId, 10) : eventId;
         if (isNaN(id)) {
             return null;
         }
-        const response = await fetch(`${API_BASE_URL}/events/${id}/availability`);
+        let url = `${API_BASE_URL}/events/${id}/availability`;
+        if (instanceDate) {
+            url += `?instanceDate=${instanceDate}`;
+        }
+        const response = await fetch(url);
         if (!response.ok) {
             // Silently fail if backend is not available or event not found
             return null;
@@ -311,30 +315,31 @@ async function displayEvents(containerId = 'upcoming-events-list', filterType = 
 
     let html = '<div class="events-list" style="max-width: 900px; margin: 0 auto;">';
 
-    // Fetch availability for unique event IDs only (not for each instance)
-    // Group events by ID and fetch availability once per unique event
-    const uniqueEventIds = [...new Set(upcomingEvents.map(e => e.id).filter(id => id))];
-    const eventsWithLimit = uniqueEventIds.filter(id => {
-        const event = allEvents.find(e => e.id === id || e.id === parseInt(id));
-        return event && event.registrationLimit;
-    });
+    // Fetch availability for each event instance (for repeating events, each instance needs its own count)
+    // Group by event ID and instance date to fetch availability per instance
+    const eventsWithLimit = upcomingEvents.filter(e => e.registrationLimit);
     
-    // Fetch availability for unique events only
+    // Fetch availability for each unique event instance
     const availabilityMap = new Map();
-    const availabilityPromises = eventsWithLimit.map(async (eventId) => {
-        const availability = await fetchEventAvailability(eventId);
-        return { eventId, availability };
+    const availabilityPromises = eventsWithLimit.map(async (event) => {
+        const eventId = event.id;
+        const instanceDate = event.instanceDate || event.date; // Use instanceDate for repeating events
+        const key = `${eventId}-${instanceDate}`; // Unique key for this instance
+        const availability = await fetchEventAvailability(eventId, instanceDate);
+        return { key, availability };
     });
     
     const availabilityResults = await Promise.all(availabilityPromises);
-    availabilityResults.forEach(({ eventId, availability }) => {
+    availabilityResults.forEach(({ key, availability }) => {
         if (availability) {
-            availabilityMap.set(eventId, availability);
+            availabilityMap.set(key, availability);
         }
     });
 
     upcomingEvents.forEach((event) => {
-        const availability = availabilityMap.get(event.id) || null;
+        const instanceDate = event.instanceDate || event.date;
+        const availabilityKey = `${event.id}-${instanceDate}`;
+        const availability = availabilityMap.get(availabilityKey) || null;
         // Use instanceDate for repeating events, otherwise use date
         const displayDate = event.instanceDate || event.date;
         const eventDate = new Date(displayDate);
@@ -392,13 +397,15 @@ async function displayEvents(containerId = 'upcoming-events-list', filterType = 
                     html += `<span style="padding: 0.5rem 1rem; background: var(--bg-light); color: var(--text-secondary); border-radius: 6px; font-size: 0.875rem; font-weight: 600;">Booked</span>`;
                 } else {
                     html += `<span style="padding: 0.5rem 1rem; background: var(--bg-light); color: var(--text-secondary); border-radius: 6px; font-size: 0.875rem;">${available} spot${available === 1 ? '' : 's'} available</span>`;
-                    html += `<a href="excavator-training-signin.html?eventId=${event.id}" class="btn btn-primary" style="text-decoration: none;">Register</a>`;
+                    const instanceDate = event.instanceDate || event.date;
+                    html += `<button onclick="showRegistrationModal('${event.id}', '${instanceDate}')" class="btn btn-primary" style="cursor: pointer; border: none;">Register</button>`;
                 }
                 
                 html += `</div>`;
             } else {
                 // Fallback if API is unavailable
-                html += `<a href="excavator-training-signin.html?eventId=${event.id}" class="btn btn-primary" style="text-decoration: none;">Register</a>`;
+                const instanceDate = event.instanceDate || event.date;
+                html += `<button onclick="showRegistrationModal('${event.id}', '${instanceDate}')" class="btn btn-primary" style="cursor: pointer; border: none;">Register</button>`;
             }
         }
 

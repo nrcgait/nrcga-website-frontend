@@ -3,22 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Excavator Training Sign In - NRCGA</title>
+    <title>Attendance Form - NRCGA</title>
     <link rel="stylesheet" href="css/styles.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         html, body {
-            height: 100%;
             margin: 0;
             padding: 0;
             overflow-x: hidden;
+            min-height: 100vh;
         }
         
         body {
             display: flex;
             flex-direction: column;
+            min-height: 100vh;
         }
         
         #nav-placeholder {
@@ -40,24 +41,26 @@
             flex: 1;
             padding: 0;
             margin: 0;
-            min-height: 600px;
+            min-height: calc(100vh - 300px);
             display: flex;
             flex-direction: column;
-            overflow: hidden;
+            padding-bottom: 3rem;
         }
         
         .form-container {
             width: 100%;
-            height: 100%;
             padding: 0;
             margin: 0;
             flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 600px;
         }
         
         .form-container iframe {
             border: none;
             width: 100%;
-            height: 100%;
             display: block;
             min-height: 600px;
         }
@@ -91,16 +94,22 @@
     <!-- Compact Header -->
     <section class="compact-header">
         <div class="container" style="text-align: center;">
-            <h1 style="font-size: 2rem; margin-bottom: 0.5rem; color: var(--text-primary);">Event Registration</h1>
-            <p style="color: var(--text-secondary); font-size: 1rem;">Please complete the form below to register for the event.</p>
+            <h1 style="font-size: 2rem; margin-bottom: 0.5rem; color: var(--text-primary);">Attendance Form</h1>
+            <p style="color: var(--text-secondary); font-size: 1rem;">Please complete the form below to record your attendance. A certificate of completion will be emailed to you.</p>
         </div>
     </section>
 
     <!-- Full Page Form Section -->
     <section class="full-page-form">
-        <div class="form-container" style="display: flex; align-items: center; justify-content: center; padding: 2rem;">
+        <div class="form-container" style="padding: 2rem;">
             <div style="max-width: 500px; width: 100%;">
                 <form id="attendance-form" style="background: var(--bg-primary); padding: 2rem; border-radius: 12px; box-shadow: var(--shadow-md);">
+                    <div class="form-group">
+                        <label for="attendanceDate">Training Date *</label>
+                        <input type="date" id="attendanceDate" name="attendanceDate" required 
+                               style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 6px; font-size: 1rem;">
+                        <small style="color: var(--text-light); font-size: 0.875rem;">Select a date between 7 days ago and today</small>
+                    </div>
                     <div class="form-group">
                         <label for="firstName">First Name *</label>
                         <input type="text" id="firstName" name="firstName" required 
@@ -114,24 +123,17 @@
                                style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 6px; font-size: 1rem;">
                     </div>
                     <div class="form-group">
-                        <label for="phone">Phone Number *</label>
-                        <input type="tel" id="phone" name="phone" required 
-                               placeholder="Enter your phone number"
-                               style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 6px; font-size: 1rem;">
-                    </div>
-                    <div class="form-group">
                         <label for="email">Email Address *</label>
                         <input type="email" id="email" name="email" required 
                                placeholder="Enter your email address"
                                style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 6px; font-size: 1rem;">
+                        <small style="color: var(--text-light); font-size: 0.875rem;">Your certificate will be sent to this email</small>
                     </div>
                     <div class="form-group">
-                        <label for="numberOfPeople">Number of People Being Registered *</label>
-                        <input type="number" id="numberOfPeople" name="numberOfPeople" required 
-                               min="1" max="10" value="1"
-                               placeholder="1-10"
+                        <label for="phone">Phone Number *</label>
+                        <input type="tel" id="phone" name="phone" required 
+                               placeholder="Enter your phone number"
                                style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 6px; font-size: 1rem;">
-                        <small style="color: var(--text-light); font-size: 0.875rem;">Minimum 1, maximum 10</small>
                     </div>
                     <div class="form-group">
                         <label for="companyName">Company Name</label>
@@ -139,31 +141,9 @@
                                placeholder="Enter your company name (optional)"
                                style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 6px; font-size: 1rem;">
                     </div>
-                    <div class="form-group">
-                        <label for="reasonForTraining">Reason for Training *</label>
-                        <select id="reasonForTraining" name="reasonForTraining" required
-                                style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 6px; font-size: 1rem;">
-                            <option value="">Select a reason...</option>
-                            <option value="Operator mandate">Operator mandate</option>
-                            <option value="Company Requirement">Company Requirement</option>
-                            <option value="Other">Other</option>
-                        </select>
-                    </div>
-                    <div class="form-group" id="reasonOtherGroup" style="display: none;">
-                        <label for="reasonOtherExplanation">If Other, Please Explain *</label>
-                        <textarea id="reasonOtherExplanation" name="reasonOtherExplanation" rows="3"
-                                  placeholder="Please explain your reason for training"
-                                  style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 6px; font-size: 1rem; font-family: inherit; resize: vertical;"></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label for="comments">Any Comments, Questions, or Concerns</label>
-                        <textarea id="comments" name="comments" rows="4"
-                                  placeholder="Enter any additional comments, questions, or concerns (optional)"
-                                  style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 6px; font-size: 1rem; font-family: inherit; resize: vertical;"></textarea>
-                    </div>
-                    <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Register</button>
+                    <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Submit Attendance</button>
                     <p style="margin-top: 1rem; font-size: 0.875rem; color: var(--text-secondary); text-align: center;">
-                        A confirmation will be sent to your email after registration.
+                        A certificate of completion will be automatically generated and emailed to you.
                     </p>
                 </form>
             </div>
@@ -176,27 +156,26 @@
     <script src="js/components.js"></script>
     <script src="js/script.js"></script>
     <script src="data/api-config.js"></script>
-    <script src="data/events.js"></script>
-    <script src="js/registration-form.js"></script>
+    <script src="js/attendance-form.js"></script>
     
     <script>
-        // Show/hide "Other" explanation field based on reason selection
+        // Set date restrictions (7 days ago to today)
         document.addEventListener('DOMContentLoaded', () => {
-            const reasonSelect = document.getElementById('reasonForTraining');
-            const otherGroup = document.getElementById('reasonOtherGroup');
-            const otherExplanation = document.getElementById('reasonOtherExplanation');
-            
-            if (reasonSelect && otherGroup) {
-                reasonSelect.addEventListener('change', () => {
-                    if (reasonSelect.value === 'Other') {
-                        otherGroup.style.display = 'block';
-                        otherExplanation.required = true;
-                    } else {
-                        otherGroup.style.display = 'none';
-                        otherExplanation.required = false;
-                        otherExplanation.value = '';
-                    }
-                });
+            const dateInput = document.getElementById('attendanceDate');
+            if (dateInput) {
+                const today = new Date();
+                const sevenDaysAgo = new Date(today);
+                sevenDaysAgo.setDate(today.getDate() - 7);
+                
+                // Format dates as YYYY-MM-DD
+                const maxDate = today.toISOString().split('T')[0];
+                const minDate = sevenDaysAgo.toISOString().split('T')[0];
+                
+                dateInput.setAttribute('max', maxDate);
+                dateInput.setAttribute('min', minDate);
+                
+                // Set default to today
+                dateInput.value = maxDate;
             }
         });
     </script>

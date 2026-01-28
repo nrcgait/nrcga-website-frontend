@@ -65,11 +65,15 @@ async function initializeRegistrationForm() {
     if (!form) return;
 
     const eventId = getUrlParameter('eventId');
+    const instanceDate = getUrlParameter('instanceDate');
     
     // Load and display event details
     if (eventId) {
         const event = await loadEventDetails(eventId);
         if (event) {
+            // Use instance date if provided (for repeating events), otherwise use event date
+            const displayDate = instanceDate || event.date;
+            
             // Update page title/header with event name
             const header = document.querySelector('.compact-header h1');
             if (header) {
@@ -82,7 +86,7 @@ async function initializeRegistrationForm() {
             eventInfo.style.cssText = 'background: var(--bg-light); padding: 1.5rem; border-radius: 8px; margin-bottom: 1.5rem;';
             eventInfo.innerHTML = `
                 <h3 style="margin: 0 0 0.75rem 0; color: var(--text-primary);">Event Details</h3>
-                <p style="margin: 0.5rem 0; color: var(--text-secondary);"><strong>Date:</strong> ${formatEventDate(event.date)}</p>
+                <p style="margin: 0.5rem 0; color: var(--text-secondary);"><strong>Date:</strong> ${formatEventDate(displayDate)}</p>
                 <p style="margin: 0.5rem 0; color: var(--text-secondary);"><strong>Time:</strong> ${formatEventTime(event.time)}</p>
                 ${event.location ? `<p style="margin: 0.5rem 0; color: var(--text-secondary);"><strong>Location:</strong> ${event.location}</p>` : ''}
             `;
@@ -107,8 +111,10 @@ async function initializeRegistrationForm() {
         submitButton.textContent = 'Submitting...';
 
         // Get form data
+        const eventInstanceDate = getUrlParameter('instanceDate');
         const formData = {
             eventId: parseInt(getUrlParameter('eventId') || form.querySelector('input[name="eventId"]')?.value),
+            eventInstanceDate: eventInstanceDate || null, // Pass instance date for repeating events
             firstName: form.querySelector('#firstName').value.trim(),
             lastName: form.querySelector('#lastName').value.trim(),
             email: form.querySelector('#email').value.trim(),
