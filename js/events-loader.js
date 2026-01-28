@@ -17,18 +17,40 @@ async function fetchEventsFromAPI() {
         }
         const data = await response.json();
         // Transform database events to match frontend format
-        return (data.events || []).map(event => ({
-            id: event.id.toString(),
-            name: event.name,
-            date: event.date,
-            time: event.time,
-            length: 180, // Default length (can be added to database schema later)
-            location: event.location || '',
-            additionalDetails: event.description || '',
-            registrationLimit: event.registration_enabled ? event.capacity : null,
-            // Note: Repeating events (eventRepeats, repeatEnds) not yet in database
-            // These can be added to the database schema later if needed
-        }));
+        const transformed = (data.events || []).map(event => {
+            // Map repeat fields from database to frontend format
+            let eventRepeats = null;
+            if (event.repeat_interval) {
+                // Custom interval (every X days)
+                eventRepeats = parseInt(event.repeat_interval);
+            } else if (event.event_repeats) {
+                // Standard repeat type (daily, weekly, monthly)
+                eventRepeats = event.event_repeats;
+            }
+            
+            const transformedEvent = {
+                id: event.id.toString(),
+                name: event.name,
+                date: event.date,
+                time: event.time,
+                length: 180, // Default length (can be added to database schema later)
+                location: event.location || '',
+                additionalDetails: event.description || '',
+                registrationLimit: event.registration_enabled ? event.capacity : null,
+                eventRepeats: eventRepeats,
+                repeatEnds: event.repeat_ends || null
+            };
+            
+            // Debug logging
+            if (eventRepeats) {
+                console.log(`Event "${event.name}" (ID: ${event.id}) - Repeats: ${eventRepeats}, Interval: ${event.repeat_interval}, Ends: ${event.repeat_ends}`);
+            }
+            
+            return transformedEvent;
+        });
+        
+        console.log(`Loaded ${transformed.length} events from API`);
+        return transformed;
     } catch (error) {
         console.warn('Error fetching events from API:', error);
         return null;
@@ -164,12 +186,15 @@ function expandRepeatingEvents(events, maxDaysAhead = 14) {
         }
     });
     
-    return expandedEvents.sort((a, b) => {
+    const sorted = expandedEvents.sort((a, b) => {
         // Sort by instance date, then by time
         const dateCompare = new Date(a.instanceDate || a.date) - new Date(b.instanceDate || b.date);
         if (dateCompare !== 0) return dateCompare;
         return a.time.localeCompare(b.time);
     });
+    
+    console.log(`Expanded ${events.length} events into ${sorted.length} instances (maxDaysAhead: ${maxDaysAhead})`);
+    return sorted;
 }
 
 // Get events for the next 2 weeks
