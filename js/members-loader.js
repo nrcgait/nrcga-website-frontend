@@ -1,68 +1,16 @@
 // Members Data Loader
-// Loads and displays member data from GitHub CSV file
-
-// Simple CSV parser
-function parseCSV(csvText) {
-    const lines = csvText.trim().split('\n');
-    if (lines.length === 0) return [];
-    
-    // Parse header
-    const headers = lines[0].split(',').map(h => h.trim());
-    
-    // Parse data rows
-    const data = [];
-    for (let i = 1; i < lines.length; i++) {
-        const line = lines[i].trim();
-        if (!line) continue;
-        
-        // Handle CSV with quoted fields
-        const values = [];
-        let currentValue = '';
-        let inQuotes = false;
-        
-        for (let j = 0; j < line.length; j++) {
-            const char = line[j];
-            
-            if (char === '"') {
-                inQuotes = !inQuotes;
-            } else if (char === ',' && !inQuotes) {
-                values.push(currentValue.trim());
-                currentValue = '';
-            } else {
-                currentValue += char;
-            }
-        }
-        values.push(currentValue.trim()); // Add last value
-        
-        // Create object from headers and values
-        const obj = {};
-        headers.forEach((header, index) => {
-            obj[header] = values[index] || '';
-        });
-        data.push(obj);
-    }
-    
-    return data;
-}
+// Loads and displays member data from local data/members.js file
 
 // Load and display members
-async function loadMembers() {
+function loadMembers() {
     try {
-        // Fetch CSV from GitHub raw URL with cache-busting
-        // Add timestamp to prevent browser caching
-        // Note: Don't add custom headers as they trigger CORS preflight requests
-        const timestamp = new Date().getTime();
-        const csvUrl = `https://raw.githubusercontent.com/nrcgait/nrcga-website/main/members.csv?v=${timestamp}`;
-        const response = await fetch(csvUrl, {
-            cache: 'no-store' // Use no-store instead of no-cache to avoid preflight
-        });
-        
-        if (!response.ok) {
-            throw new Error(`Failed to load members: ${response.statusText}`);
+        // Use members data from data/members.js (loaded via script tag in HTML)
+        // The data is available as window.membersData
+        if (typeof window.membersData === 'undefined') {
+            throw new Error('Members data not found. Make sure data/members.js is loaded.');
         }
         
-        const csvText = await response.text();
-        const members = parseCSV(csvText);
+        const members = window.membersData;
         
         // Separate members by type
         const officers = members.filter(m => m.Type === 'Officer');
