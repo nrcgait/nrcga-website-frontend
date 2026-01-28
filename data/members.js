@@ -76,16 +76,16 @@ window.membersData = [
     { Type: "Stakeholder", "Company Name": "VCI Construction", "Stakeholder Group": "Excavator", "Voting Member": "Yes", Website: "https://vcicom.com/", Category: "Excavator", Term: "", "Contact Person": "Rob Espinosa" },
     { Type: "Stakeholder", "Company Name": "Western States Contracting", "Stakeholder Group": "Excavator", "Voting Member": "Yes", Website: "http://www.westernstatesco.com/", Category: "Excavator", Term: "", "Contact Person": "Harold Lefler" },
     { Type: "Stakeholder", "Company Name": "Xram Excavation", "Stakeholder Group": "Excavator", "Voting Member": "Yes", Website: "https://g.co/kgs/QqEWCLq", Category: "Excavator", Term: "", "Contact Person": "Scotty Marx" },
-    { Type: "Associate", "Company Name": "811 Spotter", "Stakeholder Group": "", "Voting Member": "No", Website: "", Category: "Associate", Term: "", "Contact Person": "" },
-    { Type: "Associate", "Company Name": "Arizona Pipeline Company", "Stakeholder Group": "", "Voting Member": "No", Website: "", Category: "Associate", Term: "", "Contact Person": "" },
-    { Type: "Associate", "Company Name": "DigContrax", "Stakeholder Group": "", "Voting Member": "No", Website: "", Category: "Associate", Term: "", "Contact Person": "" },
-    { Type: "Associate", "Company Name": "Flippin's Trenching", "Stakeholder Group": "", "Voting Member": "No", Website: "", Category: "Associate", Term: "", "Contact Person": "" },
-    { Type: "Associate", "Company Name": "Haaker Equipment Company", "Stakeholder Group": "", "Voting Member": "No", Website: "", Category: "Associate", Term: "", "Contact Person": "" },
-    { Type: "Associate", "Company Name": "National Trench Safety", "Stakeholder Group": "", "Voting Member": "No", Website: "", Category: "Associate", Term: "", "Contact Person": "" },
-    { Type: "Associate", "Company Name": "NEPTCO MULETAPE", "Stakeholder Group": "", "Voting Member": "No", Website: "", Category: "Associate", Term: "", "Contact Person": "" },
-    { Type: "Associate", "Company Name": "Norfield DP", "Stakeholder Group": "", "Voting Member": "No", Website: "", Category: "Associate", Term: "", "Contact Person": "" },
-    { Type: "Associate", "Company Name": "Silver Lake Construction", "Stakeholder Group": "", "Voting Member": "No", Website: "", Category: "Associate", Term: "", "Contact Person": "" },
-    { Type: "Associate", "Company Name": "Sub-T & Locating Dynamics", "Stakeholder Group": "", "Voting Member": "No", Website: "", Category: "Associate", Term: "", "Contact Person": "" },
-    { Type: "Associate", "Company Name": "Tecsolutions Consultants", "Stakeholder Group": "", "Voting Member": "No", Website: "", Category: "Associate", Term: "", "Contact Person": "" }
+    { Type: "Associate", "Company Name": "811 Spotter", "Stakeholder Group": "", "Voting Member": "No", Website: "https://811spotter.com/", Category: "Associate", Term: "", "Contact Person": "" },
+    { Type: "Associate", "Company Name": "Arizona Pipeline Company", "Stakeholder Group": "", "Voting Member": "No", Website: "https://www.azpipelines.com/", Category: "Associate", Term: "", "Contact Person": "" },
+    { Type: "Associate", "Company Name": "DigContrax", "Stakeholder Group": "", "Voting Member": "No", Website: "https://digcontrax.com/", Category: "Associate", Term: "", "Contact Person": "" },
+    { Type: "Associate", "Company Name": "Flippin's Trenching", "Stakeholder Group": "", "Voting Member": "No", Website: "https://www.flippinstrenching.com/", Category: "Associate", Term: "", "Contact Person": "" },
+    { Type: "Associate", "Company Name": "Haaker Equipment Company", "Stakeholder Group": "", "Voting Member": "No", Website: "https://www.haakerequipment.com/", Category: "Associate", Term: "", "Contact Person": "" },
+    { Type: "Associate", "Company Name": "National Trench Safety", "Stakeholder Group": "", "Voting Member": "No", Website: "https://www.nationalsafety.com/", Category: "Associate", Term: "", "Contact Person": "" },
+    { Type: "Associate", "Company Name": "NEPTCO MULETAPE", "Stakeholder Group": "", "Voting Member": "No", Website: "https://www.neptcomuletape.com/", Category: "Associate", Term: "", "Contact Person": "" },
+    { Type: "Associate", "Company Name": "Norfield DP", "Stakeholder Group": "", "Voting Member": "No", Website: "https://www.norfielddp.com/", Category: "Associate", Term: "", "Contact Person": "" },
+    { Type: "Associate", "Company Name": "Silver Lake Construction", "Stakeholder Group": "", "Voting Member": "No", Website: "https://www.silverlakeconstruction.com/", Category: "Associate", Term: "", "Contact Person": "" },
+    { Type: "Associate", "Company Name": "Sub-T & Locating Dynamics", "Stakeholder Group": "", "Voting Member": "No", Website: "https://www.subtandlocatingdynamics.com/", Category: "Associate", Term: "", "Contact Person": "" },
+    { Type: "Associate", "Company Name": "Tecsolutions Consultants", "Stakeholder Group": "", "Voting Member": "No", Website: "https://www.tecsolutionsconsultants.com/", Category: "Associate", Term: "", "Contact Person": "" }
 ];
 
