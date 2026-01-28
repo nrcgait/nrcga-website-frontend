@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Archive - NRCGA</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="nav-placeholder"></div>
+
+    <!-- Page Header -->
+    <section class="page-header">
+        <div class="container">
+            <span class="section-label">Resources</span>
+            <h1 class="page-title">NRCGA Archive</h1>
+            <p class="page-subtitle">Access historical documents, meeting minutes, and archived materials from NRCGA.</p>
+        </div>
+    </section>
+
+    <!-- Section Navigation -->
+    <section class="content-section" style="padding-top: 2rem; padding-bottom: 1rem;">
+        <div class="container">
+            <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                <a href="#meeting-minutes" class="btn btn-primary" onclick="scrollToSection('meeting-minutes'); return false;">Meeting Minutes</a>
+                <a href="#historical-documents" class="btn btn-outline" onclick="scrollToSection('historical-documents'); return false;">Historical Documents</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Archive Content -->
+    <section id="meeting-minutes" class="content-section">
+        <div class="container">
+            <div class="content-text" id="meeting-minutes-content">
+                <h2>Meeting Minutes</h2>
+                <p>Historical meeting minutes and records from NRCGA board meetings, committee meetings, and general assemblies. NRCGA monthly membership meetings take place the second Tuesday of January, March, May, July, September, and November.</p>
+                <div style="text-align: center; padding: 2rem; color: var(--text-secondary);">Loading documents...</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Additional Archive Content -->
+    <section id="historical-documents" class="content-section bg-light">
+        <div class="container">
+            <div class="content-text" id="historical-documents-content">
+                <h2>Historical Documents</h2>
+                <p>NRCGA news articles and historical documents organized by year.</p>
+                <div style="text-align: center; padding: 2rem; color: var(--text-secondary);">Loading documents...</div>
+            </div>
+        </div>
+    </section>
+
+    
+    <div id="footer-placeholder"></div>
+
+    <script src="js/nav-config.js"></script>
+    <script src="js/components.js"></script>
+    <script src="js/script.js"></script>
+    <script src="data/archive.js"></script>
+    <script src="js/archive-loader.js"></script>
+</body>
+</html>
+

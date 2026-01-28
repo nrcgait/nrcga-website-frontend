@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Members - NRCGA</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="nav-placeholder"></div>
+
+    <!-- Page Header -->
+    <section class="page-header">
+        <div class="container">
+            <span class="section-label">Membership</span>
+            <h1 class="page-title">NRCGA Members</h1>
+            <p class="page-subtitle">Our members are the foundation of Nevada's damage prevention community.</p>
+        </div>
+    </section>
+
+    <!-- Board of Directors Section -->
+    <section class="content-section">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Board of Directors</h2>
+                <p class="section-subtitle">NRCGA officers are nominated and voted into office by members of the Board of Directors. Any NRCGA member may be nominated to serve on the Board of Directors.</p>
+            </div>
+
+            <!-- Officers -->
+            <div style="margin-bottom: 3rem;">
+                <h3 style="font-size: 1.5rem; margin-bottom: 1.5rem; color: var(--text-primary);">NRCGA Officers</h3>
+                <div class="board-table">
+                    <div class="board-row board-header">
+                        <div class="board-cell">Position</div>
+                        <div class="board-cell">Officer</div>
+                        <div class="board-cell">Term</div>
+                    </div>
+                    <!-- Officers will be loaded from API -->
+                </div>
+            </div>
+
+            <!-- Directors -->
+            <div>
+                <h3 style="font-size: 1.5rem; margin-bottom: 1.5rem; color: var(--text-primary);">NRCGA Directors</h3>
+                <div class="board-table">
+                    <div class="board-row board-header">
+                        <div class="board-cell">Stakeholder Group</div>
+                        <div class="board-cell">Director</div>
+                        <div class="board-cell">Term</div>
+                    </div>
+                    <!-- Directors will be loaded from API -->
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Members List Section -->
+    <section class="content-section bg-light">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Stakeholder Members</h2>
+                <p class="section-subtitle">NRCGA stakeholder members represent various sectors of Nevada's damage prevention community.</p>
+            </div>
+
+            <div class="members-grid" id="stakeholder-members-grid">
+                <!-- Member items will be dynamically generated from JSON -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Associate Members Section -->
+    <section class="content-section">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Associate Members</h2>
+            </div>
+
+            <div class="associate-members" id="associate-members-grid">
+                <!-- Associate member items will be dynamically generated from JSON -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Membership Info -->
+    <section class="content-section bg-light">
+        <div class="container">
+            <div class="content-text">
+                <h2>Join the NRCGA Community</h2>
+                <p>
+                    NRCGA membership brings together excavators, utility operators, locators, and other stakeholders 
+                    committed to damage prevention and public safety across Nevada. As a member, you'll have access 
+                    to training, networking opportunities, and the ability to shape the future of damage prevention 
+                    in our state.
+                </p>
+            </div>
+
+            <div class="membership-benefits" style="margin-top: 3rem;">
+                <h2>Member Benefits</h2>
+                <div class="features-grid">
+                    <!-- Training access section  
+                    <div class="feature-item">
+                        <div class="feature-icon">🎓</div>
+                        <h3>Training Access</h3>
+                        <p>Priority registration and discounted rates for NRCGA training programs and workshops.</p>
+                    </div> -->
+
+                    <div class="feature-item">
+                        <div class="feature-icon">🤝</div>
+                        <h3>Networking</h3>
+                        <p>Connect with industry professionals at meetings, events, and committee sessions.</p>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">📊</div>
+                        <h3>Industry Data</h3>
+                        <p>Access to DIRT reports, damage statistics, and industry insights.</p>
+                    </div>
+
+                    <!-- Best practices section 
+                    <div class="feature-item">
+                        <div class="feature-icon">💡</div>
+                        <h3>Best Practices</h3>
+                        <p>Learn from industry leaders and share your own experiences and innovations.</p>
+                    </div> -->
+
+                    <!-- Recognition section 
+                    <div class="feature-item">
+                        <div class="feature-icon">🏆</div>
+                        <h3>Recognition</h3>
+                        <p>Eligibility for awards and recognition programs like the Silver Shovel Awards.</p>
+                    </div> -->
+
+                    <div class="feature-item">
+                        <div class="feature-icon">🗳️</div>
+                        <h3>Voting Rights</h3>
+                        <p>Participate in NRCGA governance and help shape policies and programs.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How to Join -->
+    <section class="content-section">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">How to Join</h2>
+            </div>
+
+            <div class="join-steps">
+                <div class="step-item">
+                    <div class="step-number">1</div>
+                    <h3>Contact Us</h3>
+                    <p>Reach out to NRCGA to express your interest in membership and learn more about the process.</p>
+                </div>
+                <div class="step-item">
+                    <div class="step-number">2</div>
+                    <h3>Complete Application</h3>
+                    <p>Fill out the membership application form with your organization or personal information.</p>
+                </div>
+                <div class="step-item">
+                    <div class="step-number">3</div>
+                    <h3>Review & Approval</h3>
+                    <p>Your application will be reviewed by the NRCGA board for approval.</p>
+                </div>
+                <div class="step-item">
+                    <div class="step-number">4</div>
+                    <h3>Welcome!</h3>
+                    <p>Once approved, you'll receive membership information and can start participating in NRCGA activities.</p>
+                </div>
+            </div>
+
+            <div class="cta-content" style="margin-top: 3rem;">
+                <a href="contact.html" class="btn btn-primary">Contact Us to Join</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Member Popup Modal -->
+    <div class="member-modal" id="member-modal">
+        <div class="member-modal-content">
+            <button class="member-modal-close" id="member-modal-close" aria-label="Close modal">&times;</button>
+            <div class="member-modal-header">
+                <h3 id="modal-company-name"></h3>
+                <span class="member-modal-category" id="modal-category"></span>
+            </div>
+            <div class="member-modal-body">
+                <div class="member-modal-info">
+                    <div class="member-modal-info-item" id="modal-voting-member" style="display: none;">
+                        <span class="member-modal-info-label">Voting Member:</span>
+                        <span class="member-modal-info-value" id="modal-voting-member-value"></span>
+                    </div>
+                    <div class="member-modal-info-item" id="modal-stakeholder-group" style="display: none;">
+                        <span class="member-modal-info-label">Stakeholder Group:</span>
+                        <span class="member-modal-info-value" id="modal-stakeholder-group-value"></span>
+                    </div>
+                    <div class="member-modal-info-item" id="modal-contact-person" style="display: none;">
+                        <span class="member-modal-info-label">Contact:</span>
+                        <span class="member-modal-info-value" id="modal-contact-person-value"></span>
+                    </div>
+                </div>
+                <div class="member-modal-website" id="modal-website" style="display: none;">
+                    <a href="#" id="modal-website-link" target="_blank" rel="noopener noreferrer">
+                        Visit Company Website →
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    
+    <div id="footer-placeholder"></div>
+
+    <script src="js/nav-config.js"></script>
+    <script src="js/components.js"></script>
+    <script src="js/script.js"></script>
+    <script src="js/members-loader.js"></script>
+</body>
+</html>
