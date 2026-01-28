@@ -61,10 +61,19 @@ function parseCSVLine(line) {
 // Load and display members from CSV
 async function loadMembers() {
     try {
-        // Fetch CSV file
-        const response = await fetch('data/members.csv');
+        // Fetch CSV file - try relative path first
+        let csvPath = 'data/members.csv';
+        
+        // If we're in a subdirectory, adjust path
+        const currentPath = window.location.pathname;
+        if (currentPath.includes('/') && currentPath.split('/').length > 2) {
+            // We're in a subdirectory, go up one level
+            csvPath = '../data/members.csv';
+        }
+        
+        const response = await fetch(csvPath);
         if (!response.ok) {
-            throw new Error(`Failed to load members.csv: ${response.status} ${response.statusText}`);
+            throw new Error(`Failed to load members.csv: ${response.status} ${response.statusText}. Make sure you're running from a web server (not file:// protocol).`);
         }
         
         const csvText = await response.text();
@@ -93,11 +102,14 @@ async function loadMembers() {
         displayAssociateMembers(associateMembers);
         
     } catch (error) {
-        console.error('Error loading members:', error);
+        console.error('Error loading members from CSV:', error);
         // Show error message on page
         const grid = document.getElementById('stakeholder-members-grid');
         if (grid) {
-            grid.innerHTML = '<p style="color: var(--text-secondary); text-align: center; padding: 2rem;">Unable to load members data. Please try again later.</p>';
+            const errorMsg = error.message.includes('file://') || error.message.includes('Failed to fetch') 
+                ? '<p style="color: var(--text-secondary); text-align: center; padding: 2rem;">Unable to load members data. Please use a web server (not file://). The CSV file requires HTTP/HTTPS protocol.</p>'
+                : `<p style="color: var(--text-secondary); text-align: center; padding: 2rem;">Unable to load members data: ${error.message}</p>`;
+            grid.innerHTML = errorMsg;
         }
     }
 }
