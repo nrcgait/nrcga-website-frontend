@@ -99,14 +99,17 @@ function displayStakeholderMembers(members) {
         
         // Show contact person if available
         const contactInfo = member['Contact Person'] ? 
-            `<p style="font-size: 0.875rem; color: var(--text-secondary); margin-top: 0.5rem;">${member['Contact Person']}</p>` : '';
+            `<p class="member-contact">${member['Contact Person']}</p>` : '';
+        
+        // Build categories section
+        const categoryHtml = member['Stakeholder Group'] ? 
+            `<div style="margin-top: 0.5rem; margin-bottom: 0.5rem;"><span class="member-category">${member['Stakeholder Group']}</span></div>` : '';
         
         return `
             <div class="member-item" data-member='${JSON.stringify(member).replace(/'/g, "&apos;")}'>
                 <h4>${member['Company Name'] || ''}</h4>
                 ${contactInfo}
-                ${member['Stakeholder Group'] ? `<span class="member-category">${member['Stakeholder Group']}</span>` : ''}
-                ${member['Voting Member'] === 'Yes' ? '<span class="member-badge">Voting Member</span>' : ''}
+                ${categoryHtml}
                 ${website}
             </div>
         `;
