@@ -1,5 +1,10 @@
 // Attendance Form Handler
-const API_BASE_URL = window.API_BASE_URL || 'http://localhost:3000/api';
+const API_BASE_URL = (function() {
+  if (typeof window.API_BASE_URL === 'undefined') {
+    window.API_BASE_URL = 'http://localhost:3000/api';
+  }
+  return window.API_BASE_URL;
+})();
 
 document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('attendance-form');

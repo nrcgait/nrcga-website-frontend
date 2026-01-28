@@ -1,7 +1,12 @@
 // Registration Modal Handler
 // Handles registration form in a modal popup
 
-const API_BASE_URL = window.API_BASE_URL || 'http://localhost:3000/api';
+const API_BASE_URL = (function() {
+  if (typeof window.API_BASE_URL === 'undefined') {
+    window.API_BASE_URL = 'http://localhost:3000/api';
+  }
+  return window.API_BASE_URL;
+})();
 
 // Format date for display
 function formatEventDate(dateString) {

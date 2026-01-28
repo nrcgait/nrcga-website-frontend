@@ -5,7 +5,12 @@
 // API URL - Update this to match your backend deployment
 // For local development: 'http://localhost:3000/api'
 // For production: 'https://your-backend-url.com/api'
-const API_BASE_URL = window.API_BASE_URL || 'http://localhost:3000/api';
+const API_BASE_URL = (function() {
+  if (typeof window.API_BASE_URL === 'undefined') {
+    window.API_BASE_URL = 'http://localhost:3000/api';
+  }
+  return window.API_BASE_URL;
+})();
 
 // Fetch events from backend API
 async function fetchEventsFromAPI() {
