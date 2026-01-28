@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nevada DIRT Data - NRCGA</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+          crossorigin=""/>
+</head>
+<body>
+    <div id="nav-placeholder"></div>
+
+    <!-- Page Header -->
+    <section class="page-header">
+        <div class="container">
+            <span class="section-label">Resources</span>
+            <h1 class="page-title">Nevada DIRT Data</h1>
+            <p class="page-subtitle">Access Nevada damage prevention data, DIRT reports, and interactive maps.</p>
+        </div>
+    </section>
+
+    <!-- NV Field Data Link -->
+    <section class="content-section">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Nevada Field Data</h2>
+                <p class="section-subtitle">Access comprehensive damage prevention data and statistics for Nevada.</p>
+            </div>
+
+            <div class="data-link-card">
+                <div class="data-link-content">
+                    <div class="data-icon">📊</div>
+                    <h3>NV Field Data</h3>
+                    <p>View detailed damage prevention data, statistics, and reports for Nevada. Access DIRT reports, damage trends, and industry insights.</p>
+                    <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin-top: 1.5rem;">
+                        <a href="#" class="btn btn-primary" target="_blank" rel="noopener noreferrer">Access NV Field Data</a>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="max-width: 800px; margin: 2rem auto 0; padding: 1.5rem; background: var(--bg-secondary); border-radius: 12px;">
+                <h3 style="font-size: 1.25rem; margin-bottom: 1rem; color: var(--text-primary);">CGA Root Cause Flow Chart</h3>
+                <p style="color: var(--text-secondary); line-height: 1.7; margin-bottom: 0.5rem;">
+                    The Common Ground Alliance (CGA) Root Cause Flow Chart is a standardized tool designed to help identify and classify 
+                    the root causes of damage incidents when reporting through the Damage Information Reporting Tool (DIRT). This flow chart 
+                    provides a systematic approach to analyzing damage events, helping to ensure consistent and accurate root cause 
+                    classification across the industry.
+                </p>
+                <p style="color: var(--text-secondary); line-height: 1.7; margin-top: 0.5rem; margin-bottom: 1.5rem;">
+                    Use this flow chart as a guide when submitting DIRT reports to help identify the primary contributing factors and root 
+                    causes of damage incidents. Accurate root cause identification helps the industry better understand damage trends and 
+                    develop targeted prevention strategies.
+                </p>
+                <div style="text-align: center;">
+                    <a href="assets/images/DIRT-root-cause-flow-chart-UPDATED-12_19_24.jpg" class="btn btn-secondary" target="_blank" rel="noopener noreferrer">View Root Cause Flow Chart</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Interactive Map -->
+    <section class="content-section bg-light">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Nevada Damage Prevention Map</h2>
+                <p class="section-subtitle">Interactive map showing damage prevention information across Nevada.</p>
+            </div>
+
+            <div class="map-container">
+                <div id="nrcga-map"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Map Information -->
+    <section class="content-section bg-light">
+        <div class="container">
+            <div class="content-text" style="max-width: 800px; margin: 0 auto;">
+                <h2>About This Map</h2>
+                <p>
+                    This interactive map provides visual representation of damage prevention data and information across Nevada. 
+                    Use the map to explore regional data, identify trends, and access location-specific damage prevention resources.
+                </p>
+                <p style="margin-top: 1.5rem;">
+                    The map is regularly updated with the latest damage prevention statistics and information. For questions about 
+                    the data or to request additional information, please <a href="contact.html">contact NRCGA</a>.
+                </p>
+                <div style="margin-top: 2rem; padding: 1.5rem; background: rgba(255, 193, 7, 0.1); border-left: 4px solid #ffc107; border-radius: 8px;">
+                    <p style="margin: 0; color: var(--text-secondary); font-size: 0.9375rem; line-height: 1.7;">
+                        <strong>Data Disclaimer:</strong> The information displayed on this map is provided for informational purposes only. 
+                        While NRCGA strives to maintain accurate and up-to-date data, the information may contain inaccuracies, errors, or omissions. 
+                        The data is provided "as is" without warranty of any kind, and NRCGA does not guarantee the accuracy, completeness, or 
+                        reliability of the information. Users should verify critical information independently and not rely solely on this map data 
+                        for decision-making purposes.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    
+    <div id="footer-placeholder"></div>
+
+    <!-- Leaflet JS -->
+    
+    
+    
+    <script>
+        // Initialize Leaflet Map
+        document.addEventListener('DOMContentLoaded', () => {
+            // Center map on Nevada (approximate center)
+            const map = L.map('nrcga-map').setView([39.5, -117.0], 6);
+
+            // Add OpenStreetMap tiles
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                maxZoom: 19
+            }).addTo(map);
+
+            // Function to load and display GeoJSON data
+            function loadGeoJSON(data, layerName) {
+                const geojsonLayer = L.geoJSON(data, {
+                    style: function(feature) {
+                        // Default style - can be customized per feature
+                        return {
+                            color: '#0066cc',
+                            weight: 2,
+                            opacity: 0.8,
+                            fillOpacity: 0.3,
+                            fillColor: '#0066cc'
+                        };
+                    },
+                    pointToLayer: function(feature, latlng) {
+                        // Custom marker for Point features
+                        return L.circleMarker(latlng, {
+                            radius: 6,
+                            fillColor: '#0066cc',
+                            color: '#ffffff',
+                            weight: 2,
+                            opacity: 1,
+                            fillOpacity: 0.8
+                        });
+                    },
+                    onEachFeature: function(feature, layer) {
+                        // Add popup with feature properties
+                        if (feature.properties) {
+                            let popupContent = '<div style="max-width: 300px;">';
+                            for (let key in feature.properties) {
+                                if (feature.properties.hasOwnProperty(key)) {
+                                    popupContent += `<strong>${key}:</strong> ${feature.properties[key]}<br>`;
+                                }
+                            }
+                            popupContent += '</div>';
+                            layer.bindPopup(popupContent);
+                        }
+                    }
+                }).addTo(map);
+                return geojsonLayer;
+            }
+
+            // Store all loaded layers for bounds calculation
+            const loadedLayers = [];
+
+            // Check if we're running on HTTP/HTTPS (server) or file:// (local)
+            const isServer = window.location.protocol === 'http:' || window.location.protocol === 'https:';
+            
+            // List of GeoJSON files to load from map_data folder
+            const geojsonFiles = [
+                'assets/map_data/instances.geojson'
+                // Add more GeoJSON files here as needed
+            ];
+
+            // Instances GeoJSON data (embedded for file:// protocol)
+            const instancesData = {
+                "type": "FeatureCollection",
+                "name": "instances",
+                "crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+                "features": [
+                    { "type": "Feature", "properties": { "Occurence": "Shallow gas line" }, "geometry": { "type": "Point", "coordinates": [ -114.977262972222221, 36.030394 ] } },
+                    { "type": "Feature", "properties": { "Occurence": "unknown 12\" pipe" }, "geometry": { "type": "Point", "coordinates": [ -115.0460063, 36.07549062 ] } },
+                    { "type": "Feature", "properties": { "Occurence": "unknown 12\" pipe" }, "geometry": { "type": "Point", "coordinates": [ -115.04602025, 36.07469542 ] } },
+                    { "type": "Feature", "properties": { "Occurence": "abandoned cox fiber" }, "geometry": { "type": "Point", "coordinates": [ -114.933146092, 36.100199819 ] } }
+                ]
+            };
+
+            // Map of embedded GeoJSON data (for file:// protocol)
+            const embeddedData = {
+                'assets/map_data/instances.geojson': instancesData
+                // Add more embedded data here as needed
+            };
+
+            // Function to fit bounds after all layers are loaded
+            function fitMapBounds() {
+                if (loadedLayers.length > 0) {
+                    const group = new L.featureGroup(loadedLayers);
+                    if (group.getBounds().isValid()) {
+                        map.fitBounds(group.getBounds(), { padding: [50, 50] });
+                    }
+                }
+            }
+
+            if (isServer) {
+                // Load from HTTP server using fetch
+                let loadedCount = 0;
+                geojsonFiles.forEach((file) => {
+                    fetch(file)
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error(`Failed to load ${file}: ${response.statusText}`);
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            const layer = loadGeoJSON(data, file);
+                            loadedLayers.push(layer);
+                            loadedCount++;
+                            if (loadedCount === geojsonFiles.length) {
+                                fitMapBounds();
+                            }
+                        })
+                        .catch(error => {
+                            console.error(`Error loading ${file}:`, error);
+                            loadedCount++;
+                            if (loadedCount === geojsonFiles.length) {
+                                fitMapBounds();
+                            }
+                        });
+                });
+            } else {
+                // Use embedded data for file:// protocol
+                geojsonFiles.forEach((file) => {
+                    if (embeddedData[file]) {
+                        const layer = loadGeoJSON(embeddedData[file], file);
+                        loadedLayers.push(layer);
+                    } else {
+                        console.warn(`No embedded data found for ${file}. Please add it to embeddedData object or use a web server.`);
+                    }
+                });
+                fitMapBounds();
+            }
+        });
+    </script>
+    <script src="js/nav-config.js"></script>
+    <script src="js/components.js"></script>
+    <script src="js/script.js"></script>
+</body>
+</html>
+
