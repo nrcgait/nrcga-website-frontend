@@ -277,13 +277,22 @@ async function displayEvents(containerId = 'upcoming-events-list', filterType = 
     const container = document.getElementById(containerId);
     if (!container) return;
 
-    // Try to fetch events from API first, fallback to window.eventsData
+    // Try to fetch events from API first, fallback to CSV
     let allEvents = await fetchEventsFromAPI();
     if (!allEvents || allEvents.length === 0) {
-        // Fallback to static events.js if API unavailable or returns no events
-        if (typeof window.eventsData !== 'undefined') {
-            allEvents = window.eventsData;
-        } else {
+        // Fallback to CSV if API unavailable or returns no events
+        try {
+            const csvEvents = await loadCSV('data/events.csv');
+            // Convert CSV data to match event format (handle numeric fields)
+            allEvents = csvEvents.map(event => ({
+                ...event,
+                id: event.id.toString(),
+                length: parseInt(event.length) || 180,
+                registrationLimit: event.registrationLimit ? parseInt(event.registrationLimit) : null,
+                eventRepeats: event.eventRepeats ? (isNaN(event.eventRepeats) ? event.eventRepeats : parseInt(event.eventRepeats)) : null
+            }));
+        } catch (error) {
+            console.error('Error loading events from CSV:', error);
             container.innerHTML = '<p style="text-align: center; padding: 2rem; color: var(--text-secondary);">No events data available.</p>';
             return;
         }

@@ -53,7 +53,7 @@
                             <p class="section-subtitle">View scheduled training sessions and register for upcoming events.</p>
                         </div>
                         <div id="calendar-events">
-                            <!-- Events will be loaded dynamically from data/events.js -->
+                            <!-- Events will be loaded dynamically from data/events.csv -->
                             <div style="text-align: center; padding: 2rem; color: var(--text-secondary);">Loading events...</div>
                         </div>
                     </div>
@@ -106,53 +106,14 @@
     </section>
 
     <!-- Training Interest Form -->
-    <section class="content-section">
+    <section id="request-training" class="content-section">
         <div class="container">
             <div class="section-header">
                 <h2 class="section-title">Request On-Site Training</h2>
-                <p class="section-subtitle">Unable to attend our scheduled training sessions? Request a trainer to come to your location. We can arrange on-site training for groups when standard training schedules don't work for your team.</p>
-            </div>
+             </div>
 
             <div class="contact-form-wrapper" style="max-width: 700px; margin: 0 auto;">
-                <form class="contact-form">
-                    <div class="form-group">
-                        <label for="name">Name *</label>
-                        <input type="text" id="name" name="name" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="email">Email *</label>
-                        <input type="email" id="email" name="email" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="phone">Phone *</label>
-                        <input type="tel" id="phone" name="phone" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="organization">Organization/Company</label>
-                        <input type="text" id="organization" name="organization" placeholder="Your company or organization name">
-                    </div>
-                    <div class="form-group">
-                        <label for="participants">Number of Participants</label>
-                        <input type="number" id="participants" name="participants" min="1" placeholder="Approximate number of people who need training">
-                    </div>
-                    <div class="form-group">
-                        <label for="location">Preferred Training Location</label>
-                        <input type="text" id="location" name="location" placeholder="City or specific address where training would take place">
-                    </div>
-                    <div class="form-group">
-                        <label for="preferred-dates">Preferred Dates</label>
-                        <input type="text" id="preferred-dates" name="preferred-dates" placeholder="Preferred dates or timeframe for training">
-                    </div>
-                    <div class="form-group">
-                        <label for="reason">Why On-Site Training?</label>
-                        <textarea id="reason" name="reason" rows="4" placeholder="Please let us know why on-site training would work better for your team (e.g., large group size, remote location, scheduling conflicts, specific training needs, etc.)"></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label for="message">Additional Information</label>
-                        <textarea id="message" name="message" rows="4" placeholder="Any other details about your training needs or questions..."></textarea>
-                    </div>
-                    <button type="submit" class="btn btn-primary">Submit Training Request</button>
-                </form>
+                <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSceXd9aIZR3FS9UfCesKBIJQwkg77njgBmLWHUX4KD8n2k2Uw/viewform?embedded=true" width="640" height="1672" frameborder="0" marginheight="0" marginwidth="0">Loading…</iframe>
             </div>
         </div>
     </section>
@@ -174,8 +135,8 @@
     <script src="js/nav-config.js"></script>
     <script src="js/components.js"></script>
     <script src="js/script.js"></script>
+    <script src="js/csv-parser.js"></script>
     <script src="data/api-config.js"></script>
-    <script src="data/events.js"></script>
     <script src="js/registration-modal.js"></script>
     <script src="js/events-loader.js"></script>
 </body>

@@ -1,21 +1,17 @@
 // Programs Data Loader
-// Loads and displays programs data from data/programs.js
+// Loads and displays programs data from data/programs.csv
 
 // Load and display programs
-function loadPrograms() {
+async function loadPrograms() {
     try {
-        // Check if programsData is available (loaded from data/programs.js)
-        if (typeof window.programsData === 'undefined') {
-            throw new Error('Programs data not found. Make sure data/programs.js is loaded before programs-loader.js');
-        }
+        // Load CSV data
+        const programs = await loadCSV('data/programs.csv');
         
-        const programs = window.programsData;
-        
-        // Sort by order if specified, otherwise keep original order
+        // Sort by title alphabetically
         const sortedPrograms = [...programs].sort((a, b) => {
-            const orderA = a.order !== undefined ? a.order : 999;
-            const orderB = b.order !== undefined ? b.order : 999;
-            return orderA - orderB;
+            const titleA = (a.title || '').toLowerCase();
+            const titleB = (b.title || '').toLowerCase();
+            return titleA.localeCompare(titleB);
         });
         
         // Display programs
@@ -47,14 +43,11 @@ function displayPrograms(programs) {
         const isExternal = program.link.startsWith('http://') || program.link.startsWith('https://');
         const linkTarget = isExternal ? ' target="_blank" rel="noopener noreferrer"' : '';
         
-        html += `<a href="${program.link}" class="program-card" style="text-decoration: none; color: inherit; display: block;"${linkTarget}>`;
-        html += `<div class="program-image">`;
-        html += `<div class="program-icon">${program.icon || '📄'}</div>`;
-        html += `</div>`;
-        html += `<div class="program-content">`;
-        html += `<h3>${program.title || 'Program'}</h3>`;
-        html += `<p>${program.description || ''}</p>`;
-        html += `</div>`;
+        html += `<a href="${program.link}" class="program-card"${linkTarget}>`;
+        html += `<div style="display: block;"><span class="program-icon">${program.icon || '📄'}</span> <strong class="program-title">${program.title || 'Program'}</strong></div>`;
+        if (program.description) {
+            html += `<div style="display: block; margin-top: 0.75rem; color: var(--text-secondary);">${program.description}</div>`;
+        }
         html += `</a>`;
     });
     
@@ -62,10 +55,10 @@ function displayPrograms(programs) {
 }
 
 // Initialize when DOM is ready
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     // Only load if we're on the programs page
     if (document.getElementById('programs-list')) {
-        loadPrograms();
+        await loadPrograms();
     }
 });
 

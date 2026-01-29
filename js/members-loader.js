@@ -1,16 +1,11 @@
 // Members Data Loader
-// Loads and displays member data from local data/members.js file
+// Loads and displays member data from local data/members.csv file
 
 // Load and display members
-function loadMembers() {
+async function loadMembers() {
     try {
-        // Use members data from data/members.js (loaded via script tag in HTML)
-        // The data is available as window.membersData
-        if (typeof window.membersData === 'undefined') {
-            throw new Error('Members data not found. Make sure data/members.js is loaded.');
-        }
-        
-        const members = window.membersData;
+        // Load CSV data
+        const members = await loadCSV('data/members.csv');
         
         // Separate members by type
         const officers = members.filter(m => m.Type === 'Officer');
@@ -224,10 +219,10 @@ function showMemberModal(member) {
 }
 
 // Initialize when DOM is ready
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     // Only load if we're on the members page
     if (document.getElementById('stakeholder-members-grid')) {
-        loadMembers();
+        await loadMembers();
     }
 });
 

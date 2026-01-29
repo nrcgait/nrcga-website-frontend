@@ -1,16 +1,22 @@
 // Front Page Loader
-// Loads and displays carousel images and breaking news popup from data/front-page.js
+// Loads and displays carousel images and breaking news popup from CSV files
 
 let carouselCurrentIndex = 0;
 let carouselInterval = null;
+let carouselData = []; // Store carousel data globally
+let breakingNewsData = null; // Store breaking news data globally
 
-function loadCarousel() {
+async function loadCarousel() {
     try {
-        // Check if frontPageConfig is available
-        if (typeof window.frontPageConfig === 'undefined') {
-            console.warn('Front page config not found. Make sure data/front-page.js is loaded before carousel-loader.js');
-            return;
-        }
+        // Load carousel data from CSV
+        carouselData = await loadCSV('data/front-page-carousel.csv');
+        
+        // Convert active from string to number
+        carouselData = carouselData.map(item => ({
+            ...item,
+            active: item.active === '1' ? 1 : 0,
+            display_order: parseInt(item.display_order) || 0
+        }));
 
         // Get the carousel container
         const container = document.getElementById('nrcga-carousel');
@@ -18,9 +24,6 @@ function loadCarousel() {
             console.warn('Carousel container not found. Make sure #nrcga-carousel exists on the page.');
             return;
         }
-
-        // Get carousel data from config
-        const carouselData = window.frontPageConfig.carousel || [];
 
         // Filter active images and sort by display_order
         const activeImages = carouselData
@@ -118,8 +121,7 @@ function initializeCarousel(imageCount) {
 
 // Carousel navigation functions (global scope for onclick handlers)
 function carouselNext() {
-    if (typeof window.frontPageConfig === 'undefined') return;
-    const carouselData = window.frontPageConfig.carousel || [];
+    if (carouselData.length === 0) return;
     const activeImages = carouselData
         .filter(item => item.active !== 0)
         .sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
@@ -130,8 +132,7 @@ function carouselNext() {
 }
 
 function carouselPrev() {
-    if (typeof window.frontPageConfig === 'undefined') return;
-    const carouselData = window.frontPageConfig.carousel || [];
+    if (carouselData.length === 0) return;
     const activeImages = carouselData
         .filter(item => item.active !== 0)
         .sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
@@ -142,8 +143,7 @@ function carouselPrev() {
 }
 
 function carouselGoTo(index) {
-    if (typeof window.frontPageConfig === 'undefined') return;
-    const carouselData = window.frontPageConfig.carousel || [];
+    if (carouselData.length === 0) return;
     const activeImages = carouselData
         .filter(item => item.active !== 0)
         .sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
@@ -186,19 +186,24 @@ function stopCarouselAutoPlay() {
 }
 
 // Breaking News Popup Loader
-function loadBreakingNews() {
+async function loadBreakingNews() {
     try {
-        // Check if frontPageConfig is available
-        if (typeof window.frontPageConfig === 'undefined') {
+        // Load breaking news data from CSV
+        const breakingNewsArray = await loadCSV('data/front-page-breaking-news.csv');
+        if (breakingNewsArray.length === 0) {
             return;
         }
-
-        const breakingNews = window.frontPageConfig.breakingNews || {};
+        
+        breakingNewsData = breakingNewsArray[0];
+        // Convert active from string to boolean
+        breakingNewsData.active = breakingNewsData.active === 'true' || breakingNewsData.active === true;
         
         // Check if breaking news is active
-        if (!breakingNews.active) {
+        if (!breakingNewsData.active) {
             return;
         }
+        
+        const breakingNews = breakingNewsData;
 
         // Check if user has dismissed this news item
         const storageKey = breakingNews.storage_key || 'nrcga_breaking_news_dismissed';
@@ -270,24 +275,21 @@ document.addEventListener('DOMContentLoaded', () => {
     if (carouselContainer) {
         carouselContainer.addEventListener('mouseenter', stopCarouselAutoPlay);
         carouselContainer.addEventListener('mouseleave', () => {
-            if (typeof window.frontPageConfig !== 'undefined') {
-                const carouselData = window.frontPageConfig.carousel || [];
-                const activeImages = carouselData
-                    .filter(item => item.active !== 0)
-                    .sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
-                if (activeImages.length > 1) {
-                    startCarouselAutoPlay();
-                }
+            const activeImages = carouselData
+                .filter(item => item.active !== 0)
+                .sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
+            if (activeImages.length > 1) {
+                startCarouselAutoPlay();
             }
         });
     }
 });
 
 // Initialize when DOM is ready
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     if (document.getElementById('nrcga-carousel')) {
-        loadCarousel();
+        await loadCarousel();
     }
-    loadBreakingNews();
+    await loadBreakingNews();
 });
 

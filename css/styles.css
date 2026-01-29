@@ -29,8 +29,8 @@
     --primary-dark: #3a6bb8;
     --secondary: #a8a8a8;
     --accent: #c0c0c0;
-    --text-primary: #e8e8e8;
-    --text-secondary: #c0c0c0;
+    --text-primary: #0a0e1a;
+    --text-secondary: #141822;
     --text-light: #a8a8a8;
     --bg-primary: #0a0e1a;
     --bg-secondary: #141822;
@@ -936,8 +936,7 @@ body {
 }
 
 .program-card {
-    display: flex;
-    gap: 2rem;
+    display: block;
     background: white;
     border-radius: 16px;
     padding: 2rem;
@@ -946,6 +945,8 @@ body {
     border-left: 4px solid transparent;
     text-decoration: none;
     color: inherit;
+    margin: 0;
+    outline: none;
 }
 
 .program-card:hover {
@@ -956,23 +957,35 @@ body {
     color: inherit;
 }
 
-.program-image {
-    flex-shrink: 0;
-    width: 80px;
-    height: 80px;
-    background: var(--bg-secondary);
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
 .program-icon {
     font-size: 2.5rem;
+    margin-right: 0.75rem;
+    display: inline;
+    vertical-align: middle;
+    line-height: 1;
 }
 
-.program-content {
-    flex: 1;
+.program-card {
+    line-height: 1.7;
+    color: var(--text-secondary);
+}
+
+.program-card > *,
+.program-card span,
+.program-card a,
+.program-card strong {
+    display: inline;
+    margin: 0;
+    padding: 0;
+    vertical-align: baseline;
+}
+
+.program-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-right: 0.5rem;
+    display: inline;
 }
 
 .program-content h3 {
@@ -983,7 +996,7 @@ body {
 
 .program-content p {
     color: var(--text-secondary);
-    margin-bottom: 1rem;
+    margin: 0;
     line-height: 1.7;
 }
 
@@ -1262,6 +1275,7 @@ body {
     background: var(--bg-secondary);
     padding: 2.5rem;
     border-radius: 16px;
+    min-height: 750px;
 }
 
 /* Dark theme - contact form wrapper gets white background bubble */
@@ -3008,9 +3022,43 @@ body {
         flex-direction: column;
     }
 
-    .contact-layout {
-        grid-template-columns: 1fr;
+    .program-chair {
+        margin-top: 0.75rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid var(--border);
     }
+    
+    [data-theme="dark"] .program-chair {
+        border-top-color: rgba(255, 255, 255, 0.1);
+    }
+    
+    [data-theme="dark"] .program-chair span:first-child {
+        color: rgba(26, 26, 26, 0.6);
+    }
+    
+    [data-theme="dark"] .program-chair span:last-child {
+        color: #1a1a1a;
+    }
+    .program-email a:hover {
+        text-decoration: underline;
+    }
+    
+    [data-theme="dark"] .program-email a {
+        color: #6ba3ff;
+    }
+    
+    [data-theme="dark"] .program-email a:hover {
+        color: #8bb5ff;
+    }
+
+    .contact-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    max-width: 1000px;
+    margin: 0 auto;
+    align-items: start; /* Add this - allows columns to have different heights */
+}
 
     .footer-content {
         grid-template-columns: 1fr;

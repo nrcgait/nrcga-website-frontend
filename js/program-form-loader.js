@@ -1,20 +1,17 @@
 // Program Form Loader
-// Loads and displays program-specific forms from data/programs.js
+// Loads and displays program-specific forms from data/programs.csv
 // This script should be loaded on individual program pages
 
-function loadProgramForm() {
+async function loadProgramForm() {
     try {
-        // Check if programsData is available
-        if (typeof window.programsData === 'undefined') {
-            console.warn('Programs data not found. Make sure data/programs.js is loaded before program-form-loader.js');
-            return;
-        }
+        // Load programs data from CSV
+        const programsData = await loadCSV('data/programs.csv');
 
         // Get current page filename
         const currentPage = window.location.pathname.split('/').pop() || 'index.html';
         
         // Find the program that matches this page
-        const program = window.programsData.find(p => {
+        const program = programsData.find(p => {
             const programLink = p.link.split('/').pop();
             return programLink === currentPage;
         });
@@ -71,10 +68,10 @@ function createFormSection(formUrl, programTitle) {
 }
 
 // Initialize when DOM is ready
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     // Only load if we're on a program page with a form placeholder
     if (document.getElementById('program-form-placeholder')) {
-        loadProgramForm();
+        await loadProgramForm();
     }
 });
 

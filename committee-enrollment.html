@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Committees - NRCGA</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        .committee-membership {
+            background: var(--bg-secondary);
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            border-left: 4px solid var(--primary);
+        }
+        .committee-membership.active {
+            border-left-color: #4caf50;
+        }
+        .committee-membership.inactive {
+            border-left-color: #ccc;
+            opacity: 0.6;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 50px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-left: 0.5rem;
+        }
+        .status-badge.active {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+        .status-badge.inactive {
+            background: #f5f5f5;
+            color: #757575;
+        }
+        .view-toggle {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid var(--bg-secondary);
+            padding-bottom: 1rem;
+        }
+        .view-toggle button {
+            padding: 0.75rem 1.5rem;
+            border: 2px solid var(--primary);
+            background: transparent;
+            color: var(--primary);
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        .view-toggle button.active {
+            background: var(--primary);
+            color: white;
+        }
+        .view-toggle button:hover {
+            background: var(--primary);
+            color: white;
+        }
+        .view-section {
+            display: none;
+        }
+        .view-section.active {
+            display: block;
+        }
+        .member-item {
+            background: var(--bg-secondary);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 0.75rem;
+            border-left: 3px solid var(--primary);
+        }
+        .member-item h4 {
+            margin: 0 0 0.25rem 0;
+            color: var(--text-primary);
+        }
+        .member-item p {
+            margin: 0;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+        .member-item.chair {
+            border-left: 4px solid #ff9800;
+            border: 2px solid #ff9800;
+            background: #fff3e0;
+        }
+        .member-item.chair h4 {
+            color: #e65100;
+            font-weight: 700;
+        }
+        .committee-membership.chair {
+            border-left-color: #ff9800;
+            background: #fff3e0;
+        }
+        .chair-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 50px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-left: 0.5rem;
+            background: #ff9800;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div id="nav-placeholder"></div>
+
+    <!-- Page Header -->
+    <section class="page-header">
+        <div class="container">
+            <span class="section-label">My Committees</span>
+            <h1 class="page-title">Committee Memberships</h1>
+            <p class="page-subtitle">View committee memberships by person or see all members of a committee.</p>
+        </div>
+    </section>
+
+    <!-- Committee Memberships -->
+    <section class="content-section">
+        <div class="container">
+            <div style="max-width: 900px; margin: 0 auto;">
+                <!-- View Toggle -->
+                <div class="view-toggle">
+                    <button id="view-by-person-btn" class="active" onclick="switchView('person')">View by Person</button>
+                    <button id="view-by-committee-btn" onclick="switchView('committee')">View by Committee</button>
+                </div>
+
+                <!-- View by Person Section -->
+                <div id="person-view" class="view-section active">
+                    <div id="person-selector" style="margin-bottom: 2rem;">
+                        <label for="person-select" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Select Person:</label>
+                        <select id="person-select" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem;">
+                            <option value="">-- Select a person --</option>
+                        </select>
+                    </div>
+
+                    <div id="memberships-container">
+                        <p style="text-align: center; color: var(--text-secondary); padding: 2rem;">
+                            Select a person to view their committee memberships.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- View by Committee Section -->
+                <div id="committee-view" class="view-section">
+                    <div id="committee-selector" style="margin-bottom: 2rem;">
+                        <label for="committee-select" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Select Committee:</label>
+                        <select id="committee-select" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem;">
+                            <option value="">-- Select a committee --</option>
+                        </select>
+                    </div>
+
+                    <div id="committee-members-container">
+                        <p style="text-align: center; color: var(--text-secondary); padding: 2rem;">
+                            Select a committee to view its members.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div id="footer-placeholder"></div>
+
+    <script src="js/nav-config.js"></script>
+    <script src="js/components.js"></script>
+    <script src="js/csv-parser.js"></script>
+    <script>
+        // Load committee data from CSV files
+        async function loadCommitteeData() {
+            try {
+                // Load committees and members from CSV
+                const committeesData = await loadCSV('data/committee-members-committees.csv');
+                const membersData = await loadCSV('data/committee-members-members.csv');
+                
+                // Convert committees array to object
+                const committees = {};
+                committeesData.forEach(committee => {
+                    committees[committee.id] = committee.name;
+                });
+                
+                // Convert members array to object keyed by name
+                const members = {};
+                membersData.forEach(member => {
+                    const memberObj = {
+                        name: member.name,
+                        company: member.company,
+                        email: member.email || ''
+                    };
+                    
+                    // Add all committee membership fields (convert strings to numbers)
+                    Object.keys(committees).forEach(committeeId => {
+                        const value = member[committeeId];
+                        if (value !== undefined && value !== '') {
+                            memberObj[committeeId] = parseInt(value) || 0;
+                        } else {
+                            memberObj[committeeId] = 0;
+                        }
+                    });
+                    
+                    members[member.name] = memberObj;
+                });
+                
+                // Create the window.committeeMemberships object
+                window.committeeMemberships = {
+                    committees: committees,
+                    members: members
+                };
+            } catch (error) {
+                console.error('Error loading committee data:', error);
+                window.committeeMemberships = { committees: {}, members: {} };
+            }
+        }
+    </script>
+    <script>
+        // Switch between views
+        function switchView(view) {
+            const personView = document.getElementById('person-view');
+            const committeeView = document.getElementById('committee-view');
+            const personBtn = document.getElementById('view-by-person-btn');
+            const committeeBtn = document.getElementById('view-by-committee-btn');
+
+            if (view === 'person') {
+                personView.classList.add('active');
+                committeeView.classList.remove('active');
+                personBtn.classList.add('active');
+                committeeBtn.classList.remove('active');
+            } else {
+                personView.classList.remove('active');
+                committeeView.classList.add('active');
+                personBtn.classList.remove('active');
+                committeeBtn.classList.add('active');
+            }
+        }
+
+        // Populate person selector
+        function populatePersonSelector() {
+            const select = document.getElementById('person-select');
+            const members = window.committeeMemberships.members;
+            
+            // Sort names alphabetically
+            const sortedNames = Object.keys(members).sort();
+            
+            sortedNames.forEach(name => {
+                const option = document.createElement('option');
+                option.value = name;
+                option.textContent = `${name} - ${members[name].company}`;
+                select.appendChild(option);
+            });
+        }
+
+        // Populate committee selector
+        function populateCommitteeSelector() {
+            const select = document.getElementById('committee-select');
+            const committees = window.committeeMemberships.committees;
+            
+            // Sort committees alphabetically
+            const sortedCommittees = Object.entries(committees).sort((a, b) => 
+                a[1].localeCompare(b[1])
+            );
+            
+            sortedCommittees.forEach(([id, name]) => {
+                const option = document.createElement('option');
+                option.value = id;
+                option.textContent = name;
+                select.appendChild(option);
+            });
+        }
+
+        // Display committee memberships for selected person
+        function displayMemberships(personName) {
+            const container = document.getElementById('memberships-container');
+            const members = window.committeeMemberships.members;
+            const committees = window.committeeMemberships.committees;
+            
+            if (!personName || !members[personName]) {
+                container.innerHTML = '<p style="text-align: center; color: var(--text-secondary); padding: 2rem;">Select a person to view their committee memberships.</p>';
+                return;
+            }
+
+            const person = members[personName];
+            let html = `<div style="background: var(--bg-secondary); padding: 2rem; border-radius: 12px; margin-bottom: 2rem;">`;
+            html += `<h2 style="margin-bottom: 0.5rem;">${person.name}</h2>`;
+            html += `<p style="color: var(--text-secondary); margin-bottom: 0.5rem;">${person.company}</p>`;
+            if (person.email) {
+                html += `<p style="color: var(--text-secondary); margin-bottom: 1.5rem;"><a href="mailto:${person.email}" style="color: var(--primary); text-decoration: none;">${person.email}</a></p>`;
+            } else {
+                html += `<p style="color: var(--text-secondary); margin-bottom: 1.5rem;">&nbsp;</p>`;
+            }
+            html += `<h3 style="margin-bottom: 1rem;">Committee Memberships:</h3>`;
+            html += `<div>`;
+
+            // Get all committees and display membership status
+            Object.keys(committees).forEach(committeeId => {
+                const membershipValue = person[committeeId];
+                const isMember = membershipValue === true || membershipValue === 1 || membershipValue === 2;
+                const isChair = membershipValue === 2;
+                const committeeName = committees[committeeId];
+                
+                let statusClass = 'inactive';
+                let statusText = 'Not a Member';
+                
+                if (isChair) {
+                    statusClass = 'chair';
+                    statusText = 'Chair';
+                } else if (isMember) {
+                    statusClass = 'active';
+                    statusText = 'Member';
+                }
+                
+                html += `<div class="committee-membership ${statusClass}">`;
+                html += `<h4 style="margin: 0; display: flex; align-items: center; flex-wrap: wrap;">`;
+                html += `${committeeName}`;
+                if (isChair) {
+                    html += `<span class="chair-badge">${statusText}</span>`;
+                } else {
+                    html += `<span class="status-badge ${statusClass}">${statusText}</span>`;
+                }
+                html += `</h4>`;
+                html += `</div>`;
+            });
+
+            html += `</div></div>`;
+            container.innerHTML = html;
+        }
+
+        // Display members of selected committee
+        function displayCommitteeMembers(committeeId) {
+            const container = document.getElementById('committee-members-container');
+            const members = window.committeeMemberships.members;
+            const committees = window.committeeMemberships.committees;
+            
+            if (!committeeId || !committees[committeeId]) {
+                container.innerHTML = '<p style="text-align: center; color: var(--text-secondary); padding: 2rem;">Select a committee to view its members.</p>';
+                return;
+            }
+
+            const committeeName = committees[committeeId];
+            
+            // Get all members who are part of this committee
+            const committeeMembers = [];
+            const chairs = [];
+            
+            Object.keys(members).forEach(name => {
+                const membershipValue = members[name][committeeId];
+                const isMember = membershipValue === true || membershipValue === 1 || membershipValue === 2;
+                const isChair = membershipValue === 2;
+                
+                if (isMember) {
+                    const memberData = {
+                        name: members[name].name,
+                        company: members[name].company,
+                        email: members[name].email || '',
+                        isChair: isChair
+                    };
+                    
+                    if (isChair) {
+                        chairs.push(memberData);
+                    } else {
+                        committeeMembers.push(memberData);
+                    }
+                }
+            });
+
+            // Sort members alphabetically by name
+            chairs.sort((a, b) => a.name.localeCompare(b.name));
+            committeeMembers.sort((a, b) => a.name.localeCompare(b.name));
+
+            let html = `<div style="background: var(--bg-secondary); padding: 2rem; border-radius: 12px; margin-bottom: 2rem;">`;
+            html += `<h2 style="margin-bottom: 1.5rem;">${committeeName}</h2>`;
+            html += `<p style="color: var(--text-secondary); margin-bottom: 1.5rem;">Members (${chairs.length + committeeMembers.length}):</p>`;
+            html += `<div>`;
+
+            if (chairs.length === 0 && committeeMembers.length === 0) {
+                html += `<p style="text-align: center; color: var(--text-secondary); padding: 1rem;">No members found for this committee.</p>`;
+            } else {
+                // Display chairs first
+                if (chairs.length > 0) {
+                    html += `<h3 style="margin-top: 1.5rem; margin-bottom: 1rem; color: var(--text-primary);">Chairs:</h3>`;
+                    chairs.forEach(member => {
+                        html += `<div class="member-item chair">`;
+                        html += `<h4>${member.name} <span class="chair-badge" style="margin-left: 0.5rem; font-size: 0.75rem;">Chair</span></h4>`;
+                        html += `<p>${member.company}</p>`;
+                        if (member.email) {
+                            html += `<p style="margin-top: 0.25rem;"><a href="mailto:${member.email}" style="color: var(--primary); text-decoration: none; font-size: 0.875rem;">${member.email}</a></p>`;
+                        }
+                        html += `</div>`;
+                    });
+                }
+                
+                // Display regular members
+                if (committeeMembers.length > 0) {
+                    html += `<h3 style="margin-top: 1.5rem; margin-bottom: 1rem; color: var(--text-primary);">${chairs.length > 0 ? 'Members:' : ''}</h3>`;
+                    committeeMembers.forEach(member => {
+                        html += `<div class="member-item">`;
+                        html += `<h4>${member.name}</h4>`;
+                        html += `<p>${member.company}</p>`;
+                        if (member.email) {
+                            html += `<p style="margin-top: 0.25rem;"><a href="mailto:${member.email}" style="color: var(--primary); text-decoration: none; font-size: 0.875rem;">${member.email}</a></p>`;
+                        }
+                        html += `</div>`;
+                    });
+                }
+            }
+
+            html += `</div></div>`;
+            container.innerHTML = html;
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Load committee data first
+            await loadCommitteeData();
+            
+            populatePersonSelector();
+            populateCommitteeSelector();
+            
+            const personSelect = document.getElementById('person-select');
+            personSelect.addEventListener('change', (e) => {
+                displayMemberships(e.target.value);
+            });
+
+            const committeeSelect = document.getElementById('committee-select');
+            committeeSelect.addEventListener('change', (e) => {
+                displayCommitteeMembers(e.target.value);
+            });
+        });
+    </script>
+</body>
+</html>

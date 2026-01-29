@@ -1,0 +1,4 @@
+id,name,date,time,length,location,additionalDetails,registrationLimit,eventRepeats,repeatEnds
+1,"Northern Nevada Training",2025-01-26,09:00,180,"Reno, NV","Monthly training session covering utility marking standards, safe excavation practices, and the 811 process.",20,3,2026-12-31
+2,"Southern Nevada Training",2025-01-28,13:00,120,"Las Vegas, NV","Weekly training session for Southern Nevada excavators.",40,4,2026-12-31
+

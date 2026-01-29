@@ -25,7 +25,7 @@
     <section class="programs">
         <div class="container">
             <div class="programs-flow" id="programs-list">
-                <!-- Programs will be loaded dynamically from data/programs.js -->
+                <!-- Programs will be loaded dynamically from data/programs.csv -->
                 <div style="text-align: center; padding: 2rem; color: var(--text-secondary);">Loading programs...</div>
             </div>
             </div>
@@ -33,15 +33,22 @@
     </section>
 
     <!-- Get Involved CTA -->
-    <section class="content-section bg-light">
-        <div class="container">
-            <div class="cta-content">
-                <h2>Get Involved</h2>
-                <p>Interested in participating in or sponsoring one of our programs? We'd love to hear from you.</p>
+<section class="content-section bg-light">
+    <div class="container">
+        <div class="cta-content" style="text-align: center;">
+            <h2>Get Involved</h2>
+            <p>Click here to view your committee enrollment.</p>
+            <div style="display: flex; justify-content: center; gap: 1.5rem; margin-top: 3rem; flex-wrap: wrap;">
+                <a href="committee-enrollment.html" class="btn btn-primary">Committee Enrollment</a>
+            </div>
+            <br>
+            <p>Interested in participating in or sponsoring one of our programs? We'd love to hear from you.</p>
+            <div style="display: flex; justify-content: center; gap: 1.5rem; margin-top: 3rem; flex-wrap: wrap;">
                 <a href="contact.html" class="btn btn-primary">Contact Us</a>
             </div>
         </div>
-    </section>
+    </div>
+</section>
 
     
     <div id="footer-placeholder"></div>
@@ -49,7 +56,7 @@
     <script src="js/nav-config.js"></script>
     <script src="js/components.js"></script>
     <script src="js/script.js"></script>
-    <script src="data/programs.js"></script>
+    <script src="js/csv-parser.js"></script>
     <script src="js/programs-loader.js"></script>
 </body>
 </html>
