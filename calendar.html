@@ -24,8 +24,13 @@
     <!-- Calendar Section -->
     <section class="content-section">
         <div class="container">
+            <div style="display: flex; justify-content: center; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap;">
+                <button onclick="switchCalendarView('list')" class="btn btn-secondary calendar-view-btn active" style="cursor: pointer;" id="view-list-btn">📋 List View</button>
+                <button onclick="switchCalendarView('week')" class="btn btn-secondary calendar-view-btn" style="cursor: pointer;" id="view-week-btn">📅 Week View</button>
+                <button onclick="switchCalendarView('month')" class="btn btn-secondary calendar-view-btn" style="cursor: pointer;" id="view-month-btn">🗓️ Month View</button>
+            </div>
             <div id="calendar-events">
-                <!-- Events will be loaded dynamically from data/events.csv -->
+                <!-- Events will be loaded dynamically -->
                 <div style="text-align: center; padding: 2rem; color: var(--text-secondary);">Loading events...</div>
             </div>
         </div>

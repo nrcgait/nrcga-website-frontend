@@ -46,7 +46,7 @@ const navConfig = {
             items: [
                 { text: "Education and Training", href: "training.html" },
                 { text: "Request Training", href: "training.html#request-training", external: true },
-                { text: "Training Database", href: "about-811-questions.html", external: true }
+                { text: "Training Database", href: "training-database.html"}
             ]
         },
         {

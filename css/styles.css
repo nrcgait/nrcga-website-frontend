@@ -1522,6 +1522,19 @@ body {
     border-color: var(--primary-dark);
 }
 
+/* Calendar view buttons */
+.calendar-view-btn.active {
+    background: var(--primary) !important;
+    color: white !important;
+    border-color: var(--primary) !important;
+}
+
+[data-theme="dark"] .calendar-view-btn.active {
+    background: var(--primary) !important;
+    color: white !important;
+    border-color: var(--primary) !important;
+}
+
 .form-group {
     margin-bottom: 1.5rem;
 }
@@ -1687,6 +1700,17 @@ body {
 .help-list {
     list-style: none;
     padding: 0;
+}
+
+/* Override for cga-info-box h3 - must come after the above rule */
+[data-theme="dark"] .content-section .container .cga-info-box h3,
+[data-theme="dark"] .content-section.bg-light .container .cga-info-box h3 {
+    color: #ffffff !important;
+}
+/* Override for cga-info-box p - must come after the above rule */
+[data-theme="dark"] .content-section .container .cga-info-box p,
+[data-theme="dark"] .content-section.bg-light .container .cga-info-box p {
+    color: #ffffff !important;
 }
 
 .impact-list li,
