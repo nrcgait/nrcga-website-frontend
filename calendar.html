@@ -24,14 +24,32 @@
     <!-- Calendar Section -->
     <section class="content-section">
         <div class="container">
-            <div style="display: flex; justify-content: center; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap;">
-                <button onclick="switchCalendarView('list')" class="btn btn-secondary calendar-view-btn active" style="cursor: pointer;" id="view-list-btn">📋 List View</button>
-                <button onclick="switchCalendarView('week')" class="btn btn-secondary calendar-view-btn" style="cursor: pointer;" id="view-week-btn">📅 Week View</button>
-                <button onclick="switchCalendarView('month')" class="btn btn-secondary calendar-view-btn" style="cursor: pointer;" id="view-month-btn">🗓️ Month View</button>
+            <div class="section-header" style="margin-bottom: 1.5rem;">
+                <h2 class="section-title">General NRCGA Events</h2>
+                <p class="section-subtitle">Meetings, programs, and general events.</p>
             </div>
-            <div id="calendar-events">
-                <!-- Events will be loaded dynamically -->
-                <div style="text-align: center; padding: 2rem; color: var(--text-secondary);">Loading events...</div>
+            <div style="text-align: center; margin-bottom: 3rem;">
+                <iframe
+                    src="https://calendar.google.com/calendar/embed?height=600&wkst=1&ctz=America%2FLos_Angeles&showPrint=0&showCalendars=0&showTz=0&src=bnJjZ2EuaXRAZ21haWwuY29t&color=%23039be5"
+                    style="border:solid 1px #777; max-width: 100%;"
+                    width="900"
+                    height="600"
+                    frameborder="0"
+                    scrolling="no"></iframe>
+            </div>
+
+            <div class="section-header" style="margin-bottom: 1.5rem;">
+                <h2 class="section-title">Training Schedule</h2>
+                <p class="section-subtitle">Click a training event to find the Register link in the event description.</p>
+            </div>
+            <div style="text-align: center;">
+                <iframe
+                    src="https://calendar.google.com/calendar/embed?height=600&wkst=1&ctz=America%2FLos_Angeles&showPrint=0&showCalendars=0&showTz=0&src=c3c2f805bd62806527726e9249d3124b0fd48a14078bb2300310ec64fc8b5f28%40group.calendar.google.com&color=%23f09300"
+                    style="border:solid 1px #777; max-width: 100%;"
+                    width="900"
+                    height="600"
+                    frameborder="0"
+                    scrolling="no"></iframe>
             </div>
         </div>
     </section>
@@ -42,10 +60,6 @@
     <script src="js/nav-config.js"></script>
     <script src="js/components.js"></script>
     <script src="js/script.js"></script>
-    <script src="js/csv-parser.js"></script>
-    <script src="data/api-config.js"></script>
-    <script src="js/registration-modal.js"></script>
-    <script src="js/events-loader.js"></script>
 </body>
 </html>
 

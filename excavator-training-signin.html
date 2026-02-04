@@ -61,8 +61,10 @@
         .form-container iframe {
             border: none;
             width: 100%;
+            max-width: 640px;
             display: block;
             min-height: 600px;
+            margin: 0 auto;
         }
         
         /* Responsive adjustments */
@@ -102,51 +104,7 @@
     <!-- Full Page Form Section -->
     <section class="full-page-form">
         <div class="form-container" style="padding: 2rem;">
-            <div style="max-width: 500px; width: 100%;">
-                <form id="attendance-form" style="background: var(--bg-primary); padding: 2rem; border-radius: 12px; box-shadow: var(--shadow-md);">
-                    <div class="form-group">
-                        <label for="attendanceDate">Training Date *</label>
-                        <input type="date" id="attendanceDate" name="attendanceDate" required 
-                               style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 6px; font-size: 1rem;">
-                        <small style="color: var(--text-light); font-size: 0.875rem;">Select a date between 7 days ago and today</small>
-                    </div>
-                    <div class="form-group">
-                        <label for="firstName">First Name *</label>
-                        <input type="text" id="firstName" name="firstName" required 
-                               placeholder="Enter your first name"
-                               style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 6px; font-size: 1rem;">
-                    </div>
-                    <div class="form-group">
-                        <label for="lastName">Last Name *</label>
-                        <input type="text" id="lastName" name="lastName" required 
-                               placeholder="Enter your last name"
-                               style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 6px; font-size: 1rem;">
-                    </div>
-                    <div class="form-group">
-                        <label for="email">Email Address *</label>
-                        <input type="email" id="email" name="email" required 
-                               placeholder="Enter your email address"
-                               style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 6px; font-size: 1rem;">
-                        <small style="color: var(--text-light); font-size: 0.875rem;">Your certificate will be sent to this email</small>
-                    </div>
-                    <div class="form-group">
-                        <label for="phone">Phone Number *</label>
-                        <input type="tel" id="phone" name="phone" required 
-                               placeholder="Enter your phone number"
-                               style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 6px; font-size: 1rem;">
-                    </div>
-                    <div class="form-group">
-                        <label for="companyName">Company Name</label>
-                        <input type="text" id="companyName" name="companyName" 
-                               placeholder="Enter your company name (optional)"
-                               style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 6px; font-size: 1rem;">
-                    </div>
-                    <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Submit Attendance</button>
-                    <p style="margin-top: 1rem; font-size: 0.875rem; color: var(--text-secondary); text-align: center;">
-                        A certificate of completion will be automatically generated and emailed to you.
-                    </p>
-                </form>
-            </div>
+            <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSdRkQY44XDfLGdm66GRvkxtS20rRpTbENtJYlPxRe4NMH0D7g/viewform?embedded=true" width="640" height="1624" frameborder="0" marginheight="0" marginwidth="0">Loading…</iframe>
         </div>
     </section>
 
@@ -155,30 +113,6 @@
     <script src="js/nav-config.js"></script>
     <script src="js/components.js"></script>
     <script src="js/script.js"></script>
-    <script src="data/api-config.js"></script>
-    <script src="js/attendance-form.js"></script>
-    
-    <script>
-        // Set date restrictions (7 days ago to today)
-        document.addEventListener('DOMContentLoaded', () => {
-            const dateInput = document.getElementById('attendanceDate');
-            if (dateInput) {
-                const today = new Date();
-                const sevenDaysAgo = new Date(today);
-                sevenDaysAgo.setDate(today.getDate() - 7);
-                
-                // Format dates as YYYY-MM-DD
-                const maxDate = today.toISOString().split('T')[0];
-                const minDate = sevenDaysAgo.toISOString().split('T')[0];
-                
-                dateInput.setAttribute('max', maxDate);
-                dateInput.setAttribute('min', minDate);
-                
-                // Set default to today
-                dateInput.value = maxDate;
-            }
-        });
-    </script>
 </body>
     
 </body>

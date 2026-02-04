@@ -50,11 +50,16 @@
                     <div style="margin-top: 3rem; padding-top: 3rem; border-top: 2px solid var(--border);">
                         <div class="section-header" style="margin-bottom: 1.5rem;">
                             <h2 class="section-title">Upcoming Training Events</h2>
-                            <p class="section-subtitle">View scheduled training sessions and register for upcoming events.</p>
+                            <p class="section-subtitle">Click a training event to find the Register link in the event description.</p>
                         </div>
-                        <div id="calendar-events">
-                            <!-- Events will be loaded dynamically from data/events.csv -->
-                            <div style="text-align: center; padding: 2rem; color: var(--text-secondary);">Loading events...</div>
+                        <div style="text-align: center;">
+                            <iframe
+                                src="https://calendar.google.com/calendar/embed?height=600&wkst=1&ctz=America%2FLos_Angeles&showPrint=0&showCalendars=0&showTz=0&src=c3c2f805bd62806527726e9249d3124b0fd48a14078bb2300310ec64fc8b5f28%40group.calendar.google.com&color=%23f09300"
+                                style="border:solid 1px #777; max-width: 100%;"
+                                width="900"
+                                height="600"
+                                frameborder="0"
+                                scrolling="no"></iframe>
                         </div>
                     </div>
                 </div>
@@ -135,10 +140,6 @@
     <script src="js/nav-config.js"></script>
     <script src="js/components.js"></script>
     <script src="js/script.js"></script>
-    <script src="js/csv-parser.js"></script>
-    <script src="data/api-config.js"></script>
-    <script src="js/registration-modal.js"></script>
-    <script src="js/events-loader.js"></script>
 </body>
 </html>
 

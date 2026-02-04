@@ -1,0 +1,272 @@
+<!doctype html>
+<html>
+<head>
+  <base target="_top">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 900px; margin: 24px auto; padding: 0 16px; }
+    .row { margin: 12px 0; }
+    .row label { display: block; margin-bottom: 4px; font-weight: 600; }
+    select,input,textarea { padding:8px; width:100%; box-sizing:border-box; }
+    button { padding:10px 14px; font-weight:700; cursor:pointer; margin-right: 10px; margin-bottom: 8px; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .card { border:1px solid #ddd; border-radius:10px; padding:16px; margin-top:12px; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
+    .link { color: #1a73e8; text-decoration: underline; cursor: pointer; word-break: break-all; }
+    .link:hover { color: #1557b0; }
+    .info { background: #e8f0fe; padding: 8px; border-radius: 4px; margin: 8px 0; font-size: 13px; }
+    .series-info { background: #fef7e0; padding: 8px; border-radius: 4px; margin: 8px 0; font-size: 13px; }
+    .error { color: #d93025; font-size: 12px; margin-top: 4px; }
+    .success { color: #137333; font-size: 12px; margin-top: 4px; }
+  </style>
+</head>
+<body>
+  <h2><?= model.orgName ?> Training Admin</h2>
+  <p class="mono">SOP: Create calendar event → open Admin → select event → set capacity → update block/title → copy link.</p>
+
+  <div class="row">
+    <button onclick="loadEvents()">Load upcoming events</button>
+    <button onclick="processEventsNow()">Process new events now</button>
+    <button onclick="syncCounts()">Sync registration counts</button>
+  </div>
+
+  <div class="row">
+    <label>Upcoming event</label>
+    <select id="eventSelect" onchange="selectEvent()">
+      <option value="">(load events)</option>
+    </select>
+  </div>
+
+  <div class="card" id="detail" style="display:none;">
+    <div><b id="title"></b></div>
+    <div id="start" class="mono"></div>
+    <div id="location" class="mono" style="margin-top: 4px; color: #666;"></div>
+    <div id="regStatus" class="mono" style="margin-top: 8px; font-weight: 600;"></div>
+    <div id="seriesInfo" class="series-info" style="display:none;"></div>
+
+    <div class="row">
+      <label>Capacity</label>
+      <input id="capacity" type="number" min="1">
+      <div class="info" id="capacityInfo" style="display:none;">Capacity parsed from title</div>
+    </div>
+
+    <div class="row">
+      <label>Close hours before (optional)</label>
+      <input id="closeHoursBefore" type="number" min="0" placeholder="e.g., 24">
+    </div>
+
+    <div class="row">
+      <label>Location (optional)</label>
+      <input id="locationInput" type="text" placeholder="Event location">
+    </div>
+
+    <div class="row">
+      <label>Notes (optional)</label>
+      <textarea id="notes" rows="3" placeholder="Internal notes for this event"></textarea>
+    </div>
+
+    <div class="row">
+      <button onclick="saveConfig()">Save capacity & settings</button>
+      <button onclick="updateOverlay()">Update this event</button>
+      <button id="updateSeriesBtn" onclick="updateSeries()" style="display:none;">Update all events in series</button>
+    </div>
+
+    <div class="row">
+      <label>Register link</label>
+      <div class="mono">
+        <a id="regLink" href="#" target="_blank" class="link">(loading...)</a>
+      </div>
+      <button onclick="copyLink()" style="padding: 6px 12px; font-size: 12px;">Copy link</button>
+    </div>
+
+    <div id="statusMessage"></div>
+  </div>
+
+<script>
+let events = [];
+let currentEvent = null;
+
+function loadEvents() {
+  document.getElementById('statusMessage').innerHTML = '';
+  google.script.run.withSuccessHandler((res) => {
+    events = res || [];
+    const sel = document.getElementById('eventSelect');
+    sel.innerHTML = '<option value="">Select…</option>';
+    events.forEach((e, i) => {
+      const opt = document.createElement('option');
+      opt.value = String(i);
+      const recurring = e.isRecurring ? ' 🔄' : '';
+      const closed = e.isClosed ? ' [CLOSED]' : '';
+      opt.textContent = `${e.title} — ${e.startText}${recurring}${closed}`;
+      sel.appendChild(opt);
+    });
+  }).withFailureHandler((err) => {
+    showStatus('Error loading events: ' + err.message, 'error');
+  }).adminListUpcoming();
+}
+
+function selectEvent() {
+  const idx = document.getElementById('eventSelect').value;
+  if (idx === '') {
+    document.getElementById('detail').style.display = 'none';
+    return;
+  }
+
+  currentEvent = events[parseInt(idx, 10)];
+  document.getElementById('detail').style.display = 'block';
+  document.getElementById('title').textContent = currentEvent.title;
+  document.getElementById('start').textContent = currentEvent.startText;
+  
+  const locationEl = document.getElementById('location');
+  if (currentEvent.location) {
+    locationEl.textContent = `📍 ${currentEvent.location}`;
+    locationEl.style.display = 'block';
+  } else {
+    locationEl.style.display = 'none';
+  }
+  
+  document.getElementById('locationInput').value = currentEvent.location || '';
+  document.getElementById('capacity').value = currentEvent.capacity;
+  document.getElementById('closeHoursBefore').value = currentEvent.closeHoursBefore || '';
+  
+  // Show current registration status
+  const regStatus = document.getElementById('regStatus');
+  if (currentEvent.isClosed) {
+    regStatus.textContent = `Status: Registration Closed (${currentEvent.currentRegistered}/${currentEvent.capacity})`;
+    regStatus.style.color = '#d93025';
+  } else {
+    regStatus.textContent = `Status: ${currentEvent.currentRegistered}/${currentEvent.capacity} registered`;
+    regStatus.style.color = '#137333';
+  }
+  
+  const regLink = document.getElementById('regLink');
+  regLink.href = currentEvent.registerUrl;
+  regLink.textContent = currentEvent.registerUrl;
+  
+  // Check if recurring and load series info
+  if (currentEvent.isRecurring) {
+    loadSeriesInfo();
+    document.getElementById('updateSeriesBtn').style.display = 'inline-block';
+  } else {
+    document.getElementById('seriesInfo').style.display = 'none';
+    document.getElementById('updateSeriesBtn').style.display = 'none';
+  }
+  
+  // Check if capacity was parsed from title
+  if (currentEvent.capacity && currentEvent.capacity !== 30) {
+    document.getElementById('capacityInfo').textContent = `Capacity parsed from title: ${currentEvent.capacity}`;
+    document.getElementById('capacityInfo').style.display = 'block';
+  } else {
+    document.getElementById('capacityInfo').style.display = 'none';
+  }
+}
+
+function loadSeriesInfo() {
+  google.script.run.withSuccessHandler((series) => {
+    if (series && series.length > 0) {
+      const info = document.getElementById('seriesInfo');
+      info.textContent = `This is part of a recurring series with ${series.length} upcoming event(s).`;
+      info.style.display = 'block';
+    } else {
+      document.getElementById('seriesInfo').style.display = 'none';
+    }
+  }).withFailureHandler(() => {
+    document.getElementById('seriesInfo').style.display = 'none';
+  }).adminGetEventSeries(currentEvent.eventId);
+}
+
+function saveConfig() {
+  if (!currentEvent) return;
+  
+  const cap = parseInt(document.getElementById('capacity').value, 10);
+  const closeH = document.getElementById('closeHoursBefore').value ? 
+    parseInt(document.getElementById('closeHoursBefore').value, 10) : '';
+  
+  if (isNaN(cap) || cap < 1) {
+    showStatus('Please enter a valid capacity (≥1)', 'error');
+    return;
+  }
+  
+  google.script.run.withSuccessHandler(() => {
+    showStatus('Settings saved successfully.', 'success');
+    loadEvents(); // Reload to refresh
+  }).withFailureHandler((err) => {
+    showStatus('Error saving: ' + err.message, 'error');
+  }).adminSaveConfig(currentEvent.eventId, cap, closeH);
+}
+
+function updateOverlay() {
+  if (!currentEvent) return;
+  
+  google.script.run.withSuccessHandler(() => {
+    showStatus('Calendar event updated successfully.', 'success');
+    loadEvents(); // Reload to refresh parsed capacity
+  }).withFailureHandler((err) => {
+    showStatus('Error updating: ' + err.message, 'error');
+  }).adminUpdateOverlay(currentEvent.eventId, currentEvent.eventStartISO);
+}
+
+function updateSeries() {
+  if (!currentEvent) return;
+  
+  if (!confirm(`This will update all events in this recurring series. Continue?`)) {
+    return;
+  }
+  
+  google.script.run.withSuccessHandler((result) => {
+    const msg = `Updated ${result.updated} of ${result.total} events.`;
+    if (result.errors && result.errors.length > 0) {
+      showStatus(msg + ' Errors: ' + result.errors.join('; '), 'error');
+    } else {
+      showStatus(msg, 'success');
+    }
+    loadEvents(); // Reload events
+  }).withFailureHandler((err) => {
+    showStatus('Error updating series: ' + err.message, 'error');
+  }).adminUpdateSeriesOverlay(currentEvent.eventId);
+}
+
+function copyLink() {
+  const link = document.getElementById('regLink').href;
+  navigator.clipboard.writeText(link).then(() => {
+    showStatus('Link copied to clipboard!', 'success');
+  }).catch(() => {
+    // Fallback for older browsers
+    const textarea = document.createElement('textarea');
+    textarea.value = link;
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textarea);
+    showStatus('Link copied to clipboard!', 'success');
+  });
+}
+
+function processEventsNow() {
+  google.script.run.withSuccessHandler((msg) => {
+    showStatus(msg, 'success');
+    loadEvents(); // Reload events after processing
+  }).withFailureHandler((err) => {
+    showStatus('Error processing events: ' + err.message, 'error');
+  }).adminProcessEventsNow();
+}
+
+function syncCounts() {
+  google.script.run.withSuccessHandler((msg) => {
+    showStatus(msg, 'success');
+    loadEvents(); // Reload events after syncing
+  }).withFailureHandler((err) => {
+    showStatus('Error syncing counts: ' + err.message, 'error');
+  }).adminSyncRegistrationCounts();
+}
+
+function showStatus(message, type) {
+  const statusEl = document.getElementById('statusMessage');
+  statusEl.innerHTML = `<div class="${type}">${message}</div>`;
+  setTimeout(() => {
+    statusEl.innerHTML = '';
+  }, 5000);
+}
+</script>
+</body>
+</html>

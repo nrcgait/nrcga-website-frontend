@@ -1,6 +1,6 @@
 # NRCGA Website Frontend
 
-This is the frontend for the NRCGA website. It's a static site that fetches events and handles registrations through the backend API. Most content is managed through simple configuration files.
+This is the frontend for the NRCGA website. It's a static site. Calendars are displayed via Google Calendar embeds (iframes). Most content is managed through simple configuration files.
 
 ## What's Included
 
@@ -12,10 +12,10 @@ This is the frontend for the NRCGA website. It's a static site that fetches even
 
 ## Dynamic Content
 
-The site includes both static and dynamic content:
+The site includes both static and embedded content:
 
-- **Events/Calendar** - Fetched from backend API at runtime (see `data/api-config.js`)
-- **Event Registrations** - Handled through backend API
+- **Events/Calendar** - Displayed via Google Calendar iframe embeds
+- **Training registrations** - Handled by a Google Apps Script web app (see `apps-script/nrcga-training/`)
 - **Carousel Images** - Configured in `data/front-page.js`
 - **Programs** - Configured in `data/programs.js`
 - **Breaking News** - Configured in `data/front-page.js`
@@ -151,7 +151,7 @@ Cloudflare Pages provides free hosting with automatic deployments from GitHub. F
 **Other Common Issues:**
 - **Build fails**: Check that the Path is set to `/` (root directory)
 - **Files not found**: Ensure file paths are relative (not absolute) and Path is set correctly
-- **API not working**: Verify `data/api-config.js` has the correct backend URL
+- **Training registrations not working**: Verify the Apps Script web app is deployed and the Training Calendar is shared with the Apps Script owner account
 - **Custom domain not working**: Check DNS settings in Cloudflare
 - **Deploy command errors**: If you used a placeholder command and get errors, try leaving it completely empty or contact support
 
@@ -205,7 +205,7 @@ Make sure the API is running at `http://localhost:8787/api` (or set `API_URL` en
 
 ## Notes
 
-- **Dynamic Content**: The site fetches events from the backend API (configured in `data/api-config.js`)
+- **Dynamic Content**: The site uses iframe embeds for calendars; training registration is handled by Apps Script (no browser API calls)
 - **Static Assets**: HTML, CSS, JavaScript, and data files are static and served directly
 - **Content Updates**: Most content can be updated by editing data files (see `MANAGEMENT.md` for details)
 - **Events**: Events are fetched from the backend API at runtime, so they stay current automatically
