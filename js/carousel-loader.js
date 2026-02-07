@@ -52,20 +52,28 @@ function generateCarouselHTML(images) {
     trackHTML += '<div class="carousel-track" style="display: flex; transition: transform 0.5s ease;">';
 
     images.forEach((image, index) => {
-        const imageHTML = `
-            <img 
-                src="${image.image_url}" 
-                alt="${image.alt_text || 'Carousel image'}" 
-                style="width: 100%; height: 400px; object-fit: cover; flex-shrink: 0;"
-                loading="lazy"
-            >
+        // Create image with caption container
+        const slideContainer = `
+            <div style="width: 100%; flex-shrink: 0; display: flex; flex-direction: column; position: relative;">
+                ${image.link_url && image.link_url.trim() !== '' 
+                    ? `<a href="${image.link_url}" target="_blank" rel="noopener noreferrer" style="display: block; width: 100%; text-decoration: none; cursor: pointer; position: relative; z-index: 1;">`
+                    : '<div style="display: block; width: 100%;">'
+                }
+                    <img 
+                        src="${image.image_url}" 
+                        alt="${image.alt_text || 'Carousel image'}" 
+                        style="width: 100%; height: 400px; object-fit: cover; display: block;"
+                        loading="lazy"
+                    >
+                ${image.link_url && image.link_url.trim() !== '' ? '</a>' : '</div>'}
+                ${image.alt_text && image.alt_text.trim() !== '' 
+                    ? `<div style="background: rgba(0,0,0,0.7); color: white; padding: 0.75rem 1rem; text-align: center; font-size: 0.9375rem; position: absolute; bottom: 0; left: 0; right: 0; z-index: 2;">${image.alt_text}</div>`
+                    : ''
+                }
+            </div>
         `;
-
-        if (image.link_url && image.link_url.trim() !== '') {
-            trackHTML += `<a href="${image.link_url}" style="display: block; width: 100%;">${imageHTML}</a>`;
-        } else {
-            trackHTML += imageHTML;
-        }
+        
+        trackHTML += slideContainer;
     });
 
     trackHTML += '</div>';
@@ -76,7 +84,7 @@ function generateCarouselHTML(images) {
             <button class="carousel-prev" onclick="carouselPrev()" 
                 style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); 
                 background: rgba(255,255,255,0.8); border: none; border-radius: 50%; 
-                width: 40px; height: 40px; cursor: pointer; font-size: 1.5rem; z-index: 10;
+                width: 40px; height: 40px; cursor: pointer; font-size: 1.5rem; z-index: 20;
                 transition: background 0.3s ease;"
                 onmouseover="this.style.background='rgba(255,255,255,0.95)'"
                 onmouseout="this.style.background='rgba(255,255,255,0.8)'"
@@ -84,15 +92,15 @@ function generateCarouselHTML(images) {
             <button class="carousel-next" onclick="carouselNext()" 
                 style="position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); 
                 background: rgba(255,255,255,0.8); border: none; border-radius: 50%; 
-                width: 40px; height: 40px; cursor: pointer; font-size: 1.5rem; z-index: 10;
+                width: 40px; height: 40px; cursor: pointer; font-size: 1.5rem; z-index: 20;
                 transition: background 0.3s ease;"
                 onmouseover="this.style.background='rgba(255,255,255,0.95)'"
                 onmouseout="this.style.background='rgba(255,255,255,0.8)'"
                 aria-label="Next image">›</button>
         `;
 
-        // Dots navigation
-        trackHTML += '<div class="carousel-dots" style="position: absolute; bottom: 1rem; left: 50%; transform: translateX(-50%); display: flex; gap: 0.5rem; z-index: 10;">';
+        // Dots navigation - moved up to avoid caption overlap
+        trackHTML += '<div class="carousel-dots" style="position: absolute; bottom: 3.5rem; left: 50%; transform: translateX(-50%); display: flex; gap: 0.5rem; z-index: 20;">';
         images.forEach((_, index) => {
             trackHTML += `
                 <button onclick="carouselGoTo(${index})" class="carousel-dot" 
