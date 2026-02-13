@@ -38,24 +38,22 @@
         }
         
         .full-page-form {
-            flex: 1;
             padding: 0;
             margin: 0;
-            min-height: calc(100vh - 300px);
             display: flex;
             flex-direction: column;
             padding-bottom: 3rem;
+            overflow: visible;
         }
         
         .form-container {
             width: 100%;
-            padding: 0;
+            padding: 2rem;
             margin: 0;
-            flex: 1;
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             justify-content: center;
-            min-height: 600px;
+            overflow: visible;
         }
         
         .form-container iframe {
@@ -63,7 +61,8 @@
             width: 100%;
             max-width: 640px;
             display: block;
-            min-height: 600px;
+            height: 2000px;
+            min-height: 2000px;
             margin: 0 auto;
         }
         
@@ -86,6 +85,11 @@
             .compact-header p {
                 font-size: 0.875rem !important;
             }
+            
+            .form-container iframe {
+                height: 2000px;
+                min-height: 2000px;
+            }
         }
     </style>
 </head>
@@ -103,9 +107,8 @@
 
     <!-- Full Page Form Section -->
     <section class="full-page-form">
-        <div class="form-container" style="padding: 2rem;">
-            <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSdRkQY44XDfLGdm66GRvkxtS20rRpTbENtJYlPxRe4NMH0D7g/viewform?embedded=true" width="640" height="1624" frameborder="0" marginheight="0" marginwidth="0">Loading…</iframe>
-        </div>
+        <div class="form-container">
+            <iframe src="https://forms.office.com/Pages/ResponsePage.aspx?id=l_bTl4Fr-UGCMvL2nXpxRyBVFANpJf9BgeFLspJ7BSZURVRQMjczWEU3VFNGVkVQNTJCVzhBTTFORi4u&embed=true" frameborder="0" marginwidth="0" marginheight="0" style="border: none; max-width:100%;" allowfullscreen webkitallowfullscreen mozallowfullscreen msallowfullscreen> </iframe>        </div>
     </section>
 
     <div id="footer-placeholder"></div>
@@ -117,4 +120,3 @@
     
 </body>
 </html>
-
