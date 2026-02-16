@@ -7,11 +7,42 @@ async function loadMembers() {
         // Load CSV data
         const members = await loadCSV('data/members.csv');
         
-        // Separate members by type
-        const officers = members.filter(m => m.Type === 'Officer');
-        const directors = members.filter(m => m.Type === 'Director');
-        const stakeholderMembers = members.filter(m => m.Type === 'Stakeholder');
-        const associateMembers = members.filter(m => m.Type === 'Associate');
+        // Normalize Type field (trim whitespace and handle case)
+        members.forEach(m => {
+            if (m.Type) {
+                m.Type = m.Type.trim();
+            }
+        });
+        
+        // Separate members by type (case-insensitive with trimmed values)
+        const officers = members.filter(m => m.Type && m.Type.trim() === 'Officer');
+        const directors = members.filter(m => m.Type && m.Type.trim() === 'Director');
+        const stakeholderMembers = members.filter(m => m.Type && m.Type.trim() === 'Stakeholder');
+        const associateMembers = members.filter(m => m.Type && m.Type.trim() === 'Associate');
+        
+        // Debug logging
+        console.log('Total members loaded:', members.length);
+        console.log('Stakeholder members found:', stakeholderMembers.length);
+        const arizonaPipeline = stakeholderMembers.find(m => m['Company Name'] && m['Company Name'].includes('Arizona Pipeline'));
+        const flippins = stakeholderMembers.find(m => m['Company Name'] && m['Company Name'].includes('Flippin'));
+        if (arizonaPipeline) {
+            console.log('Arizona Pipeline found in stakeholders:', arizonaPipeline);
+        } else {
+            console.log('Arizona Pipeline NOT found in stakeholders');
+            const allArizona = members.find(m => m['Company Name'] && m['Company Name'].includes('Arizona Pipeline'));
+            if (allArizona) {
+                console.log('Arizona Pipeline found in all members with Type:', allArizona.Type);
+            }
+        }
+        if (flippins) {
+            console.log('Flippins found in stakeholders:', flippins);
+        } else {
+            console.log('Flippins NOT found in stakeholders');
+            const allFlippins = members.find(m => m['Company Name'] && m['Company Name'].includes('Flippin'));
+            if (allFlippins) {
+                console.log('Flippins found in all members with Type:', allFlippins.Type);
+            }
+        }
         
         // Display officers
         displayOfficers(officers);
