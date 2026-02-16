@@ -56,7 +56,6 @@ Stakeholder,"Southwest Gas","Natural Gas",Yes,https://www.swgas.com/,"Natural Ga
 Stakeholder,"Stake Center Locating",Locator,Yes,https://www.stakecenter.com/,Locator,,Tom Fava
 Stakeholder,"Team Fishel",Excavator,Yes,https://www.teamfishel.com/,Excavator,,Marty Byars
 Stakeholder,"Terra Contracting",Excavator,Yes,https://terracontracting.com/,Excavator,,Paul Gibson
-Stakeholder,"Tilson Tech",Excavator,Yes,https://tilsontech.com/,Excavator,,Brendan Vargas
 Stakeholder,"Truckee Meadows Water Authority",Water,Yes,https://tmwa.com/,Water,,Charles Atkinson
 Stakeholder,"USA North 811","One-Call",Yes,http://usanorth811.org/,"One-Call",,Ryan White
 Stakeholder,USIC,Locator,Yes,https://www.usicllc.com/,Locator,,Mike Marrero
@@ -64,9 +63,9 @@ Stakeholder,"VCI Construction",Excavator,Yes,https://vcicom.com/,Excavator,,Rob 
 Stakeholder,"Western States Contracting",Excavator,Yes,http://www.westernstatesco.com/,Excavator,,Harold Lefler
 Stakeholder,"Xram Excavation",Excavator,Yes,https://g.co/kgs/QqEWCLq,Excavator,,Scotty Marx
 Associate,"811 Spotter",,No,https://811spotter.com/,Associate,,
-Associate,"Arizona Pipeline Company",,No,https://www.azpipelines.com/,Associate,,
-Associate,DigContrax,,No,https://digcontrax.com/,Associate,,
-Associate,"Flippin's Trenching",,No,https://flippins.com/,Associate,,
+Stakeholder,"Arizona Pipeline Company",Excavator,Yes,https://www.azpipelines.com/,Excavator,,David Syfrig
+Associate,DigContrax,,No,https://digcontrax.com/,Excavator,,Ken Flippin
+Stakeholder,"Flippin's Trenching",Excavator,Yes,https://flippins.com/,Associate,,
 Associate,"Haaker Equipment Company",,No,https://www.haaker.com/,Associate,,
 Associate,"National Trench Safety",,No,https://www.nationalsafety.com/,Associate,,
 Associate,NEPTCO MULETAPE,,No,"https://chasecorp.com/products/cable-pulling-and-detection?utm_source=google&utm_medium=ppc&utm_campaign=go_pad_gr&utm_term=neptco%20mule%20tape&utm_campaign=01-GO-EN-US-CC-MuletapeBrand&utm_source=adwords&utm_medium=ppc&hsa_acc=1855261152&hsa_cam=22653008392&hsa_grp=191776003188&hsa_ad=767000734743&hsa_src=g&hsa_tgt=kwd-324832192038&hsa_kw=neptco%20mule%20tape&hsa_mt=e&hsa_net=adwords&hsa_ver=3&gad_source=1&gad_campaignid=22653008392&gbraid=0AAAAA-Fewryn2NneK9LEC3YrZ5JrLIHiz&gclid=Cj0KCQiA4eHLBhCzARIsAJ2NZoKeMfNdmjmk8mvsiAshNmwnYTD-tBARyzyiVz38wEOQ7gBF4aI2ZskaAly8EALw_wcB",Associate,,
@@ -74,3 +73,4 @@ Associate,"Norfield DP",,No,https://www.norfielddp.com/,Associate,,
 Associate,"Silver Lake Construction",,No,https://www.silverlakeconstruction.com/,Associate,,
 Associate,"Sub-T & Locating Dynamics",,No,https://www.locatingdynamics.com/,Associate,,
 Associate,"Tecsolutions Consultants",,No,https://www.tecsolutionsconsultants.com/,Associate,,
+
