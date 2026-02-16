@@ -15,34 +15,38 @@ async function loadMembers() {
         });
         
         // Separate members by type (case-insensitive with trimmed values)
-        const officers = members.filter(m => m.Type && m.Type.trim() === 'Officer');
-        const directors = members.filter(m => m.Type && m.Type.trim() === 'Director');
-        const stakeholderMembers = members.filter(m => m.Type && m.Type.trim() === 'Stakeholder');
-        const associateMembers = members.filter(m => m.Type && m.Type.trim() === 'Associate');
+        let officers = members.filter(m => m.Type && m.Type.trim() === 'Officer');
+        let directors = members.filter(m => m.Type && m.Type.trim() === 'Director');
+        let stakeholderMembers = members.filter(m => m.Type && m.Type.trim() === 'Stakeholder');
+        let associateMembers = members.filter(m => m.Type && m.Type.trim() === 'Associate');
         
-        // Debug logging
-        console.log('Total members loaded:', members.length);
-        console.log('Stakeholder members found:', stakeholderMembers.length);
-        const arizonaPipeline = stakeholderMembers.find(m => m['Company Name'] && m['Company Name'].includes('Arizona Pipeline'));
-        const flippins = stakeholderMembers.find(m => m['Company Name'] && m['Company Name'].includes('Flippin'));
-        if (arizonaPipeline) {
-            console.log('Arizona Pipeline found in stakeholders:', arizonaPipeline);
-        } else {
-            console.log('Arizona Pipeline NOT found in stakeholders');
-            const allArizona = members.find(m => m['Company Name'] && m['Company Name'].includes('Arizona Pipeline'));
-            if (allArizona) {
-                console.log('Arizona Pipeline found in all members with Type:', allArizona.Type);
-            }
-        }
-        if (flippins) {
-            console.log('Flippins found in stakeholders:', flippins);
-        } else {
-            console.log('Flippins NOT found in stakeholders');
-            const allFlippins = members.find(m => m['Company Name'] && m['Company Name'].includes('Flippin'));
-            if (allFlippins) {
-                console.log('Flippins found in all members with Type:', allFlippins.Type);
-            }
-        }
+        // Sort officers by Stakeholder Group (Position) alphabetically
+        officers.sort((a, b) => {
+            const groupA = (a['Stakeholder Group'] || a.Position || '').toLowerCase();
+            const groupB = (b['Stakeholder Group'] || b.Position || '').toLowerCase();
+            return groupA.localeCompare(groupB);
+        });
+        
+        // Sort directors by Stakeholder Group alphabetically
+        directors.sort((a, b) => {
+            const groupA = (a['Stakeholder Group'] || '').toLowerCase();
+            const groupB = (b['Stakeholder Group'] || '').toLowerCase();
+            return groupA.localeCompare(groupB);
+        });
+        
+        // Sort stakeholders by Company Name alphabetically
+        stakeholderMembers.sort((a, b) => {
+            const nameA = (a['Company Name'] || '').toLowerCase();
+            const nameB = (b['Company Name'] || '').toLowerCase();
+            return nameA.localeCompare(nameB);
+        });
+        
+        // Sort associate members by Company Name alphabetically
+        associateMembers.sort((a, b) => {
+            const nameA = (a['Company Name'] || '').toLowerCase();
+            const nameB = (b['Company Name'] || '').toLowerCase();
+            return nameA.localeCompare(nameB);
+        });
         
         // Display officers
         displayOfficers(officers);
