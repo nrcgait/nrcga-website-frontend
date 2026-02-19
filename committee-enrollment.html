@@ -110,6 +110,70 @@
             background: #ff9800;
             color: white;
         }
+        
+        /* Dark mode - use same styles as light mode for member enrollment */
+        [data-theme="dark"] .committee-membership {
+            background: var(--bg-secondary) !important;
+        }
+        
+        [data-theme="dark"] .member-item {
+            background: var(--bg-secondary) !important;
+        }
+        
+        [data-theme="dark"] .member-item.chair {
+            background: #fff3e0 !important;
+            border: 2px solid #ff9800 !important;
+        }
+        
+        [data-theme="dark"] .member-item.chair h4 {
+            color: #e65100 !important;
+        }
+        
+        [data-theme="dark"] .committee-membership.chair {
+            background: #fff3e0 !important;
+        }
+        
+        [data-theme="dark"] .status-badge.active {
+            background: #e8f5e9 !important;
+            color: #2e7d32 !important;
+        }
+        
+        [data-theme="dark"] .status-badge.inactive {
+            background: #f5f5f5 !important;
+            color: #757575 !important;
+        }
+        
+        /* Ensure text colors remain readable in dark mode */
+        [data-theme="dark"] .committee-membership h4 {
+            color: var(--text-primary) !important;
+        }
+        
+        [data-theme="dark"] .member-item h4 {
+            color: var(--text-primary) !important;
+        }
+        
+        [data-theme="dark"] .member-item p {
+            color: var(--text-secondary) !important;
+        }
+        
+        /* Override inline styles in dynamically generated HTML - use white backgrounds like light mode */
+        [data-theme="dark"] div[style*="background: var(--bg-secondary)"] {
+            background: #f7fafc !important;
+        }
+        
+        [data-theme="dark"] div[style*="background: var(--bg-secondary)"] h2,
+        [data-theme="dark"] div[style*="background: var(--bg-secondary)"] h3,
+        [data-theme="dark"] div[style*="background: var(--bg-secondary)"] h4 {
+            color: #1a1a1a !important;
+        }
+        
+        [data-theme="dark"] div[style*="background: var(--bg-secondary)"] p {
+            color: #4a5568 !important;
+        }
+        
+        [data-theme="dark"] div[style*="background: var(--bg-secondary)"] a {
+            color: var(--primary) !important;
+        }
     </style>
 </head>
 <body>
