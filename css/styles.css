@@ -3206,5 +3206,21 @@ body {
     section[style*="background-attachment: fixed"] {
         background-attachment: scroll !important;
     }
+
+    /* Calendar iframe responsive on mobile */
+    .events-calendar iframe {
+        height: 500px !important;
+        min-height: 400px;
+    }
+
+    /* Breaking news popup mobile adjustments */
+    #breaking-news-popup {
+        padding: 0.5rem !important;
+    }
+
+    #breaking-news-popup > div {
+        padding: 1rem !important;
+        max-width: calc(100% - 1rem) !important;
+    }
 }
 
