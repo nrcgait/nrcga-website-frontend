@@ -3076,13 +3076,13 @@ body {
     }
 
     .contact-layout {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 4rem;
-    max-width: 1000px;
-    margin: 0 auto;
-    align-items: start; /* Add this - allows columns to have different heights */
-}
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 3rem;
+        max-width: 1000px;
+        margin: 0 auto;
+        align-items: start;
+    }
 
     .footer-content {
         grid-template-columns: 1fr;
@@ -3221,6 +3221,15 @@ body {
     #breaking-news-popup > div {
         padding: 1rem !important;
         max-width: calc(100% - 1rem) !important;
+    }
+
+    /* Training form - show button, hide iframe on mobile */
+    .training-form-mobile-button {
+        display: block !important;
+    }
+
+    .training-form-iframe {
+        display: none !important;
     }
 }
 
