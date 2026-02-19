@@ -1912,10 +1912,21 @@ body {
     border-radius: 12px;
     border: 1px solid var(--border);
     transition: all 0.3s;
-    cursor: pointer;
 }
 
-.member-item:hover {
+.member-item-link {
+    cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+}
+
+.member-item-link:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+    border-color: var(--primary);
+}
+
+.member-item:not(.member-item-link):hover {
     box-shadow: var(--shadow-md);
     transform: translateY(-2px);
     border-color: var(--primary);

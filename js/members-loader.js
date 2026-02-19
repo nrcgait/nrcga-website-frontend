@@ -124,8 +124,8 @@ function displayStakeholderMembers(members) {
     }
     
     grid.innerHTML = members.map(member => {
-        const website = member.Website && member.Website.trim() ? 
-            `<a href="${member.Website}" target="_blank" rel="noopener noreferrer" class="member-website">Visit Website →</a>` : '';
+        const hasWebsite = member.Website && member.Website.trim();
+        const websiteUrl = hasWebsite ? member.Website.trim() : '#';
         
         // Show contact person if available
         const contactInfo = member['Contact Person'] ? 
@@ -135,18 +135,20 @@ function displayStakeholderMembers(members) {
         const categoryHtml = member['Stakeholder Group'] ? 
             `<div style="margin-top: 0.5rem; margin-bottom: 0.5rem;"><span class="member-category">${member['Stakeholder Group']}</span></div>` : '';
         
+        // Make the entire member item clickable if website exists
+        const itemTag = hasWebsite ? 'a' : 'div';
+        const itemAttrs = hasWebsite ? 
+            `href="${websiteUrl}" target="_blank" rel="noopener noreferrer"` : '';
+        const itemClass = hasWebsite ? 'member-item member-item-link' : 'member-item';
+        
         return `
-            <div class="member-item" data-member='${JSON.stringify(member).replace(/'/g, "&apos;")}'>
+            <${itemTag} class="${itemClass}" ${itemAttrs} style="${hasWebsite ? 'text-decoration: none; color: inherit; display: block;' : ''}">
                 <h4>${member['Company Name'] || ''}</h4>
                 ${contactInfo}
                 ${categoryHtml}
-                ${website}
-            </div>
+            </${itemTag}>
         `;
     }).join('');
-    
-    // Add click handlers for member modals
-    attachMemberClickHandlers();
 }
 
 // Display associate members
@@ -160,98 +162,24 @@ function displayAssociateMembers(members) {
     }
     
     grid.innerHTML = members.map(member => {
-        const website = member.Website && member.Website.trim() ? 
-            `<a href="${member.Website}" target="_blank" rel="noopener noreferrer" class="member-website">Visit Website →</a>` : '';
+        const hasWebsite = member.Website && member.Website.trim();
+        const websiteUrl = hasWebsite ? member.Website.trim() : '#';
+        
+        // Make the entire member item clickable if website exists
+        const itemTag = hasWebsite ? 'a' : 'div';
+        const itemAttrs = hasWebsite ? 
+            `href="${websiteUrl}" target="_blank" rel="noopener noreferrer"` : '';
+        const itemClass = hasWebsite ? 'member-item member-item-link' : 'member-item';
         
         return `
-            <div class="member-item" data-member='${JSON.stringify(member).replace(/'/g, "&apos;")}'>
+            <${itemTag} class="${itemClass}" ${itemAttrs} style="${hasWebsite ? 'text-decoration: none; color: inherit; display: block;' : ''}">
                 <h4>${member['Company Name'] || ''}</h4>
-                ${website}
-            </div>
+            </${itemTag}>
         `;
     }).join('');
-    
-    // Add click handlers for member modals
-    attachMemberClickHandlers();
 }
 
-// Attach click handlers to member items for modal display
-function attachMemberClickHandlers() {
-    const memberItems = document.querySelectorAll('.member-item');
-    const modal = document.getElementById('member-modal');
-    const modalClose = document.getElementById('member-modal-close');
-    
-    if (!modal) return;
-    
-    memberItems.forEach(item => {
-        item.addEventListener('click', () => {
-            const memberData = JSON.parse(item.getAttribute('data-member'));
-            showMemberModal(memberData);
-        });
-    });
-    
-    // Close modal handlers
-    if (modalClose) {
-        modalClose.addEventListener('click', () => {
-            modal.style.display = 'none';
-        });
-    }
-    
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
-            modal.style.display = 'none';
-        }
-    });
-}
-
-// Show member modal with details
-function showMemberModal(member) {
-    const modal = document.getElementById('member-modal');
-    if (!modal) return;
-    
-    document.getElementById('modal-company-name').textContent = member['Company Name'] || '';
-    const categoryText = member['Stakeholder Group'] || member.Category || '';
-    document.getElementById('modal-category').textContent = categoryText;
-    
-    // Voting member
-    const votingMemberEl = document.getElementById('modal-voting-member');
-    if (member['Voting Member'] === 'Yes') {
-        votingMemberEl.style.display = 'flex';
-        document.getElementById('modal-voting-member-value').textContent = 'Yes';
-    } else {
-        votingMemberEl.style.display = 'none';
-    }
-    
-    // Stakeholder group
-    const stakeholderGroupEl = document.getElementById('modal-stakeholder-group');
-    if (member['Stakeholder Group']) {
-        stakeholderGroupEl.style.display = 'flex';
-        document.getElementById('modal-stakeholder-group-value').textContent = member['Stakeholder Group'];
-    } else {
-        stakeholderGroupEl.style.display = 'none';
-    }
-    
-    // Contact person
-    const contactPersonEl = document.getElementById('modal-contact-person');
-    if (member['Contact Person']) {
-        contactPersonEl.style.display = 'flex';
-        document.getElementById('modal-contact-person-value').textContent = member['Contact Person'];
-    } else {
-        contactPersonEl.style.display = 'none';
-    }
-    
-    // Website
-    const websiteEl = document.getElementById('modal-website');
-    const websiteLink = document.getElementById('modal-website-link');
-    if (member.Website && member.Website.trim()) {
-        websiteEl.style.display = 'block';
-        websiteLink.href = member.Website;
-    } else {
-        websiteEl.style.display = 'none';
-    }
-    
-    modal.style.display = 'flex';
-}
+// Note: Modal functionality removed - members now link directly to their websites
 
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', async () => {
