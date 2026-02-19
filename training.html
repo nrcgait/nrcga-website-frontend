@@ -114,7 +114,17 @@
              </div>
 
              <div class="contact-form-wrapper" style="max-width: 700px; margin: 0 auto;">
-                <div style="display: flex; justify-content: center; align-items: flex-start; width: 100%;">
+                <!-- Mobile Button (hidden on desktop) -->
+                <div class="training-form-mobile-button" style="display: none; text-align: center; margin: 2rem 0;">
+                    <p style="margin-bottom: 1.5rem; color: var(--text-secondary); line-height: 1.7; font-size: 1rem;">
+                        Unable to attend our scheduled training sessions? Request a trainer to come to your location. We can arrange on-site training for groups when standard training schedules don't work for your team.
+                    </p>
+                    <a href="https://forms.office.com/Pages/ResponsePage.aspx?id=l_bTl4Fr-UGCMvL2nXpxRyBVFANpJf9BgeFLspJ7BSZUMldFOUxIVDQzS1FQMVlQQTUzUThSMktTRi4u" target="_blank" rel="noopener noreferrer" class="btn btn-primary" style="font-size: 1.125rem; padding: 1rem 2.5rem;">
+                        Open Training Request Form
+                    </a>
+                </div>
+                <!-- Desktop Iframe (hidden on mobile) -->
+                <div class="training-form-iframe" style="display: flex; justify-content: center; align-items: flex-start; width: 100%;">
                     <iframe width="640px" src="https://forms.office.com/Pages/ResponsePage.aspx?id=l_bTl4Fr-UGCMvL2nXpxRyBVFANpJf9BgeFLspJ7BSZUMldFOUxIVDQzS1FQMVlQQTUzUThSMktTRi4u&embed=true" frameborder="0" marginwidth="0" marginheight="0" style="border: none; max-width:100%; min-height: 1950px;" allowfullscreen webkitallowfullscreen mozallowfullscreen msallowfullscreen> </iframe>
                 </div>
             </div>

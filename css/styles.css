@@ -3231,5 +3231,20 @@ body {
     .training-form-iframe {
         display: none !important;
     }
+
+    /* Contact forms - show button, hide iframe on mobile */
+    .contact-form-mobile-button {
+        display: block !important;
+    }
+
+    .contact-form-iframe {
+        display: none !important;
+    }
+
+    /* Reduce contact form wrapper size on mobile when showing button */
+    .contact-form-wrapper {
+        min-height: auto !important;
+        padding: 1.5rem !important;
+    }
 }
 
