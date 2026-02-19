@@ -3222,6 +3222,16 @@ body {
         padding: 1rem !important;
         max-width: calc(100% - 1rem) !important;
     }
+}
+
+/* Dark mode - Breaking news popup text colors */
+[data-theme="dark"] #breaking-news-popup #popup-content {
+    color: #ffffff !important;
+}
+
+[data-theme="dark"] #breaking-news-popup label span {
+    color: #ffffff !important;
+}
 
     /* Training form - show button, hide iframe on mobile */
     .training-form-mobile-button {
