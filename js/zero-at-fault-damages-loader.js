@@ -2,7 +2,7 @@
 // Loads company list from a single CSV: assets/zeroatfaultlists/zerodamages.csv
 
 const ZERO_DAMAGES_LIST_CONTAINER_ID = 'zero-damages-list';
-const CSV_PATH = 'assets/zeroatfaultlists/zerodamages.csv';
+const CSV_PATH = 'assets/zerodamages.csv';
 
 const CARD_STYLE = 'padding: 1rem; background: var(--bg-light); border-radius: 8px; text-align: center;';
 
@@ -78,3 +78,4 @@ if (document.readyState === 'loading') {
 } else {
     initZeroAtFaultDamagesList();
 }
+
