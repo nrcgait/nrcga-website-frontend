@@ -56,7 +56,7 @@ const navConfig = {
         },
         {
             type: "link",
-            text: "Nevada DIRT",
+            text: "Nevada Data",
             href: "data-maps.html"
         },
         {
