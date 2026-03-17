@@ -1,10 +1,23 @@
 // Archive Data Loader
 // Loads and displays archive data (meeting minutes and historical documents) from data/archive.csv
 
+// Parse YYYY-MM-DD as local date (avoids UTC-midnight shifting display to previous day)
+function parseLocalDate(dateString) {
+    const match = typeof dateString === 'string' && dateString.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (match) {
+        const year = parseInt(match[1], 10);
+        const month = parseInt(match[2], 10) - 1;
+        const day = parseInt(match[3], 10);
+        const date = new Date(year, month, day);
+        if (!isNaN(date.getTime())) return date;
+    }
+    return new Date(dateString);
+}
+
 // Format date for display
 function formatDate(dateString) {
     try {
-        const date = new Date(dateString);
+        const date = parseLocalDate(dateString);
         if (isNaN(date.getTime())) {
             return dateString;
         }
@@ -17,7 +30,7 @@ function formatDate(dateString) {
 // Extract year from date string
 function getYear(dateString) {
     try {
-        const date = new Date(dateString);
+        const date = parseLocalDate(dateString);
         if (!isNaN(date.getTime())) {
             return date.getFullYear().toString();
         }
@@ -56,8 +69,8 @@ async function loadArchive() {
         // Sort minutes within each year by date (newest first)
         Object.keys(meetingMinutesByYear).forEach(year => {
             meetingMinutesByYear[year].sort((a, b) => {
-                const dateA = new Date(a.date);
-                const dateB = new Date(b.date);
+                const dateA = parseLocalDate(a.date);
+                const dateB = parseLocalDate(b.date);
                 return dateB - dateA;
             });
         });
@@ -77,8 +90,8 @@ async function loadArchive() {
         // Sort documents within each year by date (newest first)
         Object.keys(historicalDocumentsByYear).forEach(year => {
             historicalDocumentsByYear[year].sort((a, b) => {
-                const dateA = new Date(a.date);
-                const dateB = new Date(b.date);
+                const dateA = parseLocalDate(a.date);
+                const dateB = parseLocalDate(b.date);
                 return dateB - dateA;
             });
         });
