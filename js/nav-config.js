@@ -26,7 +26,7 @@ const navConfig = {
                 { text: "Members", href: "members.html" },
                 { text: "Bylaws & Standing Rules", href: "bylaws.html" },
                 { text: "Archive", href: "archive.html" },
-                { text: "Calendar", href: "index.html#calendar" }
+                { text: "Calendar", href: "calendar.html" }
             ]
         },
         {
