@@ -36,7 +36,8 @@ const navConfig = {
             items: [
                 { text: "About 811", href: "about-811.html" },
                 { text: "Create a Ticket", href: "https://usanorth811.org/", external: true },
-                { text: "General Questions", href: "about-811-questions.html" }
+                { text: "General Questions", href: "about-811-questions.html" },
+                { text: "EPR Codes", href: "https://usanorth811.org/assets/PDF/NV-EPR-Codes_Update-Announcment.pdf", external: true}
             ]
         },
         {
