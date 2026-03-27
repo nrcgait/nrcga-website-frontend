@@ -1,0 +1,54 @@
+media: assets/images
+
+content:
+  - name: site_data
+    label: Site data
+    type: group
+    items:
+      - name: front_page_carousel
+        label: Front page carousel
+        type: file
+        path: data/front-page-carousel.csv
+        format: datagrid
+
+      - name: front_page_breaking_news
+        label: Front page breaking news
+        type: file
+        path: data/front-page-breaking-news.csv
+        format: datagrid
+
+      - name: programs
+        label: Programs
+        type: file
+        path: data/programs.csv
+        format: datagrid
+
+      - name: members
+        label: Members
+        type: file
+        path: data/members.csv
+        format: datagrid
+
+      - name: committee_members
+        label: Committee members
+        type: file
+        path: data/committee-members-members.csv
+        format: datagrid
+
+      - name: committees
+        label: Committees
+        type: file
+        path: data/committee-members-committees.csv
+        format: datagrid
+
+      - name: archive
+        label: Archive
+        type: file
+        path: data/archive.csv
+        format: datagrid
+
+      - name: zero_at_fault_damages
+        label: Zero at fault damages
+        type: file
+        path: assets/zerodamages.csv
+        format: datagrid
