@@ -52,6 +52,13 @@ async function loadArchive() {
     try {
         // Load CSV data
         const archiveItems = await loadCSV('data/archive.csv');
+
+        // Trim fields so Excel/spreadsheet trailing spaces don't break type filters or external links
+        archiveItems.forEach(item => {
+            if (item.type != null) item.type = String(item.type).trim();
+            if (item.link != null) item.link = String(item.link).trim();
+            if (item.date != null) item.date = String(item.date).trim();
+        });
         
         // Separate items by type
         const meetingMinutes = archiveItems.filter(item => item.type === 'meeting-minute');
