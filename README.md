@@ -183,16 +183,12 @@ Cloudflare Pages provides free hosting with automatic deployments from GitHub. F
 - **Custom domain not working**: Check DNS settings in Cloudflare
 - **Deploy command errors**: If you used a placeholder command and get errors, try leaving it completely empty or contact support
 
-### Cloudflare Pages — direct upload with Wrangler
+### Cloudflare Pages — direct upload alternate method
 
 
 ```
 
-Replace `YOUR_PROJECT_NAME` with your Pages project name (create the project in the [Cloudflare dashboard](https://dash.cloudflare.com) under **Workers & Pages** if needed). Each run uploads the current directory as a new production deployment unless you configure previews or CI separately.
-
-### Alternative Deployment Methods
-
-#### GitHub Static File Upload
+### Alternative Deployment Method - Cloudflare Static File Upload
 
 - It is unlikely Github will fail, but should it fail and you still have access to Cloudflare, create a zip file of all of the website files and choose **Drag and drop your files** instead of **Import an existing Git repository**.
 
