@@ -48,7 +48,7 @@ const navConfig = {
                 { text: "Education and Training", href: "training.html" },
                 { text: "Training Schedule", href: "https://luma.com/calendar/cal-9DDWMhenRIXr0U5", external: true},
                 { text: "Request Training", href: "training.html#request-training"},
-                { text: "Training Database", href: "https://nrcga-my.sharepoint.com/:x:/g/personal/admin_nrcga_onmicrosoft_com/IQC7Yc8zSWelS5dOo4v4xgbwAUgTRtrCv_I_VR9y58OTZQ8?e=mmh953&nav=MTVfezg2REVGNTM2LTU1QkItNDlGRS04NjY1LTEyRUY2QjVFMzc0RX0", external: true}
+                { text: "Training Database", href: "https://nrcga-my.sharepoint.com/:x:/g/personal/admin_nrcga_onmicrosoft_com/IQC7Yc8zSWelS5dOo4v4xgbwAUgTRtrCv_I_VR9y58OTZQ8?e=Q5MHRg", external: true}
             ]
         },
         {
