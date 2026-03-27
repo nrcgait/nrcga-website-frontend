@@ -4,8 +4,13 @@
 // Load and display programs
 async function loadPrograms() {
     try {
-        // Load CSV data
-        const programs = await loadCSV('data/programs.csv');
+        const raw = await loadCSV('data/programs.csv');
+        const programs = raw.map(p => ({
+            title: pickCsvField(p, 'title'),
+            description: pickCsvField(p, 'description'),
+            link: pickCsvField(p, 'link'),
+            icon: pickCsvField(p, 'icon')
+        })).filter(p => p.title || p.link);
         
         // Sort by title alphabetically
         const sortedPrograms = [...programs].sort((a, b) => {
@@ -40,6 +45,7 @@ function displayPrograms(programs) {
     let html = '';
     
     programs.forEach(program => {
+        if (!program.link) return;
         const isExternal = program.link.startsWith('http://') || program.link.startsWith('https://');
         const linkTarget = isExternal ? ' target="_blank" rel="noopener noreferrer"' : '';
         

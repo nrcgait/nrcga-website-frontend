@@ -47,20 +47,38 @@ let historicalDocumentsByYear = {};
 let allMeetingMinutesYears = [];
 let allHistoricalDocumentsYears = [];
 
+/** Map spreadsheet variants to the two canonical type values (order in file does not matter). */
+function normalizeArchiveRowType(raw) {
+    const s = String(raw || '').trim().toLowerCase().replace(/\u00a0/g, ' ').replace(/_/g, '-');
+    if (s === 'meeting-minute' || s === 'meeting minute' || s === 'minutes' || s === 'meeting minutes') {
+        return 'meeting-minute';
+    }
+    if (s === 'historical-document' || s === 'historical document' || s === 'document' || s === 'news' || s === 'newsletter') {
+        return 'historical-document';
+    }
+    return s;
+}
+
 // Load and display archive items
 async function loadArchive() {
     try {
+        meetingMinutesByYear = {};
+        historicalDocumentsByYear = {};
+        allMeetingMinutesYears = [];
+        allHistoricalDocumentsYears = [];
+
         // Load CSV data
         const archiveItems = await loadCSV('data/archive.csv');
 
-        // Trim fields so Excel/spreadsheet trailing spaces don't break type filters or external links
+        // Canonical field names (pickCsvField: case-insensitive headers from Excel)
         archiveItems.forEach(item => {
-            if (item.type != null) item.type = String(item.type).trim();
-            if (item.link != null) item.link = String(item.link).trim();
-            if (item.date != null) item.date = String(item.date).trim();
+            item.type = normalizeArchiveRowType(pickCsvField(item, 'type'));
+            item.title = pickCsvField(item, 'title');
+            item.date = pickCsvField(item, 'date');
+            item.link = pickCsvField(item, 'link');
         });
         
-        // Separate items by type
+        // Separate items by type (any row order in the CSV is fine)
         const meetingMinutes = archiveItems.filter(item => item.type === 'meeting-minute');
         const historicalDocuments = archiveItems.filter(item => item.type === 'historical-document');
         

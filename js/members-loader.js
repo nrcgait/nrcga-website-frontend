@@ -4,21 +4,24 @@
 // Load and display members
 async function loadMembers() {
     try {
-        // Load CSV data
-        const members = await loadCSV('data/members.csv');
+        // Load CSV and map to canonical keys (Excel may use different header casing)
+        const raw = await loadCSV('data/members.csv');
+        const members = raw.map(r => ({
+            Type: pickCsvField(r, 'Type'),
+            'Company Name': pickCsvField(r, 'Company Name'),
+            'Stakeholder Group': pickCsvField(r, 'Stakeholder Group'),
+            'Voting Member': pickCsvField(r, 'Voting Member'),
+            Website: pickCsvField(r, 'Website'),
+            Category: pickCsvField(r, 'Category'),
+            Term: pickCsvField(r, 'Term'),
+            'Contact Person': pickCsvField(r, 'Contact Person')
+        }));
         
-        // Normalize Type field (trim whitespace and handle case)
-        members.forEach(m => {
-            if (m.Type) {
-                m.Type = m.Type.trim();
-            }
-        });
-        
-        // Separate members by type (case-insensitive with trimmed values)
-        let officers = members.filter(m => m.Type && m.Type.trim() === 'Officer');
-        let directors = members.filter(m => m.Type && m.Type.trim() === 'Director');
-        let stakeholderMembers = members.filter(m => m.Type && m.Type.trim() === 'Stakeholder');
-        let associateMembers = members.filter(m => m.Type && m.Type.trim() === 'Associate');
+        // Separate members by type (case-insensitive; spreadsheets often change casing)
+        let officers = members.filter(m => m.Type && m.Type.trim().toLowerCase() === 'officer');
+        let directors = members.filter(m => m.Type && m.Type.trim().toLowerCase() === 'director');
+        let stakeholderMembers = members.filter(m => m.Type && m.Type.trim().toLowerCase() === 'stakeholder');
+        let associateMembers = members.filter(m => m.Type && m.Type.trim().toLowerCase() === 'associate');
         
         // Sort officers by Stakeholder Group (Position) alphabetically
         officers.sort((a, b) => {

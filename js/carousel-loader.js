@@ -8,14 +8,13 @@ let breakingNewsData = null; // Store breaking news data globally
 
 async function loadCarousel() {
     try {
-        // Load carousel data from CSV
-        carouselData = await loadCSV('data/front-page-carousel.csv');
-        
-        // Convert active from string to number
-        carouselData = carouselData.map(item => ({
-            ...item,
-            active: item.active === '1' ? 1 : 0,
-            display_order: parseInt(item.display_order) || 0
+        const rawCarousel = await loadCSV('data/front-page-carousel.csv');
+        carouselData = rawCarousel.map(item => ({
+            image_url: pickCsvField(item, 'image_url'),
+            alt_text: pickCsvField(item, 'alt_text'),
+            link_url: pickCsvField(item, 'link_url'),
+            display_order: parseInt(pickCsvField(item, 'display_order'), 10) || 0,
+            active: pickCsvField(item, 'active') === '1' ? 1 : 0
         }));
 
         // Get the carousel container
@@ -196,15 +195,21 @@ function stopCarouselAutoPlay() {
 // Breaking News Popup Loader
 async function loadBreakingNews() {
     try {
-        // Load breaking news data from CSV
         const breakingNewsArray = await loadCSV('data/front-page-breaking-news.csv');
         if (breakingNewsArray.length === 0) {
             return;
         }
         
-        breakingNewsData = breakingNewsArray[0];
-        // Convert active from string to boolean
-        breakingNewsData.active = breakingNewsData.active === 'true' || breakingNewsData.active === true;
+        const raw = breakingNewsArray[0];
+        const activeStr = pickCsvField(raw, 'active').toLowerCase();
+        breakingNewsData = {
+            active: activeStr === 'true' || activeStr === '1',
+            title: pickCsvField(raw, 'title'),
+            content: pickCsvField(raw, 'content'),
+            image_url: pickCsvField(raw, 'image_url'),
+            read_more_url: pickCsvField(raw, 'read_more_url'),
+            storage_key: pickCsvField(raw, 'storage_key')
+        };
         
         // Check if breaking news is active
         if (!breakingNewsData.active) {

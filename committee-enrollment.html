@@ -246,32 +246,35 @@
                 const committeesData = await loadCSV('data/committee-members-committees.csv');
                 const membersData = await loadCSV('data/committee-members-members.csv');
                 
-                // Convert committees array to object
+                // Convert committees array to object (headers may vary in casing)
                 const committees = {};
                 committeesData.forEach(committee => {
-                    committees[committee.id] = committee.name;
+                    const id = pickCsvField(committee, 'id');
+                    const name = pickCsvField(committee, 'name');
+                    if (id) committees[id] = name;
                 });
                 
                 // Convert members array to object keyed by name
                 const members = {};
                 membersData.forEach(member => {
+                    const displayName = pickCsvField(member, 'name');
                     const memberObj = {
-                        name: member.name,
-                        company: member.company,
-                        email: member.email || ''
+                        name: displayName,
+                        company: pickCsvField(member, 'company'),
+                        email: pickCsvField(member, 'email')
                     };
                     
                     // Add all committee membership fields (convert strings to numbers)
                     Object.keys(committees).forEach(committeeId => {
-                        const value = member[committeeId];
+                        const value = pickCsvField(member, committeeId);
                         if (value !== undefined && value !== '') {
-                            memberObj[committeeId] = parseInt(value) || 0;
+                            memberObj[committeeId] = parseInt(value, 10) || 0;
                         } else {
                             memberObj[committeeId] = 0;
                         }
                     });
                     
-                    members[member.name] = memberObj;
+                    if (displayName) members[displayName] = memberObj;
                 });
                 
                 // Create the window.committeeMemberships object

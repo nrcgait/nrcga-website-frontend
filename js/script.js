@@ -65,7 +65,7 @@ if (heroSection && heroOverlay) {
 }
 
 // Form submission handler (exclude attendance form which has its own handler)
-const contactForm = document.querySelector('.contact-form:not(#attendance-form)');
+const contactForm = document.querySelector('.contact-form');
 if (contactForm) {
     contactForm.addEventListener('submit', (e) => {
         e.preventDefault();

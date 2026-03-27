@@ -28,8 +28,8 @@ function renderCompanies(rows) {
     if (!container) return;
 
     const companies = rows.filter(r => {
-        const company = r.company ?? r['company\r'] ?? '';
-        return company && String(company).trim();
+        const company = pickCsvField(r, 'company');
+        return company.length > 0;
     });
     if (companies.length === 0) {
         container.innerHTML = '<p style="text-align:center; color: var(--text-light);">No companies listed for this year.</p>';
@@ -38,8 +38,7 @@ function renderCompanies(rows) {
 
     container.innerHTML = companies
         .map(row => {
-            const raw = row.company ?? row['company\r'] ?? '';
-            const name = escapeHtml(String(raw).trim());
+            const name = escapeHtml(pickCsvField(row, 'company'));
             return '<div style="' + CARD_STYLE + '">' + name + '</div>';
         })
         .join('');

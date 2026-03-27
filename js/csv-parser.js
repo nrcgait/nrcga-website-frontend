@@ -8,11 +8,14 @@
  * @returns {Array<Object>} Array of objects with keys from headers
  */
 function parseCSV(csvText, hasHeaders = true) {
-    const lines = csvText.trim().split('\n');
+    // BOM (common when Excel saves UTF-8) makes the first header "\ufefftype" so obj.type is always undefined
+    let text = String(csvText).replace(/^\uFEFF/, '').trim();
+    // Normalize newlines so CRLF / old Mac CR don't merge rows or leave stray \r in fields
+    const lines = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
     if (lines.length === 0) return [];
     
-    // Parse headers
-    const headers = hasHeaders ? parseCSVLine(lines[0]) : null;
+    // Parse headers (trim each key so spaces around names don't break lookups)
+    const headers = hasHeaders ? parseCSVLine(lines[0]).map(h => String(h || '').trim().replace(/^\uFEFF/, '')) : null;
     
     // Parse data rows
     const startIndex = hasHeaders ? 1 : 0;
@@ -25,7 +28,8 @@ function parseCSV(csvText, hasHeaders = true) {
         if (hasHeaders && headers) {
             const obj = {};
             headers.forEach((header, index) => {
-                obj[header] = values[index] || '';
+                const key = header || `column_${index}`;
+                obj[key] = values[index] !== undefined ? values[index] : '';
             });
             data.push(obj);
         } else {
@@ -34,6 +38,25 @@ function parseCSV(csvText, hasHeaders = true) {
     }
     
     return data;
+}
+
+/**
+ * Read one column by header name; matching is case-insensitive and ignores non-breaking spaces.
+ * Use with rows from loadCSV() when Excel changes "Type" vs "type" or "Company Name" vs "company name".
+ * @returns {string} trimmed cell text, or '' if missing
+ */
+function pickCsvField(obj, name) {
+    if (!obj || typeof obj !== 'object') return '';
+    const target = String(name).trim().toLowerCase().replace(/\u00a0/g, ' ');
+    for (const k of Object.keys(obj)) {
+        const kn = String(k).trim().toLowerCase().replace(/\u00a0/g, ' ').replace(/^\uFEFF/, '');
+        if (kn === target) {
+            const v = obj[k];
+            if (v == null) return '';
+            return String(v).trim();
+        }
+    }
+    return '';
 }
 
 /**

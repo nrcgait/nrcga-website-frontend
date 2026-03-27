@@ -6,31 +6,57 @@ Welcome! You've taken on an important responsibility. This website is central to
 
 You might wonder why this is a custom-built static site rather than a WordPress page or similar CMS. The answer is freedom. This approach gives our community the flexibility to innovate, experiment, and adapt quickly to new needs without being constrained by a single system's limitations.
 
-This documentation is here to help you succeed. The site is designed to be maintainable by someone with basic technical skills, and most updates are straightforward edits to simple configuration files. When you need help, don't hesitate to reach out—the technical support contact information is above.
+This documentation is here to help you succeed. The site is designed to be maintainable by someone with basic technical skills, and most updates are straightforward edits to **CSV data files** under `data/` (and `assets/` where noted) plus the navigation config in `js/nav-config.js`. When you need help, don't hesitate to reach out—the technical support contact information is below.
 
 Take ownership of this project. Make it your own. The community will benefit from your care and creativity.
 
-Good luck, and thank you for continuing this work.
+You got this, and thank you for continuing this work.
 
 *—Charles Folashade Jr, 2026*
 
 This document provides instructions for managing and updating content on the NRCGA website.
 
 ## Table of Contents
+- [CSV data files (overview)](#csv-data-files-overview)
 - [Updating the Navigation Bar](#updating-the-navigation-bar)
 - [Updating Members Data](#updating-members-data)
 - [Updating Archive Links](#updating-archive-links)
 - [Updating Programs](#updating-programs)
 - [Updating the Front Page Carousel and Breaking News](#updating-the-front-page-carousel-and-breaking-news)
+- [Updating Committee Enrollment](#updating-committee-enrollment)
+- [Updating Zero at Fault Damages List](#updating-zero-at-fault-damages-list)
 - [Deploying Files to the Website](#deploying-files-to-the-website)
-- [Backend API Configuration](#backend-api-configuration)
 - [Technical Assistance Contact](#technical-assistance-contact)
+
+---
+
+## CSV data files (overview)
+
+List-style and table content is stored in **CSV** (comma-separated values) files. Pages load them in the browser with `js/csv-parser.js` (`loadCSV`). Use a **local HTTP server** when testing (not `file://`), because `fetch()` is used to read the files.
+
+| File | Used on / by |
+|------|----------------|
+| **`data/members.csv`** | `members.html` — `js/members-loader.js` |
+| **`data/archive.csv`** | `archive.html` — `js/archive-loader.js` |
+| **`data/programs.csv`** | `programs.html` — `js/programs-loader.js` |
+| **`data/front-page-carousel.csv`** | Home page — `js/carousel-loader.js` (carousel) |
+| **`data/front-page-breaking-news.csv`** | Home page — `js/carousel-loader.js` (popup; **only the first data row** is used) |
+| **`data/committee-members-committees.csv`** | `committee-enrollment.html` — committee id → display name |
+| **`data/committee-members-members.csv`** | `committee-enrollment.html` — people and per-committee membership codes |
+| **`assets/zerodamages.csv`** | `zero-at-fault-damages.html` — `js/zero-at-fault-damages-loader.js` |
+
+### CSV editing rules (all files)
+
+- **Keep the header row** as the first line; column names must stay exactly as documented in each section below (the loaders map rows to those names).
+- **Commas inside a value** must be wrapped in double quotes, e.g. `"January 13, 2026 Minutes"`.
+- **Double quotes inside a value** are escaped by doubling them: `"He said ""hello"""`.
+- After editing, open the relevant page over **http://localhost** (see README) and check the browser console (F12) for load or parse errors.
 
 ---
 
 ## Updating the Navigation Bar
 
-The navigation bar is now **dynamically loaded** from a simple configuration file, making it very easy to update without touching any code!
+The navigation bar is **dynamically loaded** from a simple configuration file, making it very easy to update without editing multiple pages!
 
 ### Location
 The navigation bar configuration is located in: **`js/nav-config.js`**
@@ -143,436 +169,310 @@ menuItems: [
 
 ## Updating Members Data
 
-Members data is stored in a **JavaScript file** for easy editing. The format is simple and works without needing a web server.
+Members data is stored in **`data/members.csv`**. It is loaded on `members.html` by `js/members-loader.js` (with `js/csv-parser.js`).
 
 ### Location
-The members data file is located in: **`data/members.js`**
+**`data/members.csv`**
 
-### File Structure
+### CSV columns (header row)
 
-The file contains a JavaScript array called `membersData` with member objects. Each member has these properties:
-- **Type**: The type of member (`"Officer"`, `"Director"`, `"Stakeholder"`, or `"Associate"`)
-- **Company Name**: The name of the company or person
-- **Stakeholder Group**: The stakeholder category (e.g., `"Excavator"`, `"Locator"`, `"Chair"`, `"Vice Chair"`)
-- **Voting Member**: Whether they are a voting member (`"Yes"` or `"No"`)
-- **Website**: Company website URL (optional, use `""` if none)
-- **Category**: Additional category information
-- **Term**: Term dates for officers/directors (optional, use `""` if none)
-- **Contact Person**: Contact person name (optional, use `""` if none)
+The first line must be exactly:
 
-### Important Note About Officers and Directors
-
-**The formatting for Officers and Directors may seem counterintuitive at first glance.** For these member types:
-- **"Company Name"** field contains the **person's name** (e.g., "Kristen Garcia", "Ryan White")
-- **"Contact Person"** field contains the **company/organization name** (e.g., "NV Energy", "USA North")
-
-This is how the file was originally formatted and must be maintained this way for the website to display correctly. **When adding or updating Officers or Directors, match the existing format in the config file** - use the person's name in "Company Name" and the organization in "Contact Person".
-
-### How to Update
-
-1. **Open the file**: `data/members.js` in any text editor
-
-2. **Add a new member**: Add a new object to the array:
-   ```javascript
-   { Type: "Stakeholder", "Company Name": "New Company", "Stakeholder Group": "Excavator", "Voting Member": "Yes", Website: "https://newcompany.com", Category: "Excavator", Term: "", "Contact Person": "John Doe" },
-   ```
-
-3. **Update an existing member**: Find the member object and edit the values
-
-4. **Remove a member**: Delete the entire object (including the comma before it)
-
-5. **Save the file** - changes will appear on the members page automatically
-
-### Format Rules
-
-- **Use commas between objects**: Each member object is separated by a comma (except the last one)
-- **Use quotes for text values**: All text values must be in quotes: `"Company Name"`
-- **Empty values**: Use empty quotes: `""` for optional fields
-- **Trailing comma**: The last object in the array should NOT have a comma after it
-
-### Example Entry
-
-```javascript
-{ Type: "Stakeholder", "Company Name": "ABC Excavation", "Stakeholder Group": "Excavator", "Voting Member": "Yes", Website: "https://abcexcavation.com", Category: "Excavator", Term: "", "Contact Person": "John Smith" },
-{ Type: "Associate", "Company Name": "XYZ Services", "Stakeholder Group": "", "Voting Member": "No", Website: "https://xyzservices.com", Category: "Associate", Term: "", "Contact Person": "" },
-{ Type: "Officer", "Company Name": "Jane Doe", "Stakeholder Group": "Chair", "Voting Member": "Yes", Website: "", Category: "Officer", Term: "2025-2026", "Contact Person": "ABC Company" },
+```text
+Type,Company Name,Stakeholder Group,Voting Member,Website,Category,Term,Contact Person
 ```
 
-### Member Types
+Each following row is one member:
 
-- **Officer**: Board officers (Chair, Vice Chair, etc.) - displayed in Officers table
-- **Director**: Board directors - displayed in Directors table  
-- **Stakeholder**: Stakeholder members - displayed in Stakeholder Members grid
-- **Associate**: Associate members - displayed in Associate Members grid
+- **Type**: `Officer`, `Director`, `Stakeholder`, or `Associate`
+- **Company Name**: For stakeholders/associates, enter the company name; see note below for officers/directors
+- **Stakeholder Group**: e.g. `Excavator`, `Locator`, `Chair`, `Vice Chair` (can be empty where appropriate)
+- **Voting Member**: `Yes` or `No`
+- **Website**: Full URL or empty
+- **Category**: Display category (e.g. `Officer`, `Excavator`)
+- **Term**: Term label for officers/directors (e.g. `2025-2026`) or empty
+- **Contact Person**: Contact name or empty; see note below for officers/directors
+
+### Important note about Officers and Directors
+
+For **Officer** and **Director** rows, the columns are used in a specific way on the site:
+
+- **Company Name** holds the **person's name** (e.g. Kristen Garcia).
+- **Contact Person** holds the **organization name** (e.g. NV Energy).
+
+Keep that pattern when adding or editing officers and directors so tables still render correctly.
+
+### Example rows
+
+```csv
+Type,Company Name,Stakeholder Group,Voting Member,Website,Category,Term,Contact Person
+Stakeholder,ABC Excavation,Excavator,Yes,https://abcexcavation.com,Excavator,,
+Associate,XYZ Services,,No,https://xyzservices.com,Associate,,
+Officer,Jane Doe,Chair,Yes,,Officer,2025-2026,ABC Company
+```
+
+### Member types (display)
+
+- **Officer** — Officers table  
+- **Director** — Directors table  
+- **Stakeholder** — Stakeholder members grid  
+- **Associate** — Associate members grid  
 
 ### Tips
 
-- **Backup first**: Make a copy of the file before making major changes
-- **Test after changes**: Refresh the members page to verify your changes display correctly
-- **Check syntax**: Make sure all quotes, commas, and braces are correct
-- **Browser console**: If members don't display, check the browser console (F12) for errors
-- **Copy-paste format**: When adding new members, copy an existing entry and modify it to ensure correct format
+- **Backup first** before bulk edits  
+- **Test** on `members.html` over a local HTTP server  
+- **Copy an existing row** and change values to avoid column mistakes  
+- If the page is blank, open the **browser console (F12)** for CSV or network errors  
 
 ---
 
 ## Updating Archive Links
 
-Archive links (meeting minutes and historical documents) are stored in a **JavaScript configuration file** for easy editing.
+Archive links (meeting minutes and historical documents) are stored in **`data/archive.csv`**, loaded on `archive.html` by `js/archive-loader.js`.
 
 ### Location
-The archive data file is located in: **`data/archive.js`**
+**`data/archive.csv`**
 
-### File Structure
+### CSV columns (header row)
 
-The file contains a JavaScript array called `archiveData` with archive item objects. Each item has these properties:
-- **type**: The type of archive item (`"meeting-minute"` or `"historical-document"`)
-- **title**: Display title for the document
-- **date**: Date string (format: `"YYYY-MM-DD"` or `"Month DD, YYYY"`)
-- **link**: URL or file path to the document
+The first line must be:
 
-### How to Update
-
-1. **Open the file**: `data/archive.js` in any text editor
-
-2. **Add a new archive item**: Add a new object to the array:
-   ```javascript
-   { type: "meeting-minute", title: "March 15, 2026 NRCGA Minutes", date: "2026-03-15", link: "assets/meeting-minutes/15March2026NRCGA_Minutes.pdf" },
-   ```
-
-3. **Update an existing item**: Find the item object and edit the values
-
-4. **Remove an item**: Delete the entire object (including the comma before it)
-
-5. **Save the file** - changes will appear on the archive page automatically
-
-### Format Rules
-
-- **Use commas between objects**: Each archive item is separated by a comma (except the last one)
-- **Use quotes for text values**: All text values must be in quotes: `"Meeting Minutes"`
-- **Date format**: Use `"YYYY-MM-DD"` format (e.g., `"2025-03-11"`) for best results
-- **Link format**: 
-  - For local files: `"assets/meeting-minutes/filename.pdf"`
-  - For external links: `"https://example.com/link"`
-
-### Example Entries
-
-```javascript
-// Meeting Minute
-{ type: "meeting-minute", title: "March 15, 2026 NRCGA Minutes", date: "2026-03-15", link: "assets/meeting-minutes/15March2026NRCGA_Minutes.pdf" },
-
-// Historical Document (external link)
-{ type: "historical-document", title: "Silver Shovel 2025 Photos", date: "2025-04-30", link: "https://photos.google.com/share/..." },
-
-// Historical Document (local file)
-{ type: "historical-document", title: "2025 Annual Report", date: "2025-12-31", link: "assets/documents/2025-annual-report.pdf" },
+```text
+type,title,date,link
 ```
 
-### Archive Types
+Each data row is one item:
 
-- **meeting-minute**: Meeting minutes and records - displayed in Meeting Minutes section
-- **historical-document**: News articles, photos, reports, etc. - displayed in Historical Documents section
+- **type**: `meeting-minute` or `historical-document`
+- **title**: Title shown in the list (wrap in quotes if it contains commas)
+- **date**: Prefer `YYYY-MM-DD` for consistent sorting (e.g. `2026-03-15`)
+- **link**: Full `https://...` URL or a site-relative path such as `assets/meeting-minutes/filename.pdf`
 
-### Display Features
+### Example rows
 
-- **Automatic organization**: Items are automatically grouped by year (newest first)
-- **Date formatting**: Dates are automatically formatted for display
-- **External link handling**: External links (http:// or https://) open in new tabs
-- **Icon selection**: Icons are automatically selected based on link type (📄 for documents, 📷 for photos, etc.)
+```csv
+type,title,date,link
+meeting-minute,"March 15, 2026 NRCGA Minutes",2026-03-15,assets/meeting-minutes/15March2026NRCGA_Minutes.pdf
+historical-document,Silver Shovel 2025 Photos,2025-04-30,https://photos.google.com/share/...
+historical-document,2025 Annual Report,2025-12-31,assets/documents/2025-annual-report.pdf
+```
+
+### Archive types (display)
+
+- **meeting-minute** — Meeting Minutes section  
+- **historical-document** — Historical Documents section  
+
+### Display behavior
+
+Items are grouped by year (newest first). External `http`/`https` links open in a new tab; the loader also picks icons by link type where supported.
 
 ### Tips
 
-- **Backup first**: Make a copy of the file before making major changes
-- **Test after changes**: Refresh the archive page to verify your changes display correctly
-- **Check syntax**: Make sure all quotes, commas, and braces are correct
-- **Browser console**: If items don't display, check the browser console (F12) for errors
-- **Copy-paste format**: When adding new items, copy an existing entry and modify it to ensure correct format
+- **Backup first**  
+- **Test** on `archive.html` over HTTP  
+- **Copy an existing row** when adding entries  
+- Use the **browser console (F12)** if nothing appears after a change  
 
 ---
 
 ## Updating Programs
 
-Programs and committees are stored in a **JavaScript configuration file** for easy editing.
+Programs and committees are stored in **`data/programs.csv`**. The programs list on `programs.html` is filled by `js/programs-loader.js`. To add a form on a program page, embed **Microsoft Forms** (or similar) directly in that page’s HTML—there is no CSV-driven form loader.
 
 ### Location
-The programs data file is located in: **`data/programs.js`**
+**`data/programs.csv`**
 
-### File Structure
+### CSV columns (header row)
 
-The file contains a JavaScript array called `programsData` with program objects. Each program has these properties:
-- **title**: Program/committee name
-- **description**: Short description of the program
-- **link**: URL or file path to the program page
-- **icon**: Emoji icon for the program (optional, defaults to 📄)
-- **order**: Display order number (lower numbers appear first, optional)
-- **form**: Optional iframe URL for embedding a form on the individual program page (e.g., Google Forms, Typeform, etc.)
+The first line must be:
 
-### How to Update
-
-1. **Open the file**: `data/programs.js` in any text editor
-
-2. **Add a new program**: Add a new object to the array:
-   ```javascript
-   {
-       title: "New Program Name",
-       description: "Description of what this program does and its purpose.",
-       link: "new-program.html",
-       icon: "🎯",
-       order: 10,
-       form: "https://docs.google.com/forms/d/e/1FAIpQLSd..." // Optional
-   },
-   ```
-
-3. **Update an existing program**: Find the program object and edit the values
-
-4. **Remove a program**: Delete the entire object (including the comma before it)
-
-5. **Reorder programs**: Change the `order` value (lower numbers appear first)
-
-6. **Save the file** - changes will appear on the programs page automatically
-
-### Format Rules
-
-- **Use commas between objects**: Each program is separated by a comma (except the last one)
-- **Use quotes for text values**: All text values must be in quotes: `"Program Name"`
-- **Link format**: 
-  - For local pages: `"program-page.html"`
-  - For external links: `"https://example.com/program"`
-- **Icon**: Use emoji characters directly: `"🎓"` or `"⭐"`
-
-### Example Entry
-
-```javascript
-{
-    title: "Excavator Safety Training",
-    description: "Our comprehensive training programs combine classroom education with real-world scenarios at mock jobsites.",
-    link: "training.html",
-    icon: "🎓",
-    order: 1,
-    form: "https://docs.google.com/forms/d/e/1FAIpQLSd.../viewform?embedded=true" // Optional
-},
+```text
+title,description,link,icon
 ```
 
-### Program Properties
+- **title**: Name shown on the programs page  
+- **description**: Short paragraph under the title (if it contains commas, wrap the whole field in double quotes)  
+- **link**: Page filename (e.g. `training.html`) or a full `https://` URL for an external program site  
+- **icon**: Single emoji for the card (e.g. `🎓`)  
 
-- **title**: Display name of the program (required)
-- **description**: Brief description shown on the programs page (required)
-- **link**: Link to the program's detail page (required)
-- **icon**: Emoji icon displayed in the program card (optional)
-- **order**: Number controlling display order - lower numbers appear first (optional, defaults to end of list)
-- **form**: URL for an iframe-embedded form (e.g., Google Forms) that will appear on the individual program page (optional)
+### Display order
 
-### Adding Forms to Program Pages
+On `programs.html`, programs are sorted **alphabetically by title** (not by a separate order column).
 
-If you want to add a form (like a registration form, contact form, or survey) to a specific program page:
+### Example row
 
-1. **Create or get the form URL**: 
-   - For Google Forms: Create a form, click "Send", then click the `</>` icon to get the embed URL
-   - For other form services: Get the iframe embed URL from your form provider
-
-2. **Add the form field to the program**:
-   ```javascript
-   {
-       title: "Golf Tournament Fundraiser",
-       description: "Annual fundraising event...",
-       link: "golf-tournament.html",
-       icon: "⛳",
-       order: 5,
-       form: "https://docs.google.com/forms/d/e/1FAIpQLSd.../viewform?embedded=true"
-   },
-   ```
-
-3. **Add the form placeholder to the program page**:
-   - Open the individual program HTML file (e.g., `golf-tournament.html`)
-   - Add this placeholder div where you want the form to appear (typically before the "Get Involved" section):
-     ```html
-     <!-- Program Form Section (will be populated if form is configured in data/programs.js) -->
-     <div id="program-form-placeholder"></div>
-     ```
-
-4. **Add the script tags** (if not already present):
-   ```html
-   <script src="data/programs.js"></script>
-   <script src="js/program-form-loader.js"></script>
-   ```
-
-5. **Save and test**: The form will automatically appear on the program page if configured correctly.
-
-**Note**: The form will only appear if:
-- The program has a `form` field in `data/programs.js`
-- The program page has the `<div id="program-form-placeholder"></div>` placeholder
-- The program page loads `data/programs.js` and `js/program-form-loader.js`
-
-### Display Features
-
-- **Automatic sorting**: Programs are automatically sorted by `order` value (if specified)
-- **External link handling**: External links (http:// or https://) open in new tabs
-- **Responsive design**: Program cards automatically adapt to screen size
-- **Hover effects**: Cards have hover animations for better user experience
+```csv
+title,description,link,icon
+"Excavator Safety Training","Our comprehensive training programs combine classroom education with real-world scenarios at mock jobsites.",training.html,🎓
+```
 
 ### Tips
 
-- **Backup first**: Make a copy of the file before making major changes
-- **Test after changes**: Refresh the programs page to verify your changes display correctly
-- **Check syntax**: Make sure all quotes, commas, and braces are correct
-- **Browser console**: If programs don't display, check the browser console (F12) for errors
-- **Copy-paste format**: When adding new programs, copy an existing entry and modify it to ensure correct format
-- **Order numbers**: Use increments of 10 (1, 10, 20, 30...) to make it easy to insert new programs between existing ones
+- **Backup** `data/programs.csv` before large edits  
+- **Match `link`** to the actual HTML filename for internal program pages  
+- **External program links**: Use a full `https://` URL in **link**; those cards open in a new tab  
+- Use **F12** if the list fails to load  
 
 ---
 
 ## Updating the Front Page Carousel and Breaking News
 
-The carousel and breaking news popup on the front page (homepage) are configured in a **JavaScript configuration file** for easy editing.
+The home page carousel and breaking news popup are driven by **two CSV files**, both loaded by `js/carousel-loader.js` (with `js/csv-parser.js` on `index.html`).
 
-### Location
-The front page configuration file is located in: **`data/front-page.js`**
+### Carousel — location and columns
 
-### File Structure
+**File:** `data/front-page-carousel.csv`
 
-The file contains a JavaScript object called `frontPageConfig` with two main sections:
+**Header row:**
 
-#### Carousel Images
-
-The `carousel` array contains image objects. Each image has these properties:
-- **image_url**: URL to the image (required)
-- **alt_text**: Alt text for accessibility (required)
-- **link_url**: Optional URL to link the image to (can be `null` or empty string)
-- **display_order**: Order in which images appear (lower numbers appear first, optional)
-- **active**: Whether the image is active/visible (`1` = active, `0` = inactive, optional, defaults to `1`)
-
-#### Breaking News Popup
-
-The `breakingNews` object contains popup configuration:
-- **active**: Whether the popup is enabled (`true` = show, `false` = hide, optional, defaults to `false`)
-- **title**: Title/headline for the breaking news (required if active is `true`)
-- **content**: Main text content of the breaking news (required if active is `true`)
-- **image_url**: Optional image URL to display in the popup (optional)
-- **read_more_url**: Optional URL for "Read More" button (optional)
-- **storage_key**: Unique identifier for localStorage to prevent showing again if dismissed (optional)
-
-### How to Update
-
-1. **Open the file**: `data/front-page.js` in any text editor
-
-2. **Add a new carousel image**: Add a new object to the `carousel` array:
-   ```javascript
-   {
-       image_url: "https://example.com/image.jpg",
-       alt_text: "Description of the image",
-       link_url: "https://example.com/page", // Optional - can be null
-       display_order: 5,
-       active: 1
-   },
-   ```
-
-3. **Update an existing image**: Find the image object in the `carousel` array and edit the values
-
-4. **Remove an image**: Delete the entire object from the `carousel` array (including the comma before it)
-
-5. **Reorder images**: Change the `display_order` value (lower numbers appear first)
-
-6. **Temporarily hide an image**: Set `active: 0` instead of deleting it
-
-7. **Enable/Configure Breaking News**: Edit the `breakingNews` object:
-   ```javascript
-   breakingNews: {
-       active: true,  // Set to true to show the popup
-       title: "Important Announcement",
-       content: "This is the main message for the breaking news popup.",
-       image_url: "https://example.com/news-image.jpg",  // Optional
-       read_more_url: "archive.html#historical-documents",  // Optional
-       storage_key: "nrcga_breaking_news_dismissed"
-   }
-   ```
-
-8. **Disable Breaking News**: Set `active: false` in the `breakingNews` object
-
-9. **Save the file** - changes will appear on the front page automatically
-
-### Format Rules
-
-- **Use commas between objects**: Each carousel object is separated by a comma (except the last one)
-- **Use quotes for text values**: All text values must be in quotes: `"Image URL"`
-- **Image URL format**: 
-  - For external images: `"https://example.com/image.jpg"`
-  - For local images: `"assets/images/carousel/image.jpg"`
-- **Link URL**: Can be a full URL, relative path, or `null` if the image shouldn't be clickable
-- **Active status**: Use `1` for active (visible) or `0` for inactive (hidden)
-
-### Example Entries
-
-**Carousel Image:**
-```javascript
-{
-    image_url: "https://storage.googleapis.com/nodeodm-outputs-v1/outputs/WILD_HORSE_35202ad3/images/DJI_20250526135552_0040_V.JPG",
-    alt_text: "Aerial view of excavation site",
-    link_url: "programs.html",
-    display_order: 0,
-    active: 1
-},
+```text
+image_url,alt_text,link_url,display_order,active
 ```
 
-**Breaking News Popup:**
-```javascript
-breakingNews: {
-    active: true,
-    title: "New Training Program Available",
-    content: "We're excited to announce our new comprehensive safety training program starting next month. Register now to secure your spot!",
-    image_url: "assets/images/news/training-announcement.jpg",
-    read_more_url: "training.html",
-    storage_key: "nrcga_breaking_news_dismissed"
-}
+- **image_url**: Full URL or path to the image (required)  
+- **alt_text**: Accessibility text (required)  
+- **link_url**: Where the slide links when clicked; leave empty for no link  
+- **display_order**: Integer; lower values appear first among active slides  
+- **active**: `1` = show in carousel, `0` = hidden (keeps the row without deleting it)  
+
+**Example row:**
+
+```csv
+image_url,alt_text,link_url,display_order,active
+https://example.org/assets/images/hero.jpg,Locate Rodeo,utility-locate-rodeo.html,10,1
 ```
 
-### Carousel Image Properties
+**Behavior:** Active rows are sorted by `display_order`. The carousel auto-advances about every five seconds and pauses on hover; slides with a `link_url` are clickable.
 
-- **image_url**: URL to the image file (required)
-- **alt_text**: Alternative text for screen readers and accessibility (required)
-- **link_url**: URL to link to when image is clicked (optional - use `null` or empty string for no link)
-- **display_order**: Number controlling display order - lower numbers appear first (optional, defaults to 0)
-- **active**: Whether the image is visible (`1` = active, `0` = inactive, optional, defaults to `1`)
+### Breaking news — location and columns
 
-### Breaking News Properties
+**File:** `data/front-page-breaking-news.csv`
 
-- **active**: Whether the popup is enabled (`true` = show, `false` = hide, optional, defaults to `false`)
-- **title**: Title/headline displayed in the popup (required if active is `true`)
-- **content**: Main text content displayed in the popup (required if active is `true`)
-- **image_url**: Optional image URL to display in the popup (optional)
-- **read_more_url**: Optional URL for the "Read More" button - if provided, button will be shown (optional)
-- **storage_key**: Unique identifier for localStorage - prevents showing popup again if user checks "Don't show again" (optional, defaults to `"nrcga_breaking_news_dismissed"`)
+**Header row:**
 
-### Display Features
+```text
+active,title,content,image_url,read_more_url,storage_key
+```
 
-**Carousel:**
-- **Automatic sorting**: Images are automatically sorted by `display_order` value (if specified)
-- **Auto-play**: Carousel automatically advances every 5 seconds
-- **Pause on hover**: Auto-play pauses when you hover over the carousel
-- **Navigation controls**: Previous/Next buttons and dot indicators for manual navigation
-- **Clickable images**: Images with `link_url` set become clickable links
-- **Responsive design**: Carousel automatically adapts to screen size
-- **Lazy loading**: Images load efficiently for better performance
+**Important:** The script uses **only the first data row** (the first line after the header). Extra rows are ignored.
 
-**Breaking News Popup:**
-- **Conditional display**: Only shows if `active` is set to `true`
-- **Dismiss functionality**: Users can close the popup or check "Don't show again"
-- **LocalStorage**: Remembers if user dismissed the popup (won't show again)
-- **Optional image**: Can display an image in the popup
-- **Optional "Read More" button**: Can link to a specific page for more information
-- **Responsive design**: Popup adapts to screen size
+- **active**: `true` to show the popup, `false` to hide it  
+- **title**: Popup headline  
+- **content**: Body text  
+- **image_url**: Optional image above the text  
+- **read_more_url**: If set, the “Read More” button navigates here  
+- **storage_key**: Key used with “Don’t show again” in the browser; change this value to reset dismissal for a new announcement  
+
+**Example row:**
+
+```csv
+active,title,content,image_url,read_more_url,storage_key
+true,"Important Announcement","Short message for the popup.",https://example.org/news.jpg,training.html,nrcga_breaking_news_2026_03
+```
 
 ### Tips
 
-- **Backup first**: Make a copy of the file before making major changes
-- **Test after changes**: Refresh the front page to verify your changes display correctly
-- **Check syntax**: Make sure all quotes, commas, and braces are correct
-- **Browser console**: If images don't display, check the browser console (F12) for errors
-- **Copy-paste format**: When adding new images, copy an existing entry and modify it to ensure correct format
-- **Order numbers**: Use increments of 10 (0, 10, 20, 30...) to make it easy to insert new images between existing ones
-- **Image optimization**: Use optimized images (compressed, appropriate size) for faster loading
-- **Alt text**: Always provide descriptive alt text for accessibility
-- **Temporary hiding**: Use `active: 0` to temporarily hide images without deleting them
-- **Breaking news storage**: Each breaking news item should have a unique `storage_key` if you want to show different news items over time
-- **Breaking news reset**: To show the popup again after it's been dismissed, change the `storage_key` value or clear browser localStorage
+- **Backup** both CSV files before edits  
+- **Test** on `index.html` over HTTP  
+- **Carousel**: use `active` 0/1 to hide slides temporarily  
+- **Breaking news**: toggle `active` to `false` instead of deleting the row if you want to reuse the copy later  
+- Change **storage_key** when you want users who dismissed the old popup to see a new one  
+
+---
+
+## Updating Committee Enrollment
+
+The committee enrollment page (`committee-enrollment.html`) loads **two CSV files** via inline script that calls `loadCSV` from `js/csv-parser.js`.
+
+### Files
+
+1. **`data/committee-members-committees.csv`** — defines each committee’s **id** and display **name**.  
+2. **`data/committee-members-members.csv`** — one row per person; columns include contact fields plus **one numeric column per committee id** from the first file.
+
+### `committee-members-committees.csv`
+
+**Header:**
+
+```text
+id,name
+```
+
+- **id**: Short machine key used as the column name in the members file (e.g. `budget`, `811Day`, `golfTournament`). No spaces.  
+- **name**: Human-readable committee name shown on the page.
+
+**Example:**
+
+```csv
+id,name
+budget,Budget Committee
+golfTournament,Golf Tournament Fundraiser Committee
+```
+
+When you add a new committee, add a row here and add a **matching new column** on every row of the members CSV (see below).
+
+### `committee-members-members.csv`
+
+**Header row** starts with fixed columns, then **one column per committee id** (same spelling as `id` in the committees file):
+
+```text
+name,company,email,budget,811Day,craigRogers,educationTraining,golfTournament,utilityLocateRodeo,operations,silverShovel,techSolutions,embeddedFacilities
+```
+
+(Your file may include additional committee columns as you add them—keep header names aligned with `committee-members-committees.csv`.)
+
+**Membership values** (per committee column):
+
+- **0** — not on that committee  
+- **1** — member  
+- **2** — chair  
+
+**Example row:**
+
+```csv
+name,company,email,budget,811Day,...
+Jane Doe,ACME Inc.,jane@example.com,1,0,...
+```
+
+### Tips
+
+- Edit **committees first**, then add matching columns to **members**  
+- Use **0**, **1**, and **2** only (no text) in membership cells  
+- **Backup** both files; a mismatched header (wrong id spelling) breaks the view  
+- Test on **`committee-enrollment.html`** over HTTP  
+
+---
+
+## Updating Zero at Fault Damages List
+
+The Zero at Fault Damages page uses **`assets/zerodamages.csv`**, loaded by `js/zero-at-fault-damages-loader.js`.
+
+### Location
+**`assets/zerodamages.csv`**
+
+### Format
+
+Single column with header:
+
+```text
+company
+```
+
+Each following row is one company name (one per line in the table).
+
+**Example:**
+
+```csv
+company
+A&G CONTRACTING LLC
+ACME UNDERGROUND INC.
+```
+
+### Tips
+
+- Keep the **`company` header**  
+- One company per row; avoid extra commas in the name (or wrap the name in quotes if you must include a comma)  
+- Test on **`zero-at-fault-damages.html`** over HTTP  
 
 ---
 
@@ -597,9 +497,9 @@ After making changes to files, you need to upload them to the cloud storage wher
    - Use browser console (F12) to check for errors
 
 3. **Upload to cloud storage**:
-   - **Cloudflare R2**: Use the R2 dashboard or upload tool to sync your `frontend` folder
+   - **Cloudflare R2**: Use the R2 dashboard or upload tool to sync the **site root** (the folder that contains `index.html`, `css/`, `js/`, `data/`, `assets/`)
    - **GCP Cloud Storage**: Use the Google Cloud Console or `gsutil` command to upload files
-   - Make sure to upload the entire `frontend` folder structure, not just individual files
+   - Keep the **same folder layout** as in this project; do not upload only loose files unless your host expects that
 
 4. **Verify deployment**:
    - Visit the live website
@@ -610,7 +510,7 @@ After making changes to files, you need to upload them to the cloud storage wher
 
 - **Files not updating**: Clear your browser cache (Ctrl+F5) or wait a few minutes for CDN cache to clear
 - **Broken images/links**: Check that file paths are correct and files were uploaded to the right location
-- **JavaScript errors**: Check browser console (F12) for error messages - usually indicates a syntax error in a data file
+- **JavaScript or CSV errors**: Check browser console (F12) — bad CSV quoting, a missing column, or a wrong path often shows up as a load or parse error
 
 ### Getting Help
 
@@ -618,52 +518,6 @@ If you encounter issues during deployment:
 1. Check the browser console (F12) for error messages
 2. Verify file paths are correct
 3. Make sure all files were uploaded (not just some)
-
-
----
-
-## Backend API Configuration
-
-The website connects to a backend API to fetch events and handle registrations. This configuration is **locked in place** and should **not be changed** unless instructed by technical support.
-
-### Location
-
-The backend API URL is configured in: **`data/api-config.js`**
-
-### Current Configuration
-
-```javascript
-window.API_BASE_URL = 'https://nrcgaapi.thefieldmappinggroup.com/api';
-```
-
-### Important Notes
-
-- **DO NOT CHANGE THIS**: The backend URL is set to the production server and should remain unchanged
-- **Backend is stable**: The backend runs on a GCP VM and the URL will not change
-- **No updates needed**: You don't need to modify this file for normal website management
-- **If the URL changes**: Only update this if explicitly instructed by technical support (this should be rare)
-
-### What This Does
-
-This configuration tells the website where to fetch:
-- Event data and availability
-- Registration submissions
-- Other dynamic content from the backend
-
-### Troubleshooting
-
-If events or registrations stop working:
-1. **Check the backend URL**: Verify `data/api-config.js` still has the correct URL
-2. **Check browser console**: Open browser console (F12) and look for API errors
-3. **Contact technical support**: Backend issues require technical assistance. See the Technical Assistance Contact section below.
-
-### When to Update
-
-You should **only** update this file if:
-- Technical support explicitly tells you the backend URL has changed
-- You're setting up a development/test environment (and you know what you're doing)
-
-**For normal website management, you should never need to touch this file.**
 
 ---
 
