@@ -283,9 +283,9 @@ function displayHistoricalDocumentsByYear(selectedYear) {
                     
                     // Determine icon based on link type
                     let icon = '📄';
-                    if (doc.link.includes('photos.google.com') || doc.link.includes('photo')) {
+                    if (doc.link.includes('photos') || doc.link.includes('photo') || doc.title.includes('photos') || doc.title.includes('photo') || doc.title.includes('Photos') {
                         icon = '📷';
-                    } else if (doc.link.includes('youtube.com') || doc.link.includes('video')) {
+                    } else if (doc.link.includes('youtube.com') || doc.link.includes('video') || ) {
                         icon = '🎥';
                     }
                     
