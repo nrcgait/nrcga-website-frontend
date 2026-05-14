@@ -5,6 +5,8 @@
 "features": [
 { "type": "Feature", "properties": { "Occurence": "unknown 12\" pipe" }, "geometry": { "type": "Point", "coordinates": [ -115.0460063, 36.07549062 ] } },
 { "type": "Feature", "properties": { "Occurence": "unknown 12\" pipe" }, "geometry": { "type": "Point", "coordinates": [ -115.04602025, 36.07469542 ] } },
-{ "type": "Feature", "properties": { "Occurence": "abandoned fiber" }, "geometry": { "type": "Point", "coordinates": [ -114.933146092, 36.100199819 ] } }
+{ "type": "Feature", "properties": { "Occurence": "abandoned fiber" }, "geometry": { "type": "Point", "coordinates": [ -114.933146092, 36.100199819 ] } },
+{ "type": "Feature", "properties": { "Occurence": "abandoned 10\" pipe" }, "geometry": { "type": "Point", "coordinates": [ -115.08109377, 36.12800649 ] } },
+{ "type": "Feature", "properties": { "Occurence": "abandoned twisted copper" }, "geometry": { "type": "Point", "coordinates": [ -114.933458, 36.079439 ] } }
 ]
 }
