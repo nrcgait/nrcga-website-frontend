@@ -24,31 +24,17 @@
     <!-- Calendar Section -->
     <section class="content-section">
         <div class="container">
-            <div class="section-header" style="margin-bottom: 1.5rem;">
-                <h2 class="section-title">General NRCGA Events</h2>
-                <p class="section-subtitle">Meetings, programs, and general events.</p>
-            </div>
-            <div style="text-align: center; margin-bottom: 3rem;">
-                    <iframe
-  src="https://luma.com/embed/calendar/cal-ckDST2yJmDjA0Dz/events"
-  width="800"
-  height="850"
-  frameborder="0"
-  style="border: 1px solid #bfcbda88; border-radius: 4px;"
-  allowfullscreen=""
-  aria-hidden="false"
-  tabindex="0"
-></iframe>
-                </div>
-            </div>     
-
+            <div id="calendar-events" data-events-container data-events-scope="all"></div>
+        </div>
     </section>
 
     
     <div id="footer-placeholder"></div>
 
     <script src="js/nav-config.js"></script>
+    <script src="js/api-client.js"></script>
     <script src="js/components.js"></script>
+    <script src="js/events-loader.js"></script>
     <script src="js/script.js"></script>
 </body>
 </html>

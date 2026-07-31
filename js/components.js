@@ -1,5 +1,31 @@
 // Navigation Component
 // Reads configuration from nav-config.js
+function getStaffPortalUrl() {
+    if (window.NRCGA_API && window.NRCGA_API.staffPortalUrl) {
+        return window.NRCGA_API.staffPortalUrl;
+    }
+    const host = window.location.hostname;
+    if (host === 'localhost' || host === '127.0.0.1') {
+        return 'http://localhost:8787/admin';
+    }
+    if (host === 'nrcga-website-staging.pages.dev' || host.endsWith('.nrcga-website-staging.pages.dev')) {
+        return 'https://nrcga-api-staging.thefieldmappinggroup.workers.dev/admin';
+    }
+    return 'https://api.nrcga.org/admin';
+}
+
+function renderStaffPortalLink() {
+    const staffUrl = getStaffPortalUrl();
+    return `
+        <a href="${staffUrl}" class="staff-portal-link" aria-label="Staff portal" title="Staff portal">
+            <svg class="staff-portal-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="8" r="3.5"></circle>
+                <path d="M5.5 20.5c0-3.5 2.9-6 6.5-6s6.5 2.5 6.5 6"></path>
+            </svg>
+        </a>
+    `;
+}
+
 function renderNavigation() {
     const currentPage = window.location.pathname.split('/').pop() || 'index.html';
     
@@ -53,14 +79,17 @@ function renderNavigation() {
                 <ul class="nav-menu">
                     ${menuItemsHTML}
                 </ul>
-                <button class="theme-toggle" aria-label="Toggle dark mode" title="Toggle dark mode">
-                    <span class="theme-toggle-icon">🌙</span>
-                </button>
-                <button class="nav-toggle" aria-label="Toggle navigation">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                </button>
+                <div class="nav-actions">
+                    ${renderStaffPortalLink()}
+                    <button class="theme-toggle" aria-label="Toggle dark mode" title="Toggle dark mode">
+                        <span class="theme-toggle-icon">🌙</span>
+                    </button>
+                    <button class="nav-toggle" aria-label="Toggle navigation">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </button>
+                </div>
             </div>
         </nav>
     `;
@@ -77,7 +106,7 @@ function renderFooter() {
                             <img src="assets/images/NRCGA-Logo_Badge-Color-300x272.png" alt="NRCGA Logo" class="logo-img footer-logo">
                             <span class="logo-text">Nevada Regional Common Ground Alliance</span>
                         </div>
-                        <p style="text-align: center;">Promoting public safety and damage prevention across Nevada.</p>
+                        <p style="text-align: center;">${(window.nrcgaFooterSettings && window.nrcgaFooterSettings.tagline) || 'Promoting public safety and damage prevention across Nevada.'}</p>
                     </div>
                     <!-- Footer links commented out - all links are available in the top navigation bar
                     <div class="footer-links">
@@ -110,7 +139,7 @@ function renderFooter() {
                     -->
                 </div>
                 <div class="footer-bottom">
-                    <p>&copy; 2026 NRCGA. All rights reserved.</p>
+                    <p>${(window.nrcgaFooterSettings && window.nrcgaFooterSettings.copyright) || '&copy; 2026 NRCGA. All rights reserved.'}</p>
                 </div>
             </div>
         </footer>
@@ -119,7 +148,9 @@ function renderFooter() {
 
 
 // Initialize components when DOM is ready
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+    await applyRemoteSiteConfig();
+
     // Inject navigation if placeholder exists
     const navPlaceholder = document.getElementById('nav-placeholder');
     if (navPlaceholder) {
@@ -136,6 +167,27 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeNavigation();
     initializeThemeToggle();
 });
+
+async function applyRemoteSiteConfig() {
+    if (!window.NRCGA_API) return;
+    try {
+        const [navData, settings] = await Promise.all([
+            window.NRCGA_API.get('/navigation'),
+            window.NRCGA_API.get('/settings'),
+        ]);
+        if (navData && typeof navData === 'object' && navData.logo) {
+            window.navConfig = navData;
+        }
+        if (settings && settings.footer) {
+            window.nrcgaFooterSettings = settings.footer;
+        }
+        if (settings && settings.contact) {
+            window.nrcgaContactSettings = settings.contact;
+        }
+    } catch (err) {
+        console.warn('Site config API unavailable, using local nav-config.js', err);
+    }
+}
 
 // Initialize navigation functionality
 function initializeNavigation() {

@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
-<body>
+<body data-page-slug="training">
     <div id="nav-placeholder"></div>
 
     <!-- Page Header -->
@@ -21,6 +21,7 @@
         </div>
     </section>
 
+    <div id="page-body">
     <!-- Hero Image Background -->
     <section style="position: relative; height: 50vh; min-height: 350px; background-image: url('assets/images/programs/education/OutsideTraining.jpg'); background-size: cover; background-position: center; background-attachment: fixed; background-repeat: no-repeat;">
         <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.3);"></div>
@@ -93,25 +94,15 @@
             </div>
         </div>
     </section>
+    </div>
 
     <!-- Training Schedule Section -->
-    <section class="content-section">
+    <section id="schedule" class="content-section">
         <div class="container">
             <div class="section-header">
                 <h2 class="section-title">Training Schedule</h2>
             </div>
-            <div style="display: flex; justify-content: center; align-items: center; width: 100%; overflow-x: auto; margin-top: 2rem;">
-                <iframe
-                    src="https://luma.com/embed/calendar/cal-9DDWMhenRIXr0U5/events?compact=true"
-                    width="600"
-                    height="450"
-                    frameborder="0"
-                    style="border: 1px solid #bfcbda88; border-radius: 4px;"
-                    allowfullscreen=""
-                    aria-hidden="false"
-                    tabindex="0"
-                ></iframe>
-            </div>
+            <div id="training-events" data-events-container data-events-scope="training" style="margin-top: 2rem;"></div>
         </div>
     </section>
 
@@ -162,7 +153,11 @@
     <div id="footer-placeholder"></div>
 
     <script src="js/nav-config.js"></script>
+    <script src="js/api-client.js"></script>
     <script src="js/components.js"></script>
+    <script src="js/events-loader.js"></script>
+    <script src="js/page-blocks-render.js"></script>
+    <script src="js/page-loader.js"></script>
     <script src="js/script.js"></script>
 </body>
 </html>

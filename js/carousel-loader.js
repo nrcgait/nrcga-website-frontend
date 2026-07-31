@@ -8,7 +8,17 @@ let breakingNewsData = null; // Store breaking news data globally
 
 async function loadCarousel() {
     try {
-        const rawCarousel = await loadCSV('data/front-page-carousel.csv');
+        let rawCarousel = null;
+        if (window.NRCGA_API) {
+            try {
+                rawCarousel = await window.NRCGA_API.get('/carousel');
+            } catch (e) {
+                console.warn('Carousel API unavailable, falling back to CSV', e);
+            }
+        }
+        if (!rawCarousel) {
+            rawCarousel = await loadCSV('data/front-page-carousel.csv');
+        }
         carouselData = rawCarousel.map(item => ({
             image_url: pickCsvField(item, 'image_url'),
             alt_text: pickCsvField(item, 'alt_text'),
@@ -195,7 +205,20 @@ function stopCarouselAutoPlay() {
 // Breaking News Popup Loader
 async function loadBreakingNews() {
     try {
-        const breakingNewsArray = await loadCSV('data/front-page-breaking-news.csv');
+        let breakingNewsArray = null;
+        if (window.NRCGA_API) {
+            try {
+                const apiNews = await window.NRCGA_API.get('/breaking-news');
+                if (apiNews) {
+                    breakingNewsArray = [apiNews];
+                }
+            } catch (e) {
+                console.warn('Breaking news API unavailable, falling back to CSV', e);
+            }
+        }
+        if (!breakingNewsArray) {
+            breakingNewsArray = await loadCSV('data/front-page-breaking-news.csv');
+        }
         if (breakingNewsArray.length === 0) {
             return;
         }

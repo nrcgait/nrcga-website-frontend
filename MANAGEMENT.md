@@ -1,5 +1,31 @@
 # Website Management Guide
 
+## Cloudflare CMS (staff portal)
+
+NRCGA content is moving from CSV-only editing to a **Cloudflare Worker CMS** (`api/` in this repo). Staff can manage members, events, carousel, archive, programs, and site settings in the browser at **`/admin`** on the API host (e.g. `https://api.nrcga.org/admin`).
+
+### Roles
+
+| Role | Access |
+|------|--------|
+| **Admin** | Full access including users and navigation |
+| **Editor** | Content, members, events |
+| **Committee Chair** | Committee-scoped content (future) |
+
+### Public site behavior
+
+Static HTML pages on Cloudflare Pages load data from **`/api/v1/*`** when `js/api-client.js` is present. If the API is unreachable, loaders fall back to the original CSV files under `data/` and `assets/`.
+
+### Local development
+
+See **`api/README.md`** for Worker setup: D1 migrations, seed script, and `npm run dev`.
+
+### CSV files (legacy fallback)
+
+The sections below still describe CSV editing. CSV files remain in the repo as backup and fallback until the CMS is fully live in production.
+
+---
+
 ## Notes to the Future Maintainer
 
 Welcome! You've taken on an important responsibility. This website is central to NRCGA's mission: Facilitate communication and collaboration within Nevada's damage prevention community.

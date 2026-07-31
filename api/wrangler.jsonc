@@ -1,0 +1,66 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "nrcga-api",
+  "main": "src/index.tsx",
+  "compatibility_date": "2025-04-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1
+  },
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "nrcga-cms",
+      "database_id": "local-dev-placeholder",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "R2",
+      "bucket_name": "nrcga-media"
+    }
+  ],
+  "send_email": [
+    {
+      "name": "EMAIL"
+    }
+  ],
+  "vars": {
+    "ADMIN_EMAIL": "info@nrcga.org",
+    "PUBLIC_SITE_ORIGIN": "https://nrcga.org"
+  },
+  "env": {
+    "staging": {
+      "name": "nrcga-api-staging",
+      "vars": {
+        "ADMIN_EMAIL": "info@nrcga.org",
+        "PUBLIC_SITE_ORIGIN": "https://nrcga-website-staging.pages.dev"
+      },
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "nrcga-cms-staging",
+          "database_id": "0a6bd7eb-886d-4a61-89a3-1b8876fbe39a",
+          "migrations_dir": "migrations"
+        }
+      ],
+      "r2_buckets": [
+        {
+          "binding": "R2",
+          "bucket_name": "nrcga-media-staging"
+        }
+      ],
+      "send_email": [
+        {
+          "name": "EMAIL"
+        }
+      ]
+    }
+  }
+}

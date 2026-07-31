@@ -67,8 +67,18 @@ async function loadArchive() {
         allMeetingMinutesYears = [];
         allHistoricalDocumentsYears = [];
 
-        // Load CSV data
-        const archiveItems = await loadCSV('data/archive.csv');
+        // Load data (API first, CSV fallback)
+        let archiveItems = null;
+        if (window.NRCGA_API) {
+            try {
+                archiveItems = await window.NRCGA_API.get('/archive');
+            } catch (e) {
+                console.warn('Archive API unavailable, falling back to CSV', e);
+            }
+        }
+        if (!archiveItems) {
+            archiveItems = await loadCSV('data/archive.csv');
+        }
 
         // Canonical field names (pickCsvField: case-insensitive headers from Excel)
         archiveItems.forEach(item => {

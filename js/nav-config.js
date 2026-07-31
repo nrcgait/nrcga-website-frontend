@@ -46,7 +46,7 @@ const navConfig = {
             href: "training.html",
             items: [
                 { text: "Education and Training", href: "training.html" },
-                { text: "Training Schedule", href: "https://luma.com/calendar/cal-9DDWMhenRIXr0U5", external: true},
+                { text: "Training Schedule", href: "training.html#schedule"},
                 { text: "Request Training", href: "training.html#request-training"},
                 { text: "Training Database", href: "https://nrcga-my.sharepoint.com/:x:/g/personal/admin_nrcga_onmicrosoft_com/IQAL9RhjUb17QKI__vdu5GUVAftmygH4ktNbXb70uCHq9E0?e=ROlhAm", external: true}
             ]

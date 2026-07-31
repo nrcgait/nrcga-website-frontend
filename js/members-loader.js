@@ -4,8 +4,17 @@
 // Load and display members
 async function loadMembers() {
     try {
-        // Load CSV and map to canonical keys (Excel may use different header casing)
-        const raw = await loadCSV('data/members.csv');
+        let raw = null;
+        if (window.NRCGA_API) {
+            try {
+                raw = await window.NRCGA_API.get('/members');
+            } catch (e) {
+                console.warn('Members API unavailable, falling back to CSV', e);
+            }
+        }
+        if (!raw) {
+            raw = await loadCSV('data/members.csv');
+        }
         const members = raw.map(r => ({
             Type: pickCsvField(r, 'Type'),
             'Company Name': pickCsvField(r, 'Company Name'),
@@ -22,6 +31,16 @@ async function loadMembers() {
         let directors = members.filter(m => m.Type && m.Type.trim().toLowerCase() === 'director');
         let stakeholderMembers = members.filter(m => m.Type && m.Type.trim().toLowerCase() === 'stakeholder');
         let associateMembers = members.filter(m => m.Type && m.Type.trim().toLowerCase() === 'associate');
+
+        // When using the API, directors are synthesized from board-member stakeholders.
+        // Deduplicate if legacy Director rows still exist alongside stakeholder-derived directors.
+        if (window.NRCGA_API && directors.length > 0) {
+            const boardGroups = new Set(directors.map(d => (d['Stakeholder Group'] || '').toLowerCase()));
+            stakeholderMembers = stakeholderMembers.filter(m => {
+                const group = (m['Stakeholder Group'] || '').toLowerCase();
+                return !boardGroups.has(group);
+            });
+        }
         
         // Sort officers by Stakeholder Group (Position) alphabetically
         officers.sort((a, b) => {

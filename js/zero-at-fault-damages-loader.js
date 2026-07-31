@@ -54,7 +54,17 @@ async function loadZeroDamagesList() {
     container.innerHTML = '<p style="text-align:center; color: var(--text-light);">Loading…</p>';
 
     try {
-        const rows = await loadCSV(CSV_PATH);
+        let rows = null;
+        if (window.NRCGA_API) {
+            try {
+                rows = await window.NRCGA_API.get('/zero-damages');
+            } catch (e) {
+                console.warn('Zero damages API unavailable, falling back to CSV', e);
+            }
+        }
+        if (!rows) {
+            rows = await loadCSV(CSV_PATH);
+        }
         renderCompanies(rows);
     } catch (err) {
         console.error('Error loading zero damages list:', err);

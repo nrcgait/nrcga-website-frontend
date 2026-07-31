@@ -4,7 +4,17 @@
 // Load and display programs
 async function loadPrograms() {
     try {
-        const raw = await loadCSV('data/programs.csv');
+        let raw = null;
+        if (window.NRCGA_API) {
+            try {
+                raw = await window.NRCGA_API.get('/programs');
+            } catch (e) {
+                console.warn('Programs API unavailable, falling back to CSV', e);
+            }
+        }
+        if (!raw) {
+            raw = await loadCSV('data/programs.csv');
+        }
         const programs = raw.map(p => ({
             title: pickCsvField(p, 'title'),
             description: pickCsvField(p, 'description'),
