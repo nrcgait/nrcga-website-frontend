@@ -1,4 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
+  if (window.__nrcgaAdminFormsInit) return
+  window.__nrcgaAdminFormsInit = true
   initCommitteePickers()
   initMemberOrgPickers()
   initRoleFields()

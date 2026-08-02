@@ -160,7 +160,6 @@ export function UserForm({
           Cancel
         </a>
       </div>
-      <script src="/admin-forms.js"></script>
     </form>
   )
 }

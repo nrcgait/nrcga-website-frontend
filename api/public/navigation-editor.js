@@ -65,6 +65,18 @@ document.addEventListener('DOMContentLoaded', () => {
       render()
       syncOutput()
     }
+    if (target.matches('[data-pick-logo-asset]')) {
+      const input = root.querySelector('[data-field="logo.image"]')
+      if (!window.NrcgaAssetPicker?.open) return
+      window.NrcgaAssetPicker.open(
+        (url) => {
+          config.logo.image = url
+          if (input instanceof HTMLInputElement) input.value = url
+          syncOutput()
+        },
+        { defaultUrl: config.logo.image || '', imagesOnly: true },
+      )
+    }
   })
 
   root.addEventListener('input', (e) => {
@@ -105,7 +117,12 @@ document.addEventListener('DOMContentLoaded', () => {
     root.innerHTML = `
       <section class="nav-editor-section">
         <h3>Logo</h3>
-        <label>Image path<input data-field="logo.image" value="${esc(config.logo.image || '')}" /></label>
+        <label>Image path
+          <div class="asset-url-row">
+            <input data-field="logo.image" value="${esc(config.logo.image || '')}" />
+            <button type="button" class="btn btn-secondary" data-pick-logo-asset>Choose from assets</button>
+          </div>
+        </label>
         <label>Alt text<input data-field="logo.alt" value="${esc(config.logo.alt || '')}" /></label>
         <label>Text<input data-field="logo.text" value="${esc(config.logo.text || '')}" /></label>
         <label>Link<input data-field="logo.link" value="${esc(config.logo.link || '')}" /></label>

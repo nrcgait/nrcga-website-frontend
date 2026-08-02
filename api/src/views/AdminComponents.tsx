@@ -60,6 +60,40 @@ export function ListSearch({
   )
 }
 
+export function AssetUrlField({
+  label,
+  name,
+  value,
+  placeholder,
+  r2Name,
+  r2Value,
+}: {
+  label: string
+  name: string
+  value?: string | null
+  placeholder?: string
+  r2Name?: string
+  r2Value?: string | null
+}) {
+  return (
+    <div class="asset-url-field" data-asset-url-field>
+      <label>{label}</label>
+      <div class="asset-url-row">
+        <input
+          name={name}
+          value={String(value ?? '')}
+          placeholder={placeholder}
+          data-asset-url-input
+        />
+        <button type="button" class="btn btn-secondary" data-asset-pick>
+          Choose from assets
+        </button>
+      </div>
+      {r2Name ? <input type="hidden" name={r2Name} value={String(r2Value ?? '')} data-asset-r2-input /> : null}
+    </div>
+  )
+}
+
 export function Pagination({
   page,
   totalPages,

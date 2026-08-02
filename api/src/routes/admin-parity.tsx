@@ -6,20 +6,17 @@ import { parsePageParam, parseSearchParam } from '../lib/pagination'
 import {
   deleteCommittee,
   deleteCommitteePerson,
-  deleteLeadership,
   deleteMembershipType,
   deletePost,
   deleteResourceLink,
   getCommitteeById,
   getCommitteePersonById,
-  getLeadershipById,
   getMembershipTypeById,
   getPostById,
   getResourceLinkById,
   listCommitteePeoplePaginated,
   listCommitteesFull,
   listCommitteesPaginated,
-  listLeadershipPaginated,
   listMembershipTypesPaginated,
   listMembershipsForPerson,
   listPostsPaginated,
@@ -27,7 +24,6 @@ import {
   setPersonMemberships,
   upsertCommittee,
   upsertCommitteePerson,
-  upsertLeadership,
   upsertMembershipType,
   upsertPost,
   upsertResourceLink,
@@ -55,7 +51,7 @@ import {
   type FormFieldDef,
 } from '../lib/forms-db'
 import { AdminShell } from '../views/AdminShell'
-import { ListSearch, Pagination } from '../views/AdminComponents'
+import { AssetUrlField, ListSearch, Pagination } from '../views/AdminComponents'
 
 type RequireAdmin = (c: { env: Env; req: { header: (name: string) => string | undefined } }) => Promise<AdminContext | null>
 type Redirect = (c: { redirect: (url: string, status?: 303) => Response }, url: string) => Response
@@ -74,84 +70,6 @@ export function registerAdminParityRoutes(app: Hono<{ Bindings: Env }>, requireA
   app.get('/tiptap-editor.js', async (c) => c.env.ASSETS.fetch(new URL('/tiptap-editor.js', c.req.url)))
 
   /* ---- Content hub cards are added in admin.tsx ---- */
-
-  /* Leadership */
-  app.get('/admin/content/leadership', async (c) => {
-    const ctx = await requireAdmin(c)
-    if (!ctx || !canManageAllContent(ctx.user.role)) return redirect(c, '/admin/login')
-    const page = parsePageParam(c.req.query('page'))
-    const result = await listLeadershipPaginated(c.env.DB, page)
-    return c.html(
-      <AdminShell ctx={ctx} title="Leadership" activePath="/admin/content" publicSiteOrigin={c.env.PUBLIC_SITE_ORIGIN}>
-        <p>
-          <a class="btn btn-primary" href="/admin/content/leadership/new">
-            Add person
-          </a>
-        </p>
-        <table class="admin-table">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Title</th>
-              <th>Order</th>
-              <th>Active</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {result.items.map((row) => (
-              <tr>
-                <td>{escapeHtml(String(row.name ?? ''))}</td>
-                <td>{escapeHtml(String(row.title ?? ''))}</td>
-                <td>{String(row.sort_order ?? 0)}</td>
-                <td>{row.active ? 'Yes' : 'No'}</td>
-                <td>
-                  <a href={`/admin/content/leadership/${row.id}/edit`}>Edit</a>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        <Pagination page={result.page} totalPages={result.totalPages} total={result.total} basePath="/admin/content/leadership" />
-      </AdminShell>,
-    )
-  })
-
-  app.all('/admin/content/leadership/new', async (c) => {
-    const ctx = await requireAdmin(c)
-    if (!ctx || !canManageAllContent(ctx.user.role)) return redirect(c, '/admin/login')
-    if (c.req.method === 'POST') {
-      const body = await c.req.parseBody()
-      await upsertLeadership(c.env.DB, parseLeadership(body as Record<string, string | File>))
-      return redirect(c, '/admin/content/leadership')
-    }
-    return c.html(
-      <AdminShell ctx={ctx} title="Add leadership" activePath="/admin/content" publicSiteOrigin={c.env.PUBLIC_SITE_ORIGIN}>
-        <LeadershipForm />
-      </AdminShell>,
-    )
-  })
-
-  app.all('/admin/content/leadership/:id/edit', async (c) => {
-    const ctx = await requireAdmin(c)
-    if (!ctx || !canManageAllContent(ctx.user.role)) return redirect(c, '/admin/login')
-    const row = await getLeadershipById(c.env.DB, c.req.param('id'))
-    if (!row) return c.text('Not found', 404)
-    if (c.req.method === 'POST') {
-      const body = await c.req.parseBody()
-      if (body._action === 'delete') {
-        await deleteLeadership(c.env.DB, row.id as string)
-        return redirect(c, '/admin/content/leadership')
-      }
-      await upsertLeadership(c.env.DB, parseLeadership(body as Record<string, string | File>), row.id as string)
-      return redirect(c, '/admin/content/leadership')
-    }
-    return c.html(
-      <AdminShell ctx={ctx} title="Edit leadership" activePath="/admin/content" publicSiteOrigin={c.env.PUBLIC_SITE_ORIGIN}>
-        <LeadershipForm item={row} />
-      </AdminShell>,
-    )
-  })
 
   /* Committees */
   app.get('/admin/content/committees', async (c) => {
@@ -916,18 +834,6 @@ export function registerAdminParityRoutes(app: Hono<{ Bindings: Env }>, requireA
   })
 }
 
-function parseLeadership(body: Record<string, string | File>) {
-  return {
-    name: String(body.name ?? ''),
-    title: String(body.title ?? ''),
-    bio: body.bio ? String(body.bio) : null,
-    photo_url: body.photo_url ? String(body.photo_url) : null,
-    photo_r2_key: body.photo_r2_key ? String(body.photo_r2_key) : null,
-    sort_order: Number(body.sort_order ?? 0),
-    active: body.active === '1' ? 1 : 0,
-  }
-}
-
 function parseCommittee(body: Record<string, string | File>) {
   return {
     name: String(body.name ?? ''),
@@ -983,37 +889,12 @@ function parsePost(body: Record<string, string | File>) {
     slug: body.slug ? String(body.slug) : '',
     excerpt: body.excerpt ? String(body.excerpt) : null,
     cover_url: body.cover_url ? String(body.cover_url) : null,
+    cover_r2_key: body.cover_r2_key ? String(body.cover_r2_key) : null,
     body_html: body.body_html ? String(body.body_html) : null,
     pdf_url: body.pdf_url ? String(body.pdf_url) : null,
     published: body.published === '1' ? 1 : 0,
     published_at: body.published_at ? String(body.published_at) : null,
   }
-}
-
-function LeadershipForm({ item }: { item?: Record<string, unknown> }) {
-  return (
-    <form method="post" class="admin-form">
-      <label>Name</label>
-      <input name="name" required value={String(item?.name ?? '')} />
-      <label>Title</label>
-      <input name="title" required value={String(item?.title ?? '')} />
-      <label>Bio</label>
-      <textarea name="bio">{String(item?.bio ?? '')}</textarea>
-      <label>Photo URL</label>
-      <input name="photo_url" value={String(item?.photo_url ?? '')} />
-      <label>Sort order</label>
-      <input name="sort_order" type="number" value={String(item?.sort_order ?? 0)} />
-      <label>
-        <input type="checkbox" name="active" value="1" checked={!item || !!item.active} /> Active
-      </label>
-      {formActions()}
-      {item ? (
-        <button class="btn btn-danger" type="submit" name="_action" value="delete">
-          Delete
-        </button>
-      ) : null}
-    </form>
-  )
 }
 
 function CommitteeForm({ item }: { item?: Record<string, unknown> }) {
@@ -1025,8 +906,7 @@ function CommitteeForm({ item }: { item?: Record<string, unknown> }) {
       <input name="slug" value={String(item?.slug ?? '')} placeholder="auto from name if blank" />
       <label>Description</label>
       <textarea name="description">{String(item?.description ?? '')}</textarea>
-      <label>Photo URL</label>
-      <input name="photo_url" value={String(item?.photo_url ?? '')} />
+      <AssetUrlField label="Photo URL" name="photo_url" value={String(item?.photo_url ?? '')} />
       <label>Sort order</label>
       <input name="sort_order" type="number" value={String(item?.sort_order ?? 0)} />
       {formActions()}
@@ -1139,8 +1019,13 @@ function PostForm({ item }: { item?: Record<string, unknown> }) {
       <input name="slug" value={String(item?.slug ?? '')} placeholder="auto from title if blank" />
       <label>Excerpt</label>
       <textarea name="excerpt">{String(item?.excerpt ?? '')}</textarea>
-      <label>Cover URL</label>
-      <input name="cover_url" value={String(item?.cover_url ?? '')} />
+      <AssetUrlField
+        label="Cover URL"
+        name="cover_url"
+        value={String(item?.cover_url ?? '')}
+        r2Name="cover_r2_key"
+        r2Value={String(item?.cover_r2_key ?? '')}
+      />
       <label>PDF URL (optional)</label>
       <input name="pdf_url" value={String(item?.pdf_url ?? '')} />
       <label>Body</label>

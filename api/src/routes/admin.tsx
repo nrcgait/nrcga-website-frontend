@@ -79,7 +79,7 @@ import {
   resolveEventFormCoordinates,
 } from '../lib/geocode'
 import { AdminShell, LoginPage } from '../views/AdminShell'
-import { Pagination, CommitteeSelect, ListSearch } from '../views/AdminComponents'
+import { AssetUrlField, Pagination, CommitteeSelect, ListSearch } from '../views/AdminComponents'
 import { MemberForm, UserForm } from '../views/MemberForm'
 
 async function requireAdmin(c: { env: Env; req: { header: (name: string) => string | undefined } }) {
@@ -244,6 +244,7 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>) {
   app.get('/page-preview.js', async (c) => c.env.ASSETS.fetch(new URL('/page-preview.js', c.req.url)))
   app.get('/page-block-inspector.js', async (c) => c.env.ASSETS.fetch(new URL('/page-block-inspector.js', c.req.url)))
   app.get('/admin-forms.js', async (c) => c.env.ASSETS.fetch(new URL('/admin-forms.js', c.req.url)))
+  app.get('/asset-picker.js', async (c) => c.env.ASSETS.fetch(new URL('/asset-picker.js', c.req.url)))
   app.get('/navigation-editor.js', async (c) => c.env.ASSETS.fetch(new URL('/navigation-editor.js', c.req.url)))
   app.get('/event-location-picker.js', async (c) =>
     c.env.ASSETS.fetch(new URL('/event-location-picker.js', c.req.url)),
@@ -726,7 +727,6 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>) {
           { href: '/admin/content/programs', title: 'Programs', desc: 'Program cards' },
           { href: '/admin/content/archive', title: 'Archive', desc: 'Minutes and newsletters' },
           { href: '/admin/content/posts', title: 'Posts', desc: 'Rich HTML newsletters and updates' },
-          { href: '/admin/content/leadership', title: 'Leadership', desc: 'Public leadership roster' },
           { href: '/admin/content/committees', title: 'Committees', desc: 'Committees and enrollment people' },
           { href: '/admin/content/resources', title: 'Resources', desc: 'Resource link list' },
           { href: '/admin/content/member-types', title: 'Membership types', desc: 'Directory and application types' },
@@ -837,8 +837,7 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>) {
           <input name="breaking_title" value={breaking.title} />
           <label>Content</label>
           <textarea name="breaking_content">{breaking.content}</textarea>
-          <label>Image URL</label>
-          <input name="breaking_image_url" value={breaking.image_url} />
+          <AssetUrlField label="Image URL" name="breaking_image_url" value={breaking.image_url} />
           <label>Read more URL</label>
           <input name="breaking_read_more_url" value={breaking.read_more_url} />
           <div class="admin-actions">

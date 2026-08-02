@@ -32,16 +32,30 @@
         { value: 'center', label: 'Center' },
         { value: 'right', label: 'Right' },
       ]) +
+      selectField('Font', 'style.font', s.font || 'default', [
+        { value: 'default', label: 'Default (Inter)' },
+        { value: 'sans', label: 'Source Sans' },
+        { value: 'serif', label: 'Source Serif' },
+        { value: 'display', label: 'Barlow' },
+        { value: 'mono', label: 'Mono' },
+      ]) +
       selectField('Font size', 'style.textSize', s.textSize || 'md', [
         { value: 'sm', label: 'Small' },
         { value: 'md', label: 'Normal' },
         { value: 'lg', label: 'Large' },
         { value: 'xl', label: 'Extra large' },
+        { value: '2xl', label: 'Display' },
       ]) +
       selectField('Text color', 'style.textColor', s.textColor || 'default', [
         { value: 'default', label: 'Default' },
-        { value: 'primary', label: 'Primary' },
+        { value: 'primary', label: 'Primary blue' },
+        { value: 'secondary', label: 'Green' },
+        { value: 'accent', label: 'Orange' },
+        { value: 'navy', label: 'Navy' },
+        { value: 'dark', label: 'Dark gray' },
         { value: 'muted', label: 'Muted' },
+        { value: 'warning', label: 'Warning' },
+        { value: 'danger', label: 'Danger' },
         { value: 'white', label: 'White' },
       ])
     )
@@ -155,7 +169,8 @@
           textField('Winner name', 'winner_name', block.winner_name) +
           textField('Year label', 'year_label', block.year_label) +
           textField('Celebration date', 'celebration_date', block.celebration_date) +
-          textField('Image URL', 'image_url', block.image_url)
+          textField('Image URL', 'image_url', block.image_url) +
+          `<div class="inspector-field"><button type="button" class="btn btn-secondary btn-sm" data-pick-asset-image-url>Choose from assets</button></div>`
         break
       case 'hall_of_fame_grid':
         fields =
@@ -228,46 +243,18 @@
   }
 
   function showAssetPicker(callback) {
-    let modal = document.getElementById('page-asset-modal')
-    if (!modal) {
-      modal = document.createElement('div')
-      modal.id = 'page-asset-modal'
-      modal.className = 'page-asset-modal'
-      modal.innerHTML =
-        '<div class="page-asset-modal-content"><h4>Choose image</h4><div id="page-asset-list" class="page-asset-list">Loading…</div><button type="button" class="btn btn-secondary" data-close-asset-modal>Cancel</button></div>'
-      document.body.appendChild(modal)
-      modal.addEventListener('click', (e) => {
-        if (e.target === modal || e.target.closest('[data-close-asset-modal]')) {
-          modal.hidden = true
-        }
-      })
+    if (window.NrcgaAssetPicker?.open) {
+      window.NrcgaAssetPicker.open(
+        (url) => {
+          if (url) callback(url)
+        },
+        { imagesOnly: true },
+      )
+      return
     }
-    modal.hidden = false
-    const list = document.getElementById('page-asset-list')
-    fetch('/admin/api/assets')
-      .then((r) => r.json())
-      .then((data) => {
-        const assets = data.assets || []
-        if (!assets.length) {
-          list.innerHTML = '<p class="inspector-hint">No assets uploaded yet. <a href="/admin/assets" target="_blank">Upload in Assets</a></p>'
-          return
-        }
-        list.innerHTML = assets
-          .map(
-            (a) =>
-              `<button type="button" class="page-asset-item" data-asset-url="${pb.escapeHtml(a.url)}"><img src="${pb.escapeHtml(a.url)}" alt="" /><span>${pb.escapeHtml(a.name)}</span></button>`,
-          )
-          .join('')
-        list.querySelectorAll('[data-asset-url]').forEach((btn) => {
-          btn.addEventListener('click', () => {
-            callback(btn.getAttribute('data-asset-url'))
-            modal.hidden = true
-          })
-        })
-      })
-      .catch(() => {
-        list.innerHTML = '<p class="inspector-hint">Could not load assets.</p>'
-      })
+    const next = window.prompt('Image URL', 'assets/images/')
+    if (next == null || !next.trim()) return
+    callback(next.trim())
   }
 
   function render(path) {
@@ -298,6 +285,18 @@
         const b = pb.getBlockAtPath(blocks2, path)
         if (b) {
           b.url = url
+          editor.writeBlocks(blocks2)
+          render(path)
+        }
+      })
+    })
+
+    panel.querySelector('[data-pick-asset-image-url]')?.addEventListener('click', () => {
+      showAssetPicker((url) => {
+        const blocks2 = editor.readBlocks()
+        const b = pb.getBlockAtPath(blocks2, path)
+        if (b) {
+          b.image_url = url
           editor.writeBlocks(blocks2)
           render(path)
         }

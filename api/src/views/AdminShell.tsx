@@ -123,6 +123,8 @@ export function AdminShell({
             <div class="admin-page-body">{children}</div>
           </main>
         </div>
+        <script src="/asset-picker.js"></script>
+        <script src="/admin-forms.js"></script>
       </body>
     </html>
   )

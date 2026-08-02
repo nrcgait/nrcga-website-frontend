@@ -37,7 +37,7 @@ import {
   upsertZeroDamage,
 } from '../lib/content-db'
 import { AdminShell } from '../views/AdminShell'
-import { Pagination, CommitteeSelect } from '../views/AdminComponents'
+import { AssetUrlField, Pagination, CommitteeSelect } from '../views/AdminComponents'
 
 type RequireAdmin = (c: { env: Env; req: { header: (name: string) => string | undefined } }) => Promise<AdminContext | null>
 type Redirect = (c: { redirect: (url: string, status?: 303) => Response }, url: string) => Response
@@ -732,10 +732,13 @@ function parsePageForm(body: Record<string, string | File>) {
 function CarouselForm({ slide }: { slide?: Record<string, unknown> }) {
   return (
     <form method="post" class="admin-form">
-      <label>Image URL</label>
-      <input name="image_url" value={String(slide?.image_url ?? '')} />
-      <label>R2 key (optional)</label>
-      <input name="image_r2_key" value={String(slide?.image_r2_key ?? '')} />
+      <AssetUrlField
+        label="Image URL"
+        name="image_url"
+        value={String(slide?.image_url ?? '')}
+        r2Name="image_r2_key"
+        r2Value={String(slide?.image_r2_key ?? '')}
+      />
       <label>Alt text</label>
       <input name="alt_text" value={String(slide?.alt_text ?? '')} />
       <label>Link URL</label>
@@ -931,7 +934,9 @@ function PageForm({ page, publicSiteOrigin }: { page?: Record<string, unknown>; 
       <div class="admin-rich-section">
         <h3>{isHome ? 'Mission / main content' : 'Page body'}</h3>
         <p class="admin-muted">
-          Edit text inline. Use the toolbar for formatting, or insert Image, Button, Callout, Embed, or Spacer.
+          Edit text inline. Use Font / Color / Size in the toolbar (select text first, or place the cursor in a
+          paragraph). Insert Image, Button, Callout, Embed, Grid, or Spacer as needed. Hover a block to see its
+          bounds; right-click to edit images, buttons, callouts, embeds, and grids.
         </p>
         <div
           class="tiptap-host"
