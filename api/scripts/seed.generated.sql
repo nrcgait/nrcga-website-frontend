@@ -1,118 +1,118 @@
 DELETE FROM members;
 INSERT INTO members (id, type, company_name, stakeholder_group, voting_member, website, category, term, contact_person, active, is_board_member, is_chair, is_vice_chair)
-     VALUES ('4d736263-c832-427a-9240-a6356091425f', 'Stakeholder', 'Advanced Spade Company', 'Locator', 'Yes', 'https://advancedspadecompany.com/', 'Locator', '', 'Daniel Kimminau', 1, 0, 0, 0);
+     VALUES ('2a325bc7-0298-4859-a3db-1a7cc07d76d1', 'Stakeholder', 'Advanced Spade Company', 'Locator', 'Yes', 'https://advancedspadecompany.com/', 'Locator', '', 'Daniel Kimminau', 1, 0, 0, 0);
 INSERT INTO members (id, type, company_name, stakeholder_group, voting_member, website, category, term, contact_person, active, is_board_member, is_chair, is_vice_chair)
-     VALUES ('d25b9bb4-84b4-4ecb-a0ea-989c15b84c09', 'Stakeholder', 'AIMS Companies', 'Excavator', 'Yes', 'https://www.aimscompanies.com/', 'Excavator', '', 'Bob Jeralds', 1, 0, 0, 0);
+     VALUES ('dc199a49-a124-44c4-8351-da638d2c002e', 'Stakeholder', 'AIMS Companies', 'Excavator', 'Yes', 'https://www.aimscompanies.com/', 'Excavator', '', 'Bob Jeralds', 1, 0, 0, 0);
 INSERT INTO members (id, type, company_name, stakeholder_group, voting_member, website, category, term, contact_person, active, is_board_member, is_chair, is_vice_chair)
-     VALUES ('50006c64-500e-4d36-9e91-bc267a3b587b', 'Stakeholder', 'AT&T', 'Telecom', 'Yes', 'https://www.att.com/', 'Telecom', '2025-2026', 'Wayne Scott', 1, 1, 0, 0);
+     VALUES ('ae0a48f4-2eeb-46e7-b343-7f8a86347d6d', 'Stakeholder', 'AT&T', 'Telecom', 'Yes', 'https://www.att.com/', 'Telecom', '2025-2026', 'Wayne Scott', 1, 1, 0, 0);
 INSERT INTO members (id, type, company_name, stakeholder_group, voting_member, website, category, term, contact_person, active, is_board_member, is_chair, is_vice_chair)
-     VALUES ('9a8890fe-0d3d-4df0-8f94-5e3eb377a261', 'Stakeholder', 'Byrd Underground', 'Excavator', 'Yes', 'http://www.byrdunderground.com/', 'Excavator', '', 'Tyler Byrd', 1, 0, 0, 0);
+     VALUES ('97e7ae31-0bd0-4c7a-825f-166fb0bd7904', 'Stakeholder', 'Byrd Underground', 'Excavator', 'Yes', 'http://www.byrdunderground.com/', 'Excavator', '', 'Tyler Byrd', 1, 0, 0, 0);
 INSERT INTO members (id, type, company_name, stakeholder_group, voting_member, website, category, term, contact_person, active, is_board_member, is_chair, is_vice_chair)
-     VALUES ('02dba41d-3c57-4ef4-97a8-6fbf9127fb41', 'Stakeholder', 'C and S Co. Inc.', 'Excavator', 'Yes', 'https://candscoinc.com/', 'Excavator', '', 'Saundra Waggoner', 1, 0, 0, 0);
+     VALUES ('95457944-6aea-41bd-9d31-f1d8d7d72b4b', 'Stakeholder', 'C and S Co. Inc.', 'Excavator', 'Yes', 'https://candscoinc.com/', 'Excavator', '', 'Saundra Waggoner', 1, 0, 0, 0);
 INSERT INTO members (id, type, company_name, stakeholder_group, voting_member, website, category, term, contact_person, active, is_board_member, is_chair, is_vice_chair)
-     VALUES ('db7e3c49-5b95-4e00-8004-d207ee14daf5', 'Stakeholder', 'City of Boulder City Public Works', 'Public Works', 'Yes', 'https://www.bcnv.org/221/Public-Works', 'Public Works', '', 'Steve Priscu', 1, 0, 0, 0);
+     VALUES ('25d1e139-dcf6-4e3b-900c-248509385f9e', 'Stakeholder', 'City of Boulder City Public Works', 'Public Works', 'Yes', 'https://www.bcnv.org/221/Public-Works', 'Public Works', '', 'Steve Priscu', 1, 0, 0, 0);
 INSERT INTO members (id, type, company_name, stakeholder_group, voting_member, website, category, term, contact_person, active, is_board_member, is_chair, is_vice_chair)
-     VALUES ('c2f12ac8-6e21-4c35-ac19-68b6ebe1c4dc', 'Stakeholder', 'City of Henderson Public Works', 'Public Works', 'Yes', 'https://www.cityofhenderson.com/government/departments/public-works', 'Public Works', '2025-2026', 'Lance Olson', 1, 1, 0, 0);
+     VALUES ('9026485a-b756-498d-acd8-74b1936537a4', 'Stakeholder', 'City of Henderson Public Works', 'Public Works', 'Yes', 'https://www.cityofhenderson.com/government/departments/public-works', 'Public Works', '2025-2026', 'Lance Olson', 1, 1, 0, 0);
 INSERT INTO members (id, type, company_name, stakeholder_group, voting_member, website, category, term, contact_person, active, is_board_member, is_chair, is_vice_chair)
-     VALUES ('57c4e943-2ce9-41f9-9513-83567bf21191', 'Stakeholder', 'City of Las Vegas Public Works', 'Public Works', 'Yes', 'https://www.lasvegasnevada.gov/Government/Departments/Public-Works', 'Public Works', '', 'Kondala Mantri', 1, 0, 0, 0);
+     VALUES ('a75adf2c-f086-483a-8b2d-fbd88cdc3c2a', 'Stakeholder', 'City of Las Vegas Public Works', 'Public Works', 'Yes', 'https://www.lasvegasnevada.gov/Government/Departments/Public-Works', 'Public Works', '', 'Kondala Mantri', 1, 0, 0, 0);
 INSERT INTO members (id, type, company_name, stakeholder_group, voting_member, website, category, term, contact_person, active, is_board_member, is_chair, is_vice_chair)
-     VALUES ('a427db79-4099-44a3-b1bf-fa76cfa0ea17', 'Stakeholder', 'Clark County Public Works', 'Public Works', 'Yes', 'https://www.clarkcountynv.gov/government/departments/public_works_department/index.php', 'Public Works', '', 'Sal Partida', 1, 0, 0, 0);
+     VALUES ('80239e1c-66ee-46bc-b25a-23df7f1479c6', 'Stakeholder', 'Clark County Public Works', 'Public Works', 'Yes', 'https://www.clarkcountynv.gov/government/departments/public_works_department/index.php', 'Public Works', '', 'Sal Partida', 1, 0, 0, 0);
 INSERT INTO members (id, type, company_name, stakeholder_group, voting_member, website, category, term, contact_person, active, is_board_member, is_chair, is_vice_chair)
-     VALUES ('6df57d4b-e786-4314-a134-3a8a68ccefc7', 'Stakeholder', 'Clark County Water Reclamation District', 'Sewer', 'Yes', 'https://www.cleanwaterteam.com/', 'Sewer', '2026-2027', 'Boyd Duchene', 1, 1, 0, 0);
+     VALUES ('6bdd6f70-25bd-49ba-b6b0-1a76aecb6362', 'Stakeholder', 'Clark County Water Reclamation District', 'Sewer', 'Yes', 'https://www.cleanwaterteam.com/', 'Sewer', '2026-2027', 'Boyd Duchene', 1, 1, 0, 0);
 INSERT INTO members (id, type, company_name, stakeholder_group, voting_member, website, category, term, contact_person, active, is_board_member, is_chair, is_vice_chair)
-     VALUES ('04a2e281-6a88-4b6f-9554-ea2696c29c05', 'Stakeholder', 'Cox Communications', 'Telecommunications', 'Yes', 'http://cox.com', 'Telecommunications', '', 'Beryl Cox', 1, 0, 0, 0);
+     VALUES ('4de7dc80-b475-4c7c-8638-5474ac0842f1', 'Stakeholder', 'Cox Communications', 'Telecommunications', 'Yes', 'http://cox.com', 'Telecommunications', '', 'Beryl Cox', 1, 0, 0, 0);
 INSERT INTO members (id, type, company_name, stakeholder_group, voting_member, website, category, term, contact_person, active, is_board_member, is_chair, is_vice_chair)
-     VALUES ('0e2147b6-34bd-47ea-99a1-ad9d12908c90', 'Stakeholder', 'ELM Utility Services', 'Locator', 'Yes', 'https://elmllc.com/', 'Locator', '2026-2027', 'Austin Benedict', 1, 1, 0, 0);
+     VALUES ('d1e21ba9-4285-4ed1-9059-7d012a9a46d7', 'Stakeholder', 'ELM Utility Services', 'Locator', 'Yes', 'https://elmllc.com/', 'Locator', '2026-2027', 'Austin Benedict', 1, 1, 0, 0);
 INSERT INTO members (id, type, company_name, stakeholder_group, voting_member, website, category, term, contact_person, active, is_board_member, is_chair, is_vice_chair)
-     VALUES ('c80f2c93-3759-469f-a627-82d62fe95011', 'Stakeholder', 'Empire Cat', 'Excavator', 'Yes', 'https://www.empire-cat.com/locations/henderson', 'Excavator', '', 'Seth Hendrickson', 1, 0, 0, 0);
+     VALUES ('17268fd0-f8fc-480a-bb08-b86badcd11ab', 'Stakeholder', 'Empire Cat', 'Excavator', 'Yes', 'https://www.empire-cat.com/locations/henderson', 'Excavator', '', 'Seth Hendrickson', 1, 0, 0, 0);
 INSERT INTO members (id, type, company_name, stakeholder_group, voting_member, website, category, term, contact_person, active, is_board_member, is_chair, is_vice_chair)
-     VALUES ('bcf32750-5697-4c9e-908f-6e98cf5ca4d3', 'Stakeholder', 'Ervin Cable Construction', 'Excavator', 'Yes', 'https://ervincable.com/', 'Excavator', '', 'Patricia Pritchard', 1, 0, 0, 0);
+     VALUES ('cb5173e9-9c74-476a-aab8-61cb72ec2cee', 'Stakeholder', 'Ervin Cable Construction', 'Excavator', 'Yes', 'https://ervincable.com/', 'Excavator', '', 'Patricia Pritchard', 1, 0, 0, 0);
 INSERT INTO members (id, type, company_name, stakeholder_group, voting_member, website, category, term, contact_person, active, is_board_member, is_chair, is_vice_chair)
-     VALUES ('51b5e6e9-8d8a-45cc-bff0-91488fb76f10', 'Stakeholder', 'GigaPower', 'Telecommunication', 'Yes', 'https://gigapower.com/', 'Telecommunication', '', '', 1, 0, 0, 0);
+     VALUES ('153a5623-28fd-4e8e-add1-b41609b69f72', 'Stakeholder', 'GigaPower', 'Telecommunication', 'Yes', 'https://gigapower.com/', 'Telecommunication', '', '', 1, 0, 0, 0);
 INSERT INTO members (id, type, company_name, stakeholder_group, voting_member, website, category, term, contact_person, active, is_board_member, is_chair, is_vice_chair)
-     VALUES ('77561beb-1f19-4896-91db-e9bf5b0ccd9a', 'Stakeholder', 'Google Fiber', 'Telecommunication', 'Yes', 'https://fiber.google.com/', 'Telecommunication', '', 'Michelle Koyle', 1, 0, 0, 0);
+     VALUES ('69532894-b598-445b-9710-46c772808533', 'Stakeholder', 'Google Fiber', 'Telecommunication', 'Yes', 'https://fiber.google.com/', 'Telecommunication', '', 'Michelle Koyle', 1, 0, 0, 0);
 INSERT INTO members (id, type, company_name, stakeholder_group, voting_member, website, category, term, contact_person, active, is_board_member, is_chair, is_vice_chair)
-     VALUES ('79efd2d6-6977-4a37-817f-d6b3977120bc', 'Stakeholder', 'Great Basin Gas Transmission Company', 'Pipeline', 'Yes', 'https://www.greatbasingtc.com/', 'Pipeline', '', 'Rusty McLaughlin', 1, 0, 0, 0);
+     VALUES ('14f9bd56-f2c8-43f0-b088-007bcdc6ebea', 'Stakeholder', 'Great Basin Gas Transmission Company', 'Pipeline', 'Yes', 'https://www.greatbasingtc.com/', 'Pipeline', '', 'Rusty McLaughlin', 1, 0, 0, 0);
 INSERT INTO members (id, type, company_name, stakeholder_group, voting_member, website, category, term, contact_person, active, is_board_member, is_chair, is_vice_chair)
-     VALUES ('1b5632dd-eef8-4af1-9a43-24eb29210c58', 'Stakeholder', 'HF Sinclair', 'Pipeline', 'Yes', 'https://www.hfsinclair.com/home/default.aspx', 'Pipeline', '', 'Mark Largesse', 1, 0, 0, 0);
+     VALUES ('06e5be54-87a7-44cc-bd31-e84324d5803c', 'Stakeholder', 'HF Sinclair', 'Pipeline', 'Yes', 'https://www.hfsinclair.com/home/default.aspx', 'Pipeline', '', 'Mark Largesse', 1, 0, 0, 0);
 INSERT INTO members (id, type, company_name, stakeholder_group, voting_member, website, category, term, contact_person, active, is_board_member, is_chair, is_vice_chair)
-     VALUES ('41abfd8c-5784-4e43-98b5-a4901ddc6ab9', 'Stakeholder', 'Hole Hogz', 'Excavator', 'Yes', 'https://www.holehogz.com/', 'Excavator', '', 'Robert McKechnie', 1, 0, 0, 0);
+     VALUES ('5258b586-4a1f-4272-99d2-b80b3b71b967', 'Stakeholder', 'Hole Hogz', 'Excavator', 'Yes', 'https://www.holehogz.com/', 'Excavator', '', 'Robert McKechnie', 1, 0, 0, 0);
 INSERT INTO members (id, type, company_name, stakeholder_group, voting_member, website, category, term, contact_person, active, is_board_member, is_chair, is_vice_chair)
-     VALUES ('d2442529-a60e-4932-8b25-c7ca1a369082', 'Stakeholder', 'JABCO. UN Inc.', 'Excavator', 'Yes', 'https://jabco.us/', 'Excavator', '', 'Ines Esquivel', 1, 0, 0, 0);
+     VALUES ('8597687d-5a5c-4977-9118-0d4471a3b002', 'Stakeholder', 'JABCO. UN Inc.', 'Excavator', 'Yes', 'https://jabco.us/', 'Excavator', '', 'Ines Esquivel', 1, 0, 0, 0);
 INSERT INTO members (id, type, company_name, stakeholder_group, voting_member, website, category, term, contact_person, active, is_board_member, is_chair, is_vice_chair)
-     VALUES ('0f8396c2-0929-4fa9-807f-0de088c26771', 'Stakeholder', 'JBM Underground', 'Excavator', 'Yes', 'https://jbmunderground.com/', 'Excavator', '', 'Mat Whalen', 1, 0, 0, 0);
+     VALUES ('81a00bd7-d8ae-4b84-9637-1ea3613e944e', 'Stakeholder', 'JBM Underground', 'Excavator', 'Yes', 'https://jbmunderground.com/', 'Excavator', '', 'Mat Whalen', 1, 0, 0, 0);
 INSERT INTO members (id, type, company_name, stakeholder_group, voting_member, website, category, term, contact_person, active, is_board_member, is_chair, is_vice_chair)
-     VALUES ('eebb6b83-4d91-48ca-bc6a-5f727ac9b6b1', 'Stakeholder', 'KCI Technologies Inc.', 'Design Engineering', 'Yes', 'http://www.kci.com/', 'Design Engineering', '2026-2027', 'Rick Torrens', 1, 1, 0, 0);
+     VALUES ('6ef14973-368d-43cb-aa10-632d857e8bad', 'Stakeholder', 'KCI Technologies Inc.', 'Design Engineering', 'Yes', 'http://www.kci.com/', 'Design Engineering', '2026-2027', 'Rick Torrens', 1, 1, 0, 0);
 INSERT INTO members (id, type, company_name, stakeholder_group, voting_member, website, category, term, contact_person, active, is_board_member, is_chair, is_vice_chair)
-     VALUES ('3c0a0cc3-2a4b-49eb-9c72-93049c05281f', 'Stakeholder', 'Kern River Gas Transmission', 'Pipeline', 'Yes', 'https://www.kernrivergas.com/', 'Pipeline', '2025-2026', 'Jeremy Crawford', 1, 1, 0, 0);
+     VALUES ('f5decb1f-50b7-4e15-a30e-687e5cceec05', 'Stakeholder', 'Kern River Gas Transmission', 'Pipeline', 'Yes', 'https://www.kernrivergas.com/', 'Pipeline', '2025-2026', 'Jeremy Crawford', 1, 1, 0, 0);
 INSERT INTO members (id, type, company_name, stakeholder_group, voting_member, website, category, term, contact_person, active, is_board_member, is_chair, is_vice_chair)
-     VALUES ('9af187dc-496a-44d2-8586-1c58db6f36e5', 'Stakeholder', 'Las Vegas Paving', 'Road Builder', 'Yes', 'https://lasvegaspaving.com/', 'Road Builder', '', 'Scott Allen', 1, 0, 0, 0);
+     VALUES ('4b1a644e-d31b-4cf4-abd3-17def37dd6f5', 'Stakeholder', 'Las Vegas Paving', 'Road Builder', 'Yes', 'https://lasvegaspaving.com/', 'Road Builder', '', 'Scott Allen', 1, 0, 0, 0);
 INSERT INTO members (id, type, company_name, stakeholder_group, voting_member, website, category, term, contact_person, active, is_board_member, is_chair, is_vice_chair)
-     VALUES ('48bcc070-f0bb-4956-b3df-8ddbc216c022', 'Stakeholder', 'Las Vegas Valley Water District', 'Water', 'Yes', 'https://www.lvvwd.com', 'Water', '2025-2026', 'Mike Austin', 1, 1, 0, 0);
+     VALUES ('9266c09e-4d65-41c2-aa5f-7f95ba485f2c', 'Stakeholder', 'Las Vegas Valley Water District', 'Water', 'Yes', 'https://www.lvvwd.com', 'Water', '2025-2026', 'Mike Austin', 1, 1, 0, 0);
 INSERT INTO members (id, type, company_name, stakeholder_group, voting_member, website, category, term, contact_person, active, is_board_member, is_chair, is_vice_chair)
-     VALUES ('bef291a6-65e5-4e55-b1e2-f4bdda5d8560', 'Stakeholder', 'Lumen', 'Telecommunications', 'Yes', 'https://lumen.com/', 'Telecommunications', '', 'Alonzo Trujillo', 1, 0, 0, 0);
+     VALUES ('0ad5ae41-4fc1-41ac-8c82-39016164e773', 'Stakeholder', 'Lumen', 'Telecommunications', 'Yes', 'https://lumen.com/', 'Telecommunications', '', 'Alonzo Trujillo', 1, 0, 0, 0);
 INSERT INTO members (id, type, company_name, stakeholder_group, voting_member, website, category, term, contact_person, active, is_board_member, is_chair, is_vice_chair)
-     VALUES ('eb062f54-535f-4a20-bb87-3a79a7900f89', 'Stakeholder', 'Mammoth Underground', 'Excavator', 'Yes', 'https://mammothug.com/', 'Excavator', '', 'Kathy Bergman', 1, 0, 0, 0);
+     VALUES ('c93976a1-73da-4cb6-b98a-b1eaf23baa2f', 'Stakeholder', 'Mammoth Underground', 'Excavator', 'Yes', 'https://mammothug.com/', 'Excavator', '', 'Kathy Bergman', 1, 0, 0, 0);
 INSERT INTO members (id, type, company_name, stakeholder_group, voting_member, website, category, term, contact_person, active, is_board_member, is_chair, is_vice_chair)
-     VALUES ('8b366fa3-22dd-42b8-93b1-777ccca28428', 'Stakeholder', 'Menichino Construction', 'Excavator', 'Yes', 'https://menichinoconstruction.com/', 'Excavator', '', 'Vince Menichino', 1, 0, 0, 0);
+     VALUES ('32032c71-f20f-4626-82cd-a4df85eb1a8f', 'Stakeholder', 'Menichino Construction', 'Excavator', 'Yes', 'https://menichinoconstruction.com/', 'Excavator', '', 'Vince Menichino', 1, 0, 0, 0);
 INSERT INTO members (id, type, company_name, stakeholder_group, voting_member, website, category, term, contact_person, active, is_board_member, is_chair, is_vice_chair)
-     VALUES ('4b36b58c-bab5-4e9b-816e-0b706dd7faf6', 'Stakeholder', 'NPL Construction Co.', 'Excavator', 'Yes', 'https://gonpl.com/', 'Excavator', '', 'Sean Murphy', 1, 0, 0, 0);
+     VALUES ('0226f275-00ed-4f28-8376-d9ec5797391b', 'Stakeholder', 'NPL Construction Co.', 'Excavator', 'Yes', 'https://gonpl.com/', 'Excavator', '', 'Sean Murphy', 1, 0, 0, 0);
 INSERT INTO members (id, type, company_name, stakeholder_group, voting_member, website, category, term, contact_person, active, is_board_member, is_chair, is_vice_chair)
-     VALUES ('af59db13-75bd-4734-af83-acdbdfb6a41c', 'Stakeholder', 'New-Com', 'Excavator', 'Yes', 'https://nclasvegas.com/', 'Excavator', '', 'Hannah Stevens', 1, 0, 0, 0);
+     VALUES ('b7c09885-3094-410f-9573-7e5dcf6e09f9', 'Stakeholder', 'New-Com', 'Excavator', 'Yes', 'https://nclasvegas.com/', 'Excavator', '', 'Hannah Stevens', 1, 0, 0, 0);
 INSERT INTO members (id, type, company_name, stakeholder_group, voting_member, website, category, term, contact_person, active, is_board_member, is_chair, is_vice_chair)
-     VALUES ('9deca17b-eae8-4840-bcb7-1dae3942d66e', 'Stakeholder', 'NUCA/Las Vegas Paving', 'Alliance Representative', 'Yes', 'https://lasvegaspaving.com/', 'Alliance Representative', '2025-2026', 'Scott Allen', 1, 1, 0, 0);
+     VALUES ('e3d1cec9-57bf-4d64-8cf7-87f5f91210b4', 'Stakeholder', 'NUCA/Las Vegas Paving', 'Alliance Representative', 'Yes', 'https://lasvegaspaving.com/', 'Alliance Representative', '2025-2026', 'Scott Allen', 1, 1, 0, 0);
 INSERT INTO members (id, type, company_name, stakeholder_group, voting_member, website, category, term, contact_person, active, is_board_member, is_chair, is_vice_chair)
-     VALUES ('c112253a-6900-4b36-ae8e-253b014bb865', 'Stakeholder', 'NV Energy', 'Electric', 'Yes', 'http://www.nvenergy.com', 'Electric', '2025-2026', 'Kristen Garcia', 1, 1, 1, 0);
+     VALUES ('554bc57c-aa71-49a9-a0b7-8aaad949572b', 'Stakeholder', 'NV Energy', 'Electric', 'Yes', 'http://www.nvenergy.com', 'Electric', '2025-2026', 'Kristen Garcia', 1, 1, 1, 0);
 INSERT INTO members (id, type, company_name, stakeholder_group, voting_member, website, category, term, contact_person, active, is_board_member, is_chair, is_vice_chair)
-     VALUES ('28e4c402-71b5-4889-b493-a82dd41ac2ee', 'Stakeholder', 'PelicanCorp', 'One-Call', 'Yes', 'https://pelicancorp.com/', 'One-Call', '', 'Siddarth Munivelu', 1, 0, 0, 0);
+     VALUES ('b22cd30c-477b-4d4d-bd73-f541a7657346', 'Stakeholder', 'PelicanCorp', 'One-Call', 'Yes', 'https://pelicancorp.com/', 'One-Call', '', 'Siddarth Munivelu', 1, 0, 0, 0);
 INSERT INTO members (id, type, company_name, stakeholder_group, voting_member, website, category, term, contact_person, active, is_board_member, is_chair, is_vice_chair)
-     VALUES ('bc983ccb-af25-4a1e-b6e6-f6f982d00533', 'Stakeholder', 'Prospector Pipeline Company', 'Pipeline', 'Yes', '', 'Pipeline', '', 'Danielle Keelan', 1, 0, 0, 0);
+     VALUES ('c58c9f76-6224-4269-b3c4-44340b4f889d', 'Stakeholder', 'Prospector Pipeline Company', 'Pipeline', 'Yes', '', 'Pipeline', '', 'Danielle Keelan', 1, 0, 0, 0);
 INSERT INTO members (id, type, company_name, stakeholder_group, voting_member, website, category, term, contact_person, active, is_board_member, is_chair, is_vice_chair)
-     VALUES ('1d267df2-48c5-42ce-aedf-78ec6d3e0e11', 'Stakeholder', 'Public Utilities Commission of Nevada', 'Regulator', 'Yes', 'http://www.puc.nv.gov', 'Regulator', '2025-2026', 'Dennis Bott', 1, 1, 0, 0);
+     VALUES ('38ec8f23-0aa4-42bd-815e-17c961c462f9', 'Stakeholder', 'Public Utilities Commission of Nevada', 'Regulator', 'Yes', 'http://www.puc.nv.gov', 'Regulator', '2025-2026', 'Dennis Bott', 1, 1, 0, 0);
 INSERT INTO members (id, type, company_name, stakeholder_group, voting_member, website, category, term, contact_person, active, is_board_member, is_chair, is_vice_chair)
-     VALUES ('6d4f8adc-08f9-4041-8714-b7563ecaa8bc', 'Stakeholder', 'Q&D Construction', 'Road Builder', 'Yes', 'https://qdconstruction.com/', 'Road Builder', '2025-2026', 'Roy Halliburton', 1, 1, 0, 0);
+     VALUES ('d0f4caf5-640c-44bc-a7bd-2ae08c21b237', 'Stakeholder', 'Q&D Construction', 'Road Builder', 'Yes', 'https://qdconstruction.com/', 'Road Builder', '2025-2026', 'Roy Halliburton', 1, 1, 0, 0);
 INSERT INTO members (id, type, company_name, stakeholder_group, voting_member, website, category, term, contact_person, active, is_board_member, is_chair, is_vice_chair)
-     VALUES ('a5067381-76ba-41ec-b06e-c1e2975b6370', 'Stakeholder', 'RP Weddell & Sons', 'Excavator', 'Yes', 'https://g.co/kgs/85FvUQF', 'Excavator', '', 'Cesar Castillo', 1, 0, 0, 0);
+     VALUES ('4ba38803-b62d-47cf-a8bc-b669f69d9a0f', 'Stakeholder', 'RP Weddell & Sons', 'Excavator', 'Yes', 'https://g.co/kgs/85FvUQF', 'Excavator', '', 'Cesar Castillo', 1, 0, 0, 0);
 INSERT INTO members (id, type, company_name, stakeholder_group, voting_member, website, category, term, contact_person, active, is_board_member, is_chair, is_vice_chair)
-     VALUES ('ad5186d4-52f8-4664-b269-0d181aecb54b', 'Stakeholder', 'Southwest Gas', 'Gas', 'Yes', 'https://www.swgas.com/', 'Gas', '2026-2027', 'Terry Harpt', 1, 1, 0, 0);
+     VALUES ('37ac53ab-d99a-4fb4-94ec-95349916d309', 'Stakeholder', 'Southwest Gas', 'Gas', 'Yes', 'https://www.swgas.com/', 'Gas', '2026-2027', 'Terry Harpt', 1, 1, 0, 0);
 INSERT INTO members (id, type, company_name, stakeholder_group, voting_member, website, category, term, contact_person, active, is_board_member, is_chair, is_vice_chair)
-     VALUES ('037e46a2-7bfd-4807-ba35-4597cc91fbaf', 'Stakeholder', 'Stake Center Locating', 'Locator', 'Yes', 'https://www.stakecenter.com/', 'Locator', '', 'Tom Fava', 1, 0, 0, 0);
+     VALUES ('f3edd804-f7ff-40ad-b000-26a79c50d0ea', 'Stakeholder', 'Stake Center Locating', 'Locator', 'Yes', 'https://www.stakecenter.com/', 'Locator', '', 'Tom Fava', 1, 0, 0, 0);
 INSERT INTO members (id, type, company_name, stakeholder_group, voting_member, website, category, term, contact_person, active, is_board_member, is_chair, is_vice_chair)
-     VALUES ('eb0885a8-331c-4f68-b4a7-d23f228d3a64', 'Stakeholder', 'Team Fishel', 'Excavator', 'Yes', 'https://www.teamfishel.com/', 'Excavator', '', 'Marty Byars', 1, 0, 0, 0);
+     VALUES ('42e497c7-c55f-4e6a-bb82-ade34e7c3fb8', 'Stakeholder', 'Team Fishel', 'Excavator', 'Yes', 'https://www.teamfishel.com/', 'Excavator', '', 'Marty Byars', 1, 0, 0, 0);
 INSERT INTO members (id, type, company_name, stakeholder_group, voting_member, website, category, term, contact_person, active, is_board_member, is_chair, is_vice_chair)
-     VALUES ('5c7b8d33-492f-4515-a355-ed37baeaba5e', 'Stakeholder', 'Terra Contracting', 'Excavator', 'Yes', 'https://terracontracting.com/', 'Excavator', '', 'Paul Gibson', 1, 0, 0, 0);
+     VALUES ('00ca27c1-96fb-46f5-a71a-9f09926197ca', 'Stakeholder', 'Terra Contracting', 'Excavator', 'Yes', 'https://terracontracting.com/', 'Excavator', '', 'Paul Gibson', 1, 0, 0, 0);
 INSERT INTO members (id, type, company_name, stakeholder_group, voting_member, website, category, term, contact_person, active, is_board_member, is_chair, is_vice_chair)
-     VALUES ('dc6d1f59-7aeb-46b3-b9e9-9d0fd3997329', 'Stakeholder', 'Truckee Meadows Water Authority', 'Water', 'Yes', 'https://tmwa.com/', 'Water', '', 'Charles Atkinson', 1, 0, 0, 0);
+     VALUES ('1aeb1723-806a-4df9-94fa-3480cb17fe0d', 'Stakeholder', 'Truckee Meadows Water Authority', 'Water', 'Yes', 'https://tmwa.com/', 'Water', '', 'Charles Atkinson', 1, 0, 0, 0);
 INSERT INTO members (id, type, company_name, stakeholder_group, voting_member, website, category, term, contact_person, active, is_board_member, is_chair, is_vice_chair)
-     VALUES ('07007e6d-1ff5-419f-8505-0801085ccc8c', 'Stakeholder', 'USA North 811', 'One-Call', 'Yes', 'http://usanorth811.org/', 'One-Call', '2025-2026', 'Ryan White', 1, 1, 0, 1);
+     VALUES ('181806d7-54dd-48dd-8ebe-fb34e0c568b0', 'Stakeholder', 'USA North 811', 'One-Call', 'Yes', 'http://usanorth811.org/', 'One-Call', '2025-2026', 'Ryan White', 1, 1, 0, 1);
 INSERT INTO members (id, type, company_name, stakeholder_group, voting_member, website, category, term, contact_person, active, is_board_member, is_chair, is_vice_chair)
-     VALUES ('5c0034f4-ac1f-4e46-b5b3-33a6d6de42ec', 'Stakeholder', 'USIC', 'Locator', 'Yes', 'https://www.usicllc.com/', 'Locator', '', 'Mike Marrero', 1, 0, 0, 0);
+     VALUES ('9f3a2181-b516-48e1-a770-6ae2a6a53595', 'Stakeholder', 'USIC', 'Locator', 'Yes', 'https://www.usicllc.com/', 'Locator', '', 'Mike Marrero', 1, 0, 0, 0);
 INSERT INTO members (id, type, company_name, stakeholder_group, voting_member, website, category, term, contact_person, active, is_board_member, is_chair, is_vice_chair)
-     VALUES ('3be149fe-5683-4281-bb5c-ed23308cc76b', 'Stakeholder', 'VCI Construction', 'Excavator', 'Yes', 'https://vcicom.com/', 'Excavator', '', 'Rob Espinosa', 1, 0, 0, 0);
+     VALUES ('abc15861-7a50-46b8-b0f2-0823b67c6bf9', 'Stakeholder', 'VCI Construction', 'Excavator', 'Yes', 'https://vcicom.com/', 'Excavator', '', 'Rob Espinosa', 1, 0, 0, 0);
 INSERT INTO members (id, type, company_name, stakeholder_group, voting_member, website, category, term, contact_person, active, is_board_member, is_chair, is_vice_chair)
-     VALUES ('859800cd-44aa-4d0b-956e-bc05f6e9ed14', 'Stakeholder', 'Western States Contracting', 'Excavator', 'Yes', 'http://www.westernstatesco.com/', 'Excavator', '2026-2027', 'Harold Lefler', 1, 1, 0, 0);
+     VALUES ('6d3fea49-257a-49e7-bab2-bd33bad89ab1', 'Stakeholder', 'Western States Contracting', 'Excavator', 'Yes', 'http://www.westernstatesco.com/', 'Excavator', '2026-2027', 'Harold Lefler', 1, 1, 0, 0);
 INSERT INTO members (id, type, company_name, stakeholder_group, voting_member, website, category, term, contact_person, active, is_board_member, is_chair, is_vice_chair)
-     VALUES ('803f7c90-ea91-40f1-9460-792f0ac8de7f', 'Stakeholder', 'Xram Excavation', 'Excavator', 'Yes', 'https://g.co/kgs/QqEWCLq', 'Excavator', '', 'Scotty Marx', 1, 0, 0, 0);
+     VALUES ('bafc48cd-b79e-4929-b2db-ebfbc24dc117', 'Stakeholder', 'Xram Excavation', 'Excavator', 'Yes', 'https://g.co/kgs/QqEWCLq', 'Excavator', '', 'Scotty Marx', 1, 0, 0, 0);
 INSERT INTO members (id, type, company_name, stakeholder_group, voting_member, website, category, term, contact_person, active, is_board_member, is_chair, is_vice_chair)
-     VALUES ('c291c46b-73ad-460f-a540-ffaa6e6d4a50', 'Stakeholder', 'Arizona Pipeline Company', 'Excavator', 'Yes', 'https://www.arizonapipeline.com/', 'Excavator', '', 'David Syfrig', 1, 0, 0, 0);
+     VALUES ('a123120e-6d13-443e-b7cd-d540e08eeaba', 'Stakeholder', 'Arizona Pipeline Company', 'Excavator', 'Yes', 'https://www.arizonapipeline.com/', 'Excavator', '', 'David Syfrig', 1, 0, 0, 0);
 INSERT INTO members (id, type, company_name, stakeholder_group, voting_member, website, category, term, contact_person, active, is_board_member, is_chair, is_vice_chair)
-     VALUES ('5777ec31-d6ab-4781-964d-867663c15032', 'Associate', 'DigContrax', '', 'No', 'https://digcontrax.com/', 'Associate', '', '', 1, 0, 0, 0);
+     VALUES ('9d7c2dfc-ff0f-4bc1-8056-8705e708d801', 'Associate', 'DigContrax', '', 'No', 'https://digcontrax.com/', 'Associate', '', '', 1, 0, 0, 0);
 INSERT INTO members (id, type, company_name, stakeholder_group, voting_member, website, category, term, contact_person, active, is_board_member, is_chair, is_vice_chair)
-     VALUES ('f6394130-cb6f-49e5-81f0-65d7229c4db9', 'Stakeholder', 'Flippin''s Trenching', 'Excavator', 'Yes', 'https://flippins.com/', 'Excavator', '', 'Ken Flippin', 1, 0, 0, 0);
+     VALUES ('d607a901-d2e1-42c9-9f8c-f74f2ba4bbbd', 'Stakeholder', 'Flippin''s Trenching', 'Excavator', 'Yes', 'https://flippins.com/', 'Excavator', '', 'Ken Flippin', 1, 0, 0, 0);
 INSERT INTO members (id, type, company_name, stakeholder_group, voting_member, website, category, term, contact_person, active, is_board_member, is_chair, is_vice_chair)
-     VALUES ('9d616ab6-b80b-457f-931c-ae25c6c6cc6f', 'Associate', 'Haaker Equipment Company', '', 'No', 'https://www.haaker.com/', 'Associate', '', '', 1, 0, 0, 0);
+     VALUES ('1d17c83b-54cb-4c31-8cfb-8cc5d031d193', 'Associate', 'Haaker Equipment Company', '', 'No', 'https://www.haaker.com/', 'Associate', '', '', 1, 0, 0, 0);
 INSERT INTO members (id, type, company_name, stakeholder_group, voting_member, website, category, term, contact_person, active, is_board_member, is_chair, is_vice_chair)
-     VALUES ('613325a1-8f1f-4338-b8bc-6edf98f4700a', 'Stakeholder', 'National Trench Safety', 'Excavator', 'Yes', 'https://www.ntsafety.com/', 'Excavator', '', 'Julie Allen', 1, 0, 0, 0);
+     VALUES ('24b9ff7e-8ae8-47eb-9b92-93fde7ef80e3', 'Stakeholder', 'National Trench Safety', 'Excavator', 'Yes', 'https://www.ntsafety.com/', 'Excavator', '', 'Julie Allen', 1, 0, 0, 0);
 INSERT INTO members (id, type, company_name, stakeholder_group, voting_member, website, category, term, contact_person, active, is_board_member, is_chair, is_vice_chair)
-     VALUES ('ea7e2b9e-5d5a-4101-9892-d028a956b24c', 'Associate', 'NEPTCO MULETAPE', '', 'No', 'https://chasecorp.com/products/cable-pulling-and-detection?utm_source=google&utm_medium=ppc&utm_campaign=go_pad_gr&utm_term=neptco%20mule%20tape&utm_campaign=01-GO-EN-US-CC-MuletapeBrand&utm_source=adwords&utm_medium=ppc&hsa_acc=1855261152&hsa_cam=22653008392&hsa_grp=191776003188&hsa_ad=767000734743&hsa_src=g&hsa_tgt=kwd-324832192038&hsa_kw=neptco%20mule%20tape&hsa_mt=e&hsa_net=adwords&hsa_ver=3&gad_source=1&gad_campaignid=22653008392&gbraid=0AAAAA-Fewryn2NneK9LEC3YrZ5JrLIHiz&gclid=Cj0KCQiA4eHLBhCzARIsAJ2NZoKeMfNdmjmk8mvsiAshNmwnYTD-tBARyzyiVz38wEOQ7gBF4aI2ZskaAly8EALw_wcB', 'Associate', '', '', 1, 0, 0, 0);
+     VALUES ('4cf86934-cdfb-4b82-9af9-371e4fd4d845', 'Associate', 'NEPTCO MULETAPE', '', 'No', 'https://chasecorp.com/products/cable-pulling-and-detection?utm_source=google&utm_medium=ppc&utm_campaign=go_pad_gr&utm_term=neptco%20mule%20tape&utm_campaign=01-GO-EN-US-CC-MuletapeBrand&utm_source=adwords&utm_medium=ppc&hsa_acc=1855261152&hsa_cam=22653008392&hsa_grp=191776003188&hsa_ad=767000734743&hsa_src=g&hsa_tgt=kwd-324832192038&hsa_kw=neptco%20mule%20tape&hsa_mt=e&hsa_net=adwords&hsa_ver=3&gad_source=1&gad_campaignid=22653008392&gbraid=0AAAAA-Fewryn2NneK9LEC3YrZ5JrLIHiz&gclid=Cj0KCQiA4eHLBhCzARIsAJ2NZoKeMfNdmjmk8mvsiAshNmwnYTD-tBARyzyiVz38wEOQ7gBF4aI2ZskaAly8EALw_wcB', 'Associate', '', '', 1, 0, 0, 0);
 INSERT INTO members (id, type, company_name, stakeholder_group, voting_member, website, category, term, contact_person, active, is_board_member, is_chair, is_vice_chair)
-     VALUES ('b5c16ec8-a732-4021-9bac-a93e398b198d', 'Associate', 'Norfield DP', '', 'No', 'https://www.norfielddp.com/', 'Associate', '', '', 1, 0, 0, 0);
+     VALUES ('0fb01442-1e6c-481b-af8f-d798a9540e44', 'Associate', 'Norfield DP', '', 'No', 'https://www.norfielddp.com/', 'Associate', '', '', 1, 0, 0, 0);
 INSERT INTO members (id, type, company_name, stakeholder_group, voting_member, website, category, term, contact_person, active, is_board_member, is_chair, is_vice_chair)
-     VALUES ('525d2a52-b663-414c-b75e-c1fc12142a06', 'Associate', 'Sub-T & Locating Dynamics', '', 'No', 'https://www.locatingdynamics.com/', 'Associate', '', '', 1, 0, 0, 0);
+     VALUES ('81ba0299-7ea0-41de-a876-423583951130', 'Associate', 'Sub-T & Locating Dynamics', '', 'No', 'https://www.locatingdynamics.com/', 'Associate', '', '', 1, 0, 0, 0);
 INSERT INTO members (id, type, company_name, stakeholder_group, voting_member, website, category, term, contact_person, active, is_board_member, is_chair, is_vice_chair)
-     VALUES ('8f50b6bb-d3c2-44d4-bb28-b138bc41598f', 'Associate', 'Tecsolutions Consultants', '', 'No', 'https://www.tecsolutionsconsultants.com/', 'Associate', '', '', 1, 0, 0, 0);
+     VALUES ('572b6d11-84d6-47c1-b291-184b26f56b12', 'Associate', 'Tecsolutions Consultants', '', 'No', 'https://www.tecsolutionsconsultants.com/', 'Associate', '', '', 1, 0, 0, 0);
 INSERT INTO members (id, type, company_name, stakeholder_group, voting_member, website, category, term, contact_person, active, is_board_member, is_chair, is_vice_chair)
-     VALUES ('199a0a8b-5e73-4753-b955-eedb7b26891f', 'Stakeholder', 'Mears Group', 'Excavator', 'Yes', 'https://www.mears.net/', 'Excavator', '', 'Bryan Kolstad', 1, 0, 0, 0);
+     VALUES ('cfe1cb9f-10d3-4d13-89e3-7434da41e26e', 'Stakeholder', 'Mears Group', 'Excavator', 'Yes', 'https://www.mears.net/', 'Excavator', '', 'Bryan Kolstad', 1, 0, 0, 0);
 DELETE FROM programs;
 INSERT OR REPLACE INTO programs (id, title, description, link, icon, sort_order)
      VALUES ('fb5301e6-5596-401b-2917-316da1e9785c', 'Education & Training', 'Our comprehensive training programs combine classroom education with real-world scenarios at mock jobsites. Learn best practices, understand utility marking standards, and master the 811 process.', 'training.html', '🎓', 0);
@@ -326,13 +326,13 @@ INSERT OR REPLACE INTO archive_items (id, type, title, date, link)
 INSERT OR REPLACE INTO archive_items (id, type, title, date, link)
      VALUES ('aec92315-ddf2-3386-2a55-9ac324a43de3', 'meeting-minute', 'May 12, 2026 NRCGA BiMonthly Meeting Minutes', '2026-05-12', 'https://nrcga-my.sharepoint.com/:b:/g/personal/admin_nrcga_onmicrosoft_com/IQAoDMCe2BkKT72cFag3U8emAf0Ru8dykBEnwDbSXvvxJNg?e=5c0dPu');
 INSERT OR REPLACE INTO carousel_slides (id, image_url, alt_text, link_url, display_order, active)
-     VALUES ('18596276-01c4-46fb-acfc-28234865e8c8', 'assets/images/programs/locate rodeo/StcHYFS3_1000x667.jpg', 'NRCGA Locate Rodeo', 'https://nrcga.org/utility-locate-rodeo', 0, 1);
+     VALUES ('3dd363b5-e22e-4d9b-868c-2d6fd14590bc', 'assets/images/programs/locate rodeo/StcHYFS3_1000x667.jpg', 'NRCGA Locate Rodeo', 'https://nrcga.org/utility-locate-rodeo', 0, 1);
 INSERT OR REPLACE INTO carousel_slides (id, image_url, alt_text, link_url, display_order, active)
-     VALUES ('c0b75273-4094-40ae-aaa4-a1ca53e32dd7', 'assets/images/programs/811 day/LVBallpark811Day2024.jpg', '811 Day', 'https://nrcga.org/811-day', 0, 1);
+     VALUES ('acedd88b-57f1-43a6-9c1c-f4b5e9889492', 'assets/images/programs/811 day/LVBallpark811Day2024.jpg', '811 Day', 'https://nrcga.org/811-day', 0, 1);
 INSERT OR REPLACE INTO carousel_slides (id, image_url, alt_text, link_url, display_order, active)
-     VALUES ('f920f3d6-6627-4328-beb3-ee6065e5ce54', 'assets/images/programs/education/Picture3-e1739554999401.jpg', 'Education & Training', 'https://nrcga.org/training', 0, 1);
+     VALUES ('ef9e3069-0c79-4730-bfa6-98f060e96602', 'assets/images/programs/education/Picture3-e1739554999401.jpg', 'Education & Training', 'https://nrcga.org/training', 0, 1);
 INSERT OR REPLACE INTO carousel_slides (id, image_url, alt_text, link_url, display_order, active)
-     VALUES ('5f9e042e-b33c-4a2a-9be1-4b3d8bbe8266', 'assets/images/programs/silver shovel/silshovbanr.jpg', 'Nevada Silver Shovel', 'https://nrcga.org/silver-shovel-award', 0, 1);
+     VALUES ('7be915e0-7902-42fd-8ec4-9068943f142e', 'assets/images/programs/silver shovel/silshovbanr.jpg', 'Nevada Silver Shovel', 'https://nrcga.org/silver-shovel-award', 0, 1);
 INSERT OR REPLACE INTO qa_items (id, question, answer_md, sort_order, published)
        VALUES ('qa-001', 'What is 811?', '811 is the national "Call Before You Dig" number that connects you to your local one-call center. When you call 811, you''ll be connected to operators who will notify utility companies about your planned excavation. Those utilities will then send locators to mark the approximate location of underground lines at no cost to you.', 0, 1);
 INSERT OR REPLACE INTO qa_items (id, question, answer_md, sort_order, published)
@@ -379,290 +379,290 @@ INSERT OR REPLACE INTO qa_items (id, question, answer_md, sort_order, published)
        VALUES ('qa-012', 'What if no utilities are marked?', 'If no utilities are marked, it doesn''t necessarily mean there are no underground lines. Some utilities may not be members of the one-call system, or lines may have been installed without proper documentation. Always dig carefully and watch for any signs of underground utilities.', 11, 1);
 INSERT OR REPLACE INTO qa_items (id, question, answer_md, sort_order, published)
        VALUES ('qa-013', 'Is calling 811 required by law?', 'Yes, in most states, calling 811 before digging is required by law. Failure to call can result in fines, liability for damages, and criminal penalties in some cases. Even if it''s not legally required in your area, it''s always the safe and responsible thing to do.', 12, 1);
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('189a8fe4-7dbd-432e-8f92-fc88f0b6841f', 'A&G CONTRACTING LLC');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('460296c8-21f2-476b-9eab-3c28cff6a4c1', 'A&K EARTH MOVERS');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('da9d406b-b163-4c5b-ac95-226c53f7bb65', 'ACME UNDERGROUND INC.');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('3e85d04f-83b5-413c-b123-65a0f0926ca1', 'ADKINS GRADING & EXCAVATION INC.');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('55659a63-9f90-4283-806d-8d904ae332e2', 'AIMS COMPANIES');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('6fbcb8d3-8d69-45b2-b3ff-d6063bbe267b', 'ALL TRADES');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('98e403cd-6f57-41b2-808b-d3ad6d33ee69', 'ALLSTATE SALES GROUP');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('8054074c-8d23-48dc-b00e-9687920b4b09', 'AMC CONCRETE INC.');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('9a1126f2-0eb6-4aa1-ab52-dbcd23a5511b', 'AMERICA UNITED CONSTRUCTION');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('59ca9f05-0e6b-43b4-9a2b-26f2e7d94b97', 'AMERICAN FENCE AND SECURITY COMPANY, INC.');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('e12c7853-19b1-47e9-b02e-08efc0a0a3f8', 'AMES CONSTRUCTION');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('43bd740e-302d-4be1-9ca7-4e1649c78e0d', 'ANTHEM BROADBAND OF NEVADA');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('1d8aaecb-1d71-478d-9a83-14693195799f', 'ANTHONY AND SYLVAN POOLS');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('d77b82fd-e076-4cd9-bb30-f8d1cacbb4ae', 'ARBOR PROS, LLC');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('0ea3a06f-b312-4968-ad40-9e5ef6e740cd', 'ARMAC CONSTRUCTION');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('3c9e6871-f0a3-4ab3-bb6c-4fcb069a0ccb', 'ARTISTIC FENCE COMPANY');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('12bacdaf-0ca2-44a7-a490-a7cb31ee02cf', 'ASHLAN CONCRETE CUTTING');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('322e563f-f7aa-4bfd-a2f2-3ab316319ba5', 'ASPEN DEVELOPERS');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('684b8511-da60-4391-a59a-e05874e8a8ae', 'ASPEN EARTHWORKS INC.');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('bc0b8fc0-775a-4810-9383-12201004e4a6', 'AT&T NEVADA');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('73cec829-7325-4fa7-a4d2-fd648fe31b1f', 'BADGER INFRASTRUCTURE SOLUTIONS');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('34bb8d5e-6c73-45cf-a3ee-c2ff7e445e5b', 'BAJA CONSTRUCTION');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('10bcad21-8d4c-4888-ae7e-0c77b59aeebf', 'BC2 ENVIRONMENTAL');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('f6d06302-7f60-44ae-a39c-d10767f2fe8e', 'BECHTEL');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('a07efc6d-2041-4d8a-9365-132a9c85e50d', 'BLACK CANYON CONSTRUCTION');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('6551c726-5fe1-4ffe-9d40-cf5ba1cf2a83', 'BLACK EAGLE CONSULTING');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('6310666c-d454-4bcb-aa3e-ded831982c8f', 'BRAEMAR CONSTRUCTION LLC');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('cc04f74f-4a2a-4e47-b503-12215d84a2bc', 'BULL CONCRETE');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('25adb825-4d6f-4d74-bc4b-1c85609028a6', 'CABLECOM');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('ab0cc3a5-7a27-4469-bf30-669efc7a7738', 'CALIFORNIA COMPACTION CORPORATION');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('75d1ed97-bc08-4d02-8a84-4bb345c351e2', 'CAMPBELL CONSTRUCTION');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('ace73c13-d1ea-4236-a8ec-043f27fb3794', 'CANYON PIPELINE CONSTRUCTION');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('5a52ee54-d889-4510-aea8-aa4b73b2046b', 'CASCADE DRILLING, LP');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('23822281-3247-4a14-a18c-958addca556a', 'CEBALLOS ENTERPRISES LLC');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('1ffc2bb4-358c-4569-8afd-3d3bc615f764', 'CEDCO INC.');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('6ac511b3-a5c7-4198-85ed-a83668c462a6', 'CENTER POINT LANDSCAPING');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('85800391-2096-42c2-9f9a-39416b6dba38', 'CG&B ENTERPRISES');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('d23c63b5-67d4-41d6-995f-5b43c4c14cbd', 'CHARLES CHESTER PLUMBING & HEATING');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('8843b1eb-ef20-4462-8e65-c28470c6bfbe', 'CHEEK CONSTRUCTION');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('0755cce0-9116-4387-8325-de1e77d43587', 'CITY OF YERINGTON');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('772faacd-6b86-4e80-9986-a8d85a8963e6', 'CIVILWISE SERVICES, INC.');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('7dd84d6c-757f-406f-91ad-4cc715490f56', 'CJ DRILLING INC');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('2e55ec9a-eedc-40ef-947b-9d5a8ba2826d', 'CLEAR CONNECTION');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('d1d676ca-31d8-41fb-a60a-4e28de131c93', 'COMPLETE DEMO SERVICES');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('9d032aa3-69ae-4558-81f3-8c92b0b1ff30', 'CONSTRUCTION MATERIALS ENGINEERS, INC.');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('88c4c36a-48a6-4f6c-955a-6896797642d8', 'COONS CONSTRUCTION LLC');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('34c285c8-72d3-42bb-a6bc-82d90a2afe1b', 'COPE EXCAVATION LLC');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('46741a3c-1e69-4b4f-aef6-b8ae7a2dc753', 'CRAFTSMAN HOMES');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('9b27832a-62ec-4e51-8f90-c830d2f004a3', 'CRAWFORD & ASSOCIATES INC');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('e4e7f437-043c-4e13-b084-41b109533235', 'CRESTWOOD CONSTRUCTION');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('b6cd4c60-643b-47f4-991e-23b323094fa5', 'CRUZ CONSTRUCTION CO. INC.');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('7a891a9f-e077-415f-980c-45d475a6736c', 'CT EQUIPMENT INC.');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('e1e31044-1930-4ae2-a1b8-3d6c9a1bebd5', 'CURTIS & SONS CONSTRUCTION');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('2658f875-bd1a-47b8-ab70-098daf4b64cc', 'CVC');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('85212dc6-7e4d-467e-9b1d-5fb5b1955b55', 'D & R HYDRANT');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('90563ce3-85e5-4070-a3d6-976d8913f3fd', 'DAIA UNDERGROUND');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('34f060c3-9498-4aa7-85c6-2c3447f44b20', 'DBR PLUMBING LLC');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('e2e5534c-2cfa-4b71-acd6-90cee8b5fa6f', 'DEFENSE BASED SERVICES INC');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('d2d7389b-6a44-42c7-9ab2-cbf25ac3e0b2', 'DESERT SPRINGS POOLS');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('4dae9ca8-6acd-4146-974f-c5d2e921ce5e', 'DIRECT SOLAR LLC');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('5aa466b8-993f-4aea-95d5-e5408030d739', 'DIVERSIFIED UTILITY SERVICES, INC.');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('fbce8e3b-46e6-4843-86e7-336c2873b360', 'DM COMMUNICATIONS LLC');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('7f4d777d-e88f-4b59-9e9e-c22f61ec129d', 'DOWL');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('3c0292f4-3b2d-4f63-a2ab-91aff0e46f28', 'DRAIN BEARS');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('d359f090-8d4c-4ee7-a656-4cd4d2a44c03', 'DTS FIBER');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('2b015e1f-2104-449a-9000-74f4c39130b5', 'DUPONT ENGINEERING');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('d8b7ef92-1440-4520-b62a-fea92f67c312', 'EAGLE DRILLING SERVICES, LLC.');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('0105a759-75ce-4c66-b4ea-0f3f85c5d1fc', 'EAGLE EXCAVATION LLC');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('bc99b994-209b-4ed9-b95a-a68d3e600b5d', 'EARTHWORM EXCAVATION');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('e3170418-3120-4013-b561-4d00d1c187d8', 'EDGEWATER CUSTOM POOLS AND LANDSCAPING');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('b16dfbbc-8732-4c89-92b9-e3b034dc7b37', 'ERVIN CABLE CONSTRUCTION');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('31d2af94-3cc4-47f5-a51c-71e1c1201d0e', 'EXCEL UTILITY CONTRACTORS LLC');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('59f533b7-a366-437b-b54b-898a08875643', 'EXTENDED POWER INC.');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('8241baf9-2779-43b9-aca1-2f7e4bd50e0c', 'EXTREME COMMERCIAL CONCRETE');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('c41c9206-7f07-4ed2-ba55-146f91967255', 'F.W. CARSON CO.');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('65cabeb9-4d9b-4596-ad21-5c8266756599', 'F&F TRENCHING');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('0f93a355-762d-48f9-906d-75112ca45ed1', 'F&P CONSTRUCTION');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('18857afc-f33f-4c04-977d-ecfc662299a7', 'FARR CONSTRUCTION DBA. RESOURCE DEVELOPMENT COMPANY');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('cc4947fa-1f08-4df2-86c0-0741aa4e47bb', 'FAST TRAC ELECTRIC');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('2e767936-d98f-4cd5-b9ba-c7a6d09e5829', 'FASTRACK CONSTRUCTION');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('029cee67-b4f6-4663-bff0-1ce9e8d7a4e5', 'FAULSTICH AND RAND CONSTRUCTION CO. INC.');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('4a673c6f-1d9c-4bf6-af9a-0c7142cade53', 'FENCE IT');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('651fda87-95b1-44f1-bfa6-0c5a3bf0aea0', 'FENCING SPECIALISTS INC');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('2981c101-25e4-4fc7-9aa9-0f0a8426de9a', 'FIBERTEL LLC.');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('51d382cc-c95b-49c3-bfb6-0d37335e8df5', 'FINE GRADE EXCAVATING & GRADING LLC');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('545639ec-5d64-4158-b0ed-ded68ddad2b5', 'FINEST FENCE');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('abbc3193-e34c-4f28-852b-cef149d11f83', 'FIRST ELECTRIC');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('3a6c6c3e-9fd1-4d01-a42b-80e0327c3e83', 'FISHER SAND & GRAVEL');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('a7a74379-e5a9-4482-852b-238b92c5d490', 'FLOCK SAFETY');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('e39dc0eb-dc8a-4567-89b6-a85f314be638', 'FLORENCE FENCE');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('4ff93117-f438-479a-9aa9-16549559f3ce', 'FLOYD''S CONSTRUCTION');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('7e3b271e-e5a1-4e36-b994-8817a4fa4850', 'FNS INFRASTRUCTURE');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('488a028e-2dd1-421d-9f3e-be926da53cc9', 'FOCUS CONCRETE');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('adf331a9-0ab3-4a36-b50d-e5c2545de4c3', 'FOUR POINT ENGINEERING');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('627bbbf4-e659-44e3-a31c-6e3294585f04', 'FRANK LEPORI CONSTRUCTION');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('b81b1444-69eb-4327-a3a1-246995ee957b', 'FREHNER MASONRY');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('12bc2e44-0d80-42ac-9659-718b76801da7', 'GAIL WILLEY LANDSCAPING');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('aa280f15-f8b8-4932-b202-8fc3beed2b2f', 'GAYMAN CONSTRUCTION');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('f20561dd-41d9-4364-9a3a-64633dfc7d06', 'GENERAL FENCE INC.');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('381c5ed4-a679-4523-8bd7-20d278f80eb4', 'GEOTECHNICAL & ENVIRONMENTAL SERVICES DBA EAGLE DRILLING SERVICES');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('42abb8c5-8f0e-4acd-b997-e93063740393', 'GEOTECHNICAL DRILLING');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('9b9742e0-3265-4f4f-818a-9614366731a2', 'GEOTEK');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('2321aed9-b564-4a8e-81d7-17351be7eb8a', 'GERHARDT & BERRY CONSTRUCTION INC.');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('5a6c5b04-1637-4b18-9853-1b541b1dc71d', 'GLASS ROOTS CONSTRUCTION');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('b4e84001-99d8-414f-90b0-0172c90d56b6', 'GOETTL AIR CONDITIONING AND PLUMBING');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('d9ccf83a-1015-40f8-bbc0-0efe8eb557d6', 'GRADEX CONSTRUCTION');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('bc118b9a-67ad-44ef-8781-7ffce2eb2538', 'GRANITE CONSTRUCTION COMPANY');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('43b4f71c-29f5-4cf1-ab7d-3cb64ed7f100', 'GRAYMAR ENVIRONMENTAL SERVICES INC.');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('986b9ceb-8726-4b38-9bb1-b2ad773bd451', 'GREENCARE DESIGNS');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('541c05be-f87c-4069-ac9c-5cdc63b7dd8e', 'GREENHOUSE GARDEN CENTER');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('3767f1e7-d905-48cb-8042-54302f20af89', 'GUIDEWELL');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('bfe203a3-070f-4e53-9f43-cce6b24f2f72', 'H.E. HUNEWILL CONSTRUCTION CO. INC.');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('cdd03cd7-43dd-4032-8d18-f04c1fd7e24a', 'HALL''S EXCAVATING');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('5e7f0da7-4b82-41dc-b628-e2da4c47ae63', 'HAZ-TECH DRILLING INC');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('8349146f-260c-4d14-82bc-1102c4fcf85f', 'HEAVY DUTY CONCRETE & PAVERS');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('43c8c7d0-8561-403c-85f5-b615b5d6baa4', 'HENRY CONTRACTING, LLC');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('5a2ab4ec-ff05-49de-bb7a-e8f98cf5571d', 'HIGHWAY STRIPING & SIGNS');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('96294023-e734-493e-9bad-fa7de5053787', 'HILL & HILL CONSTRUCTION, LLC.');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('73407d7c-1b04-4647-9744-1011479e5149', 'HOFSOMMER EXCAVATING');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('aad65aa5-a806-46d5-b7db-bbaf25d5d762', 'HOLCIM-SWR INC');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('96885302-ec0f-4d99-8dd2-c70fca203c73', 'HOLE HOGZ, LLC');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('46e2fa6f-8970-4f38-a51a-43d987880047', 'HORROCKS ENGINEERS');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('5c9b220c-3c35-4d03-9921-b0cb85885d20', 'HY-ROCK EXCAVATION LLC.');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('a144beef-683f-4014-8d34-e91378cc4ebb', 'HYLAN WEST');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('3255b283-0d47-4730-a866-cc347e565e7f', 'IES RESIDENTIAL');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('6876f6bf-6780-4a98-a2dc-7780d726237c', 'IMPACT SIGNS & GRAPHICS');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('d0a22dd9-d90a-4dbe-9785-0ebe52cc58b8', 'IN-LINE UNDERGROUND SOLUTIONS LLC');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('6fd13571-518c-49b3-be7d-7f5630262666', 'INFINITY FENCE LLC.');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('3ef3eb6d-2ab0-475d-8ee5-302e73e53605', 'J & G LANDSCAPING');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('7918c174-c73f-436e-8611-30566d13c9ef', 'J & J ENTERPRISE SERVICES, INC.');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('c7991f33-3c12-47f0-b3f2-405385708f0d', 'J&L CONSTRUCTION');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('34b19dd8-4a7d-4048-be4c-7618ae5f34b6', 'JACOBS ENGINEERING GROUP');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('53eac26f-aff4-4313-8f5f-ca27ab28d773', 'JBM UNDERGROUND');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('c903e486-4246-4df8-8c10-8759399ee163', 'JC COMPANIES, LLC');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('421c7cde-9337-45ab-895a-56f9e3c89dc0', 'JCP PLUMBING INC.');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('52d6dfd6-6c4f-4789-8c9d-72cb8d26d143', 'JET PLUMBING & DRAIN SERVICES');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('1e0eb694-f725-4673-9b64-e991e99672fd', 'JP FENCE LLC.');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('86708009-ac6e-45a3-aa89-24b762514157', 'JUMP 2 IT PLUMBING');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('26b4502e-7fee-4b3d-8a6b-c501dcb617fa', 'KCI TECHNOLOGIES');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('ace39c5e-a290-4807-bafc-a021c7448138', 'KELLER NORTH AMERICA, INC.');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('1c838401-629c-4113-a290-29b5be4ce2b4', 'KING COMMUNICATION');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('6e61047c-6028-4f78-a3e4-2c7d2dad0546', 'KLEINFELDER');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('a3d2999f-e807-4b66-9605-dca968720e5f', 'KNL CONSTRUCTION LLC');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('a1d6b467-e900-4cc4-afb5-a0c9befd4422', 'KOKOPELLI LANDSCAPING');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('437a8623-35c1-47e8-a29c-0f11d1d86e38', 'KP CONSTRUCTION');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('23d2d2b3-f851-4463-9c5e-740bddd5a2b6', 'LAKESIDE EXCAVATION');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('9449dfae-a7d0-47a3-8f83-257bcde3fbae', 'LANCE JOHNSON INC.');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('1a3f1945-1e3b-453d-9ec5-47c2fdc0eaf8', 'LANZ CONSTRUCTION LLC');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('c0e6d021-f1bf-4f92-a843-56c5356c18b6', 'LAS VEGAS FLAG & SIGN');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('ed4677db-5a88-41c9-835a-e9e339280143', 'LAS VEGAS URBAN FOREST CENTER');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('a0582c81-4642-4aa7-ab1f-26391ab7f0cc', 'LEGACY CONSTRUCTION & DEVELOPMENT INC.');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('2cb7ccb7-cf4b-45d0-80d7-c2da5f372b2c', 'LEGENDS LANDSCAPING, LLC');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('cc3fd664-58bf-43a8-8743-7ffddbc78674', 'LITTLE CITY LANDSCAPE');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('7322dfaf-6dcb-4003-bd15-ae98f0269e9a', 'LUMOS & ASSOCIATES');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('88bbf23f-8027-454f-9f62-cd230aa62d9d', 'M & J ENTERPRISES CONSTRUCTION INC.');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('4c3934e7-b7ed-42c9-8f4c-ec7a1db9ad05', 'M & M EXCAVATING & LANDSCAPE SERVICES LLC.');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('596b09eb-6932-4156-976d-498f911ecfc1', 'M4 ENGINEERING LLC');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('d14b8fd7-ef9a-4f65-ba6d-a4f3329fcc5a', 'MAILE CONCRETE');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('441ac506-ba21-43f0-b663-0cc8f4bfd95d', 'MALCOLM DRILLING');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('3b27ba54-3fdf-4e29-b215-75fe474c116f', 'MAS TEC');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('4b8bf202-ffc0-4c3b-9cab-1e0c2e989c6f', 'MAUI ONE EXCAVATING, INC.');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('e239c79b-0e5c-4f39-98af-b6bdd3e9882c', 'MCKUIN PIPELINE');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('44bc944a-6694-4532-9a03-f27360f53b97', 'MENICHINO CONSTRUCTION');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('a575fc8f-eeaa-476c-be74-f4cf11320d00', 'MMC INC');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('12869df4-7249-4520-8e3c-e5b3f36339e8', 'MOANA NURSERY');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('6a611816-2ca7-4de8-a40d-0a50c5d41805', 'MONSTER TREE SERVICE OF GREATER RENO');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('5a49f2c7-e0d8-4c2a-89fa-a5b7e8ed9873', 'MOON VALLEY NURSERY');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('de8489ad-e938-4406-8745-9ba44b7937ae', 'MORGAN CONSTRUCTION, INC.');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('e71c9dc4-0246-4e80-b09f-e72e8f88bfcf', 'MORLEY GRADING LLC');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('705c3cbf-b415-4a71-b0e0-b564c10d3219', 'MOUNTAIN EXCAVATION CO LLC');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('8f4d1718-9f2a-44a1-af4a-6de52efd4500', 'NDX LLC.');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('de43a808-733c-4575-ae7b-8b74a2a6384e', 'NEILS FUGAL & SONS');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('363bd70f-aa0f-4c99-99b9-a8c35ddb0bba', 'NEVADA BARRICADE & SIGN COMPANY');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('68017bd2-4935-489a-9924-5db36a709ea6', 'NEVADA DIRT WORKS');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('598f0977-82b3-43ec-b3ab-3e4d462f44ec', 'NEVADA FENCE');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('d8faf628-377d-4d93-ab4b-99ffe36776dc', 'NEW LIFE INDUSTRIES LLC.');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('a85471cd-9ef0-453b-9e89-b307239fc63c', 'NEWFIELDS');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('2fa8e42a-5520-4789-b952-de54b2466194', 'NINTH ISLAND CONSTRUCTION LLC');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('f5b24a0a-6c9a-4ffe-8e32-371c2149c8ea', 'NINYO & MOORE');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('a72ae1c1-43f7-41a2-ab10-0ff011ada004', 'NNE CONSTRUCTION, INC.');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('500ff1f1-2ae6-489f-9ba0-a1c5125a4cab', 'NORTH SKY COMMUNICATIONS');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('a30ffc6a-4c56-4580-81c5-12993581d0c3', 'NV CONNECTIONS');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('8f5647c0-f559-4d91-af87-8dbac19ef71e', 'OSMOSE UTILITIES SERVICES INC.');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('c2cb100a-1387-4e46-bf07-27b603d61057', 'PACIFIC NETWORK SOLUTION CONSTRUCTION, LLC');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('7f80ecbe-7f42-42ea-a684-d23c98d65932', 'PACIFIC UTILITY INSTALLATION');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('977f25d2-3033-45d5-8a65-4d9cab6c0f5a', 'PAR 3 LANDSCAPE & MAINTENANCE');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('b8c8c583-ec68-4bba-8b6f-38925f1d13f8', 'PAVEMENT RECYCLING SYSTEMS');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('2c1e520b-9278-4b51-9680-18d0f31f46ac', 'PEARSON TRENCHING AND TRUCKING');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('6877975b-c3bb-40e8-bd2b-5c77cecd801b', 'PEAVINE CONSTRUCTION');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('a442da17-1bdf-46c2-b7e6-da2711938f7b', 'PEEK BROTHERS CONSTRUCTION');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('feb122a9-8013-41cc-a012-649f9adaa1f9', 'PENNY ELECTRIC');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('5362121d-ab89-45ee-92c6-35f48803da6c', 'PERFORMANCE EXCAVATING LLC');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('66fa26af-aa8b-42e4-9d41-1c9f76c189cd', 'PHOENIX LANDSCAPE');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('5dc73a86-e544-4157-b549-3700c98abc56', 'PLATINUM CONTRACTING OF NEVADA, LLC');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('150394d6-43d5-4503-8dfa-dcab0a2e5d73', 'POKRAJAC CORPORATION');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('3f3af138-7431-4b77-8e0d-1daebb74949b', 'POWER PLUS');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('4719bde2-7b2f-4f12-92f7-f3c5a1aafc05', 'PRECISION PIPELINE LLC');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('bde83cf1-a79f-476e-b605-fe6a29fc1531', 'PREMIER POOLS AND SPAS');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('e9be29f9-e538-4c70-93d0-2a24545933a5', 'PRIORITY GRADING');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('5c11887a-3181-4182-95ef-a972d96aeb10', 'PRO UTILITY CONSTRUCTION LLC');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('5f1ea432-c8d2-48a0-9857-d7a75e38a835', 'PURE PLUMBING & AIR LLC.');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('55d9eea5-acc8-4b70-9439-df18dfd36ec4', 'Q & D CONSTRUCTION');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('125c0fd4-77bc-4018-8c77-917e42eb6b54', 'QUALTEK WIRELESS');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('612b5c0f-b4b7-47da-b00b-23c5e44b11b9', 'QUIK TRENCH');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('83b37ac5-d84e-4eb3-a90d-b984392be14e', 'R & J JOY INC. DBA JOY ENGINEERING');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('34b9db6c-0ae2-404e-aecf-c41f984152d8', 'R & R CONSTRUCTION LLC.');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('a6cf3f2b-5442-4fb3-9673-bc3d95e0b98a', 'R & S DIRECTIONAL UNDERGROUND DRILLING');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('b745cbc7-b830-4828-87b1-b26e446554c7', 'R AND K CONCRETE CUTTING INC');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('955ac6f8-6e00-4d0d-95e5-5924fa254ab7', 'R CONSTRUCTION');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('5762a640-5537-40d3-8706-37c2c53a39e5', 'R&L DECIGA INC');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('b8ecadbc-409e-4285-a4a2-34abae347510', 'RAPID CONSTRUCTION INC.');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('902f2671-8ee3-40e9-82c7-f7ff510d2046', 'RED STAR FENCE');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('cdd9bc49-8395-4cf4-ac6b-7db52e4f0e8b', 'REDMOND FENCING');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('2dc2f21f-169d-4020-8ecd-9a8b64b28005', 'RENO DRAIN OIL SERVICE');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('f103ecaa-1211-4193-a010-809183cb6aeb', 'RENO GREEN LANDSCAPING');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('292dd90d-433f-4470-a5ef-3caedd467e8c', 'RENO TAHOE CONSTRUCTION');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('3db3f154-f139-4cd8-8d82-90ffbfc055a9', 'RESOLUTION PLUMBING');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('a1356654-4418-4335-8c23-1d194133ed1b', 'RLM UNDERGROUND, LLC');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('4ae92b84-487e-48c5-9bb3-c8ffc8df7ed8', 'RM CONTRACTING LLC.');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('c33eda27-e8cb-42cd-8561-183065274863', 'ROAD AND HIGHWAY BUILDERS');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('06c36bda-bad4-4303-b1d6-9cc85782da0e', 'ROCKY MOUNTAIN GRADING');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('d60e1fd3-3d7b-4a19-87b7-7ece9cf97bb2', 'ROOT-O-MATIC, INC');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('7110dc1d-efca-4a6a-8cde-2def825bef3c', 'ROTO ROOTER');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('9a31b7f9-f2f8-4dd2-9c70-0dda41df8fa8', 'ROYALTY PLUMBING');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('309e4801-6087-48ce-9a79-eaa9b2293224', 'SHAY CONSTRUCTION');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('804efcc8-d258-4a38-9876-a29aa0168b2a', 'SIERRA LLC');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('1924f93e-989e-4db8-b886-1e00b4276a18', 'SIERRA NEVADA CONSTRUCTION');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('707e2681-03d1-4f82-9fe8-6681b2ac0bd1', 'SIGNATURE LANDSCAPES');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('9d471997-7c1d-44e2-a564-845044f5222f', 'SILVER LAKE CONSTRUCTION');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('41a60c1c-17ef-4762-b428-c7dfd0900c9f', 'SILVER STATE FENCE AND STAIN');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('fc6f6780-c43b-48fc-bff4-6caefecb1a4e', 'SOIL-TECH');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('e7e3460a-6ffa-4061-94ee-6bd014505b6c', 'SOMMERCAL CONSTRUCTION INC');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('64768f8d-fdc8-4897-8d6d-baa3c547dd56', 'SORENSEN COMPANIES INC.');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('b0b729c0-fd12-465a-9fae-5f5e4393e3e0', 'SORENSEN PLUMBING INC.');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('31927b80-3041-4960-8c01-8a87d9e40787', 'SOUTHWEST GEOTECHNICAL');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('ad0c154b-9ab3-4908-9921-d849449d386b', 'SOUTHWEST LAWN SHAPING');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('5616b6b3-f13b-4445-8f7b-3cc16a624b3a', 'SPANISH SPRINGS CONSTRUCTION INC.');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('9bd77c8c-6ec5-431d-81c8-2d0c69fa6e9d', 'STANDARD ROCK LTD');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('245454ce-8f3b-48ab-bd09-54c0a65449f7', 'STRAIGHT-LINE INC.');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('b0f4df37-b85b-44a6-9584-abefe1e160f2', 'STRATA, INC.');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('611d0b62-00b9-48e6-9f83-d7ed9bc472ef', 'STURGEON ELECTRIC');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('a7b88620-1821-4963-a25f-4ac362003adc', 'SUMMIT LINE CONSTRUCTION');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('00eb5646-af04-4977-89f1-03aaaeb62917', 'SUNRISE PAVING, INC.');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('c6653035-5f78-49b3-8a8c-f891d9f8e9ac', 'SUNSTATE COMPANIES, LLC');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('f163c8a5-feb3-4390-a465-a5da84bd26de', 'T AND D POWER');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('a57b524a-a51b-49ab-babc-4c3947f92f31', 'T AND R CONSTRUCTION');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('c1d3d0f0-963c-4c76-a573-7c0eb373c44d', 'T-PAVE CONSTRUCTION LCC');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('134d3b87-123a-46a0-8369-34e60c877591', 'T&D POWER');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('bfb32fdc-5121-43c7-a84d-84141f4b8afd', 'T2 UTILITY ENGINEERS');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('964e103e-95cb-4777-a6ab-c0503a3918b4', 'TAB CONTRACTORS INC.');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('25dea5e7-e247-4885-afd3-0b0485403142', 'TABER DRILLING');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('efc876e9-0712-45f5-bf00-a12085778a25', 'TAHOE FENCE CO.');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('95689079-4993-4384-ba44-421745ef7031', 'TAND INC.');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('3d46392a-2650-48bc-8f1c-67310cf18317', 'TERRACON CONSULTANTS INC');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('cd2b610b-1ae8-47a1-ad54-41e5fe26cfbd', 'THE BORING COMPANY');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('9cd4be02-3177-4d84-8db0-eed7756609c3', 'THE PAVER COMPANY LLC');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('3b6afa0f-90d2-4a45-ba63-54f9197cfe57', 'THOLL FENCE COMPANY');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('bfe1877b-0d55-47e0-8be6-1c04e4caaeae', 'TIBERTI FENCE COMPANY');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('d2c663da-f1df-47c1-b9c4-bdec894adb3d', 'TILSON TECHNOLOGY MANAGEMENT, INC');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('c245bbaa-fc69-4e27-ae59-66d08748f0e2', 'TITAN ELECTRICAL CONTRACTING');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('dfade6da-1e26-4835-967b-75c9fd187e50', 'TOM EDISS LANDSCAPE INC');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('ce08ad86-0e45-40b4-9adc-bf856dfbb9b0', 'TRACY RYDER LANDSCAPE');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('0945b845-78a3-44ef-af7c-843877eed16c', 'TRIPLE J TRENCHING');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('d3d2240e-b9f3-4b1a-a32e-4b3ae548203a', 'UNITED SITE SERVICES');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('8fe23bf1-4759-4cb9-854d-ae274aa8f873', 'URBAN JUNGLE CONSTRUCTORS LTD');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('e336473b-859c-44e8-8ee6-6127a487092c', 'VALLEY ELECTRIC ASSOCIATION INC NEVADA');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('1fe66273-b3e9-44ba-8a95-22f81a50baa8', 'VANTAGE CONCEPTS');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('fd96785b-e894-4ad4-bcec-d5399c633089', 'VEGAS CIVIL, LLC');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('a186e358-b3e1-4c41-ab1a-125e2085a5c7', 'VERSA GRADE');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('ab560b13-159a-4c27-9762-63db78594c05', 'VERSAGRADE INC.');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('54216ca2-27db-4b3f-9a7d-7c6b52b4d7dc', 'VIKING DRILLERS, INC');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('35570f4b-99de-4e34-bfa3-3805f177fa49', 'VINCO INC.');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('b2dcdcf8-04a9-419c-b114-7d58812940f6', 'VONALAS INCORPORATED');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('8eda6a24-ff47-4633-a86f-642d005c6a17', 'VT CONSTRUCTION');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('31c480b1-513e-4443-84c5-bbca8ae4f0e8', 'WALKER RIVER IRRIGATION DISTRICT');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('db7b13c2-98bd-452e-8812-af93d2dae6c5', 'WASATCH ELECTRIC');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('9582e87a-33a8-4b38-a223-3a6c8823c820', 'WELLS CARGO INC.');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('65b328d4-36f9-40e1-be1d-2934612ac9dc', 'WEST RIDGE HOMES INC.');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('3a2589dd-6303-422a-85cc-d8029415c82c', 'WESTCOM LLC');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('14b51b03-2d54-4d1f-89f9-de4629fd2f06', 'WILLIAM CHARLES CONSTRUCTION');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('6e39c98e-918c-45f1-9658-c74a2d78f247', 'WRIGHT VENTURES LLC');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('fdc533c1-9afa-440d-8e31-91a46ccfc969', 'XL LANDSCAPE DEVELOPMENT');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('e0347fc8-a23b-4fdb-9cc1-ac901f2313b4', 'XRAM EXCAVATION');
-INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('17597062-6eb3-4e20-87b2-680225530f97', 'YESCO');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('e5ed31a8-7064-4c2e-a7ac-bfd6b1edd1fb', 'A&G CONTRACTING LLC');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('49712b2c-0f97-4b5e-9a1b-bb0a75217b85', 'A&K EARTH MOVERS');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('3fb0365a-1cf0-496a-bb7e-d277447269ad', 'ACME UNDERGROUND INC.');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('dafc482f-0093-4c9a-bb8e-94af4714efa9', 'ADKINS GRADING & EXCAVATION INC.');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('38267f7a-e598-4dc4-91b6-7ab7f0b01ce1', 'AIMS COMPANIES');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('8a8e139a-8599-4e1b-95cf-e71fd7b91616', 'ALL TRADES');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('8e4102ee-56a7-4493-a836-493b11ba78fa', 'ALLSTATE SALES GROUP');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('f0a98cb6-78fd-47bc-b8ac-9f0eb9025e6a', 'AMC CONCRETE INC.');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('022e02ea-2e60-44b9-8dc3-78813721cb9d', 'AMERICA UNITED CONSTRUCTION');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('cbf19004-646b-457d-974c-47b94e4d8dd2', 'AMERICAN FENCE AND SECURITY COMPANY, INC.');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('3667d97a-726c-4f01-9afe-9507ab029b21', 'AMES CONSTRUCTION');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('27612f47-f948-43dc-989d-d437356fd429', 'ANTHEM BROADBAND OF NEVADA');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('cb0b2ff0-7a3d-486b-b54e-105356ce6264', 'ANTHONY AND SYLVAN POOLS');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('a1727f93-43fe-4788-9d86-56faffcfce74', 'ARBOR PROS, LLC');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('228b1d15-34ad-4d77-b56f-a112eb2a4286', 'ARMAC CONSTRUCTION');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('1b328711-5846-4d1b-a095-ab8d6c19e3f6', 'ARTISTIC FENCE COMPANY');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('5440aaca-d96f-439e-8278-88f4676ba7ec', 'ASHLAN CONCRETE CUTTING');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('b9a6fcb9-9fd8-4115-801b-ddd8eb084335', 'ASPEN DEVELOPERS');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('9b6b1120-51a9-43d6-8903-59b54384af46', 'ASPEN EARTHWORKS INC.');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('9a208edd-7c18-4bb8-bdce-5f589a015876', 'AT&T NEVADA');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('7628a90c-bec9-4727-91dc-7da4cdf7a82c', 'BADGER INFRASTRUCTURE SOLUTIONS');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('073accd4-9369-4ba1-89df-ee9c724401b8', 'BAJA CONSTRUCTION');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('0e892bb1-e783-4120-a68d-89263cbdd057', 'BC2 ENVIRONMENTAL');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('0a6d2407-5f4c-4984-872b-d3ac2ab9d13f', 'BECHTEL');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('b402d898-0445-4fd1-8dba-00c1bb585933', 'BLACK CANYON CONSTRUCTION');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('5efa17e6-6a87-42f6-8c3e-569597333db0', 'BLACK EAGLE CONSULTING');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('b7f0b6b0-0801-4cd6-b01e-0dfc95c7a3b4', 'BRAEMAR CONSTRUCTION LLC');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('901082b1-2845-4e43-90a0-cfa473b7dcc6', 'BULL CONCRETE');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('26213634-5f0c-4566-bd64-9d8140b50a46', 'CABLECOM');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('d42c46ae-a693-43cd-91a4-e92400e50e53', 'CALIFORNIA COMPACTION CORPORATION');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('bfb141af-f2ba-4eb2-9e10-db5d257ea7d4', 'CAMPBELL CONSTRUCTION');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('57cd5922-497c-48a6-bab0-732480e88d6f', 'CANYON PIPELINE CONSTRUCTION');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('234d5f54-acb3-48a5-b9dd-10b2dd101ea5', 'CASCADE DRILLING, LP');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('0f7cd65e-7599-465d-8826-ff6b2945536e', 'CEBALLOS ENTERPRISES LLC');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('c6a25b96-2945-40c4-ba25-b6cbe2b4109f', 'CEDCO INC.');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('9105c1bb-a87d-4c4d-af57-53bf465bbee4', 'CENTER POINT LANDSCAPING');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('06c6c7e7-57a9-4b65-b6b4-903db8652240', 'CG&B ENTERPRISES');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('712a947b-7d4b-441d-bdad-19926a159cd0', 'CHARLES CHESTER PLUMBING & HEATING');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('c57a09e1-4361-4e2a-b165-b882cc7c96f1', 'CHEEK CONSTRUCTION');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('dc5c6b72-a570-4b5a-a03a-733820130458', 'CITY OF YERINGTON');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('17d2ba00-1d85-4e4b-8cb5-50ffba0265c5', 'CIVILWISE SERVICES, INC.');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('59bd164c-42b0-4189-85e1-96538a03889d', 'CJ DRILLING INC');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('4806ce78-83f7-4584-b287-c22284ee69ca', 'CLEAR CONNECTION');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('e83b3447-1268-4593-8f84-b72cd3cef2ce', 'COMPLETE DEMO SERVICES');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('9b533844-4578-4484-9dda-f0eb4dee66d2', 'CONSTRUCTION MATERIALS ENGINEERS, INC.');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('f38a4763-232a-42ed-8884-54ba20479ae8', 'COONS CONSTRUCTION LLC');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('693ec1aa-bccf-4f3b-a9bc-cdb758f85151', 'COPE EXCAVATION LLC');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('fec1a62b-7a36-441e-b11c-36d3684e21d0', 'CRAFTSMAN HOMES');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('5f8fa47d-7933-44ce-9149-1648ad23eb2a', 'CRAWFORD & ASSOCIATES INC');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('ccf5a720-ebe4-4ee0-a3ec-3f04f24ae4f3', 'CRESTWOOD CONSTRUCTION');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('347f9251-ec42-4788-957a-eff18f01dfac', 'CRUZ CONSTRUCTION CO. INC.');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('854e468d-bfe0-4074-93ac-a807c42ef987', 'CT EQUIPMENT INC.');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('c85c22de-0eac-4ef8-8f81-89289f155f48', 'CURTIS & SONS CONSTRUCTION');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('a63be7ac-0c72-4ddf-a6fd-6c3c7d43a055', 'CVC');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('be580cb3-75dc-4f59-b5c2-203ef1504916', 'D & R HYDRANT');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('683d247a-40d9-4697-90f9-01854cc45320', 'DAIA UNDERGROUND');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('3293b627-896d-4652-add1-bcf46420162d', 'DBR PLUMBING LLC');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('c379004b-3715-4ce8-ac1b-8393add51c22', 'DEFENSE BASED SERVICES INC');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('8c667e75-e62e-4200-b0e0-ec64d4b1f3bd', 'DESERT SPRINGS POOLS');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('2f75bf1a-5997-4247-b880-bde1b3a19351', 'DIRECT SOLAR LLC');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('0465f491-9076-4b2d-aae0-c6af9d195b5e', 'DIVERSIFIED UTILITY SERVICES, INC.');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('b0f306a9-e8c6-4f8d-9435-e60eb2d574bd', 'DM COMMUNICATIONS LLC');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('a3a20387-7b44-4cfa-9ab9-35d7b7123ef4', 'DOWL');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('26eab8e3-2f45-4cdb-9503-901495d7f052', 'DRAIN BEARS');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('fd8c1885-8af4-465a-ab84-80bb66f66e72', 'DTS FIBER');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('8e4789be-4d6f-4c08-b9ad-2dcddb2d302e', 'DUPONT ENGINEERING');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('65e4b460-6de6-42c1-8235-2e4d8750f047', 'EAGLE DRILLING SERVICES, LLC.');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('aa723e0f-046c-4b2a-902e-606abbeb2b06', 'EAGLE EXCAVATION LLC');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('0c97c9f8-aa99-4e24-9237-bf70f030d27b', 'EARTHWORM EXCAVATION');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('1aec226c-eda4-404b-9ae1-b2c878d14334', 'EDGEWATER CUSTOM POOLS AND LANDSCAPING');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('a0dfb827-75ad-43cb-b489-35e80f241383', 'ERVIN CABLE CONSTRUCTION');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('12f961a5-3ca0-41ba-9992-8705fdb8b7d6', 'EXCEL UTILITY CONTRACTORS LLC');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('4792a105-fb93-4218-9f82-a2635d1b85d3', 'EXTENDED POWER INC.');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('9f4bc787-a5af-45af-9655-712b3867007c', 'EXTREME COMMERCIAL CONCRETE');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('f0d91587-98ab-451f-a0f8-ba0e695de9af', 'F.W. CARSON CO.');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('5da1f25d-cc0d-4cc9-b0e3-7a336faccfa8', 'F&F TRENCHING');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('77b27201-9c3d-4807-8c97-8de590faec4d', 'F&P CONSTRUCTION');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('47887f52-ee95-49dc-98d8-e30178cabe14', 'FARR CONSTRUCTION DBA. RESOURCE DEVELOPMENT COMPANY');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('daf2a70b-bbf8-4150-b567-b978a2c23b0e', 'FAST TRAC ELECTRIC');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('56a389d7-0d11-44b3-a43e-5a9e344b4bc8', 'FASTRACK CONSTRUCTION');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('4862f3a2-996a-4453-abfa-d32eeeeefc0a', 'FAULSTICH AND RAND CONSTRUCTION CO. INC.');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('e0c9deec-728a-4dcc-a362-cc00060877b0', 'FENCE IT');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('43381751-3cfb-4ad8-9fa0-12fc891ab6fb', 'FENCING SPECIALISTS INC');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('76b694a1-faad-4d9c-922a-a46ca4493845', 'FIBERTEL LLC.');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('45c3767d-f993-45fd-82f6-94d7869990c7', 'FINE GRADE EXCAVATING & GRADING LLC');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('dc6fcc1b-ba9e-4df5-accb-266f0e5e04ca', 'FINEST FENCE');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('945e2445-4d38-4c05-bedd-91ac6b9dd904', 'FIRST ELECTRIC');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('af38cad5-015d-4314-b180-c7a705079203', 'FISHER SAND & GRAVEL');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('cc32e6ee-47a1-4e56-ab52-6adaffb88a50', 'FLOCK SAFETY');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('da923bda-27f8-437a-93b6-6c9f51aec3e5', 'FLORENCE FENCE');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('3e57e19d-80dc-4b4f-9740-39eb712c604c', 'FLOYD''S CONSTRUCTION');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('abbaf13e-2bee-4d71-8756-d21d44acd92a', 'FNS INFRASTRUCTURE');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('fd3faaf0-b130-4db9-a767-b39053fdaa0f', 'FOCUS CONCRETE');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('9296b001-2781-44e3-aa17-5b427f730548', 'FOUR POINT ENGINEERING');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('3b497ba9-84f1-4432-87e4-ac4a05ce7623', 'FRANK LEPORI CONSTRUCTION');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('4bd7b08a-d02e-4a96-83c5-8bf5016f51bb', 'FREHNER MASONRY');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('a51db342-2004-4081-89d6-726f99f3fff7', 'GAIL WILLEY LANDSCAPING');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('e399e4c5-dbc1-4148-8abf-c58a87304342', 'GAYMAN CONSTRUCTION');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('dd0083e0-bfa2-461c-abfe-c31936a3b443', 'GENERAL FENCE INC.');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('9bc2cb72-a57e-4914-bd48-6bfe26e6f2b2', 'GEOTECHNICAL & ENVIRONMENTAL SERVICES DBA EAGLE DRILLING SERVICES');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('2bf1b3fe-cf75-4fbb-877b-1fbb10d33c27', 'GEOTECHNICAL DRILLING');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('73b39846-41c5-40c6-bfd5-9b340560c919', 'GEOTEK');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('c2bfc43a-eec9-4185-a900-b45cd26c27af', 'GERHARDT & BERRY CONSTRUCTION INC.');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('815332a9-0bd7-403f-9e7c-2d1836fff18d', 'GLASS ROOTS CONSTRUCTION');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('ec84c1a5-732f-423b-9915-4eea15f4d394', 'GOETTL AIR CONDITIONING AND PLUMBING');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('e3bbab8d-1dba-4d8d-ad44-237d74a6e50a', 'GRADEX CONSTRUCTION');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('72680582-86ea-47f3-9166-733d18f47715', 'GRANITE CONSTRUCTION COMPANY');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('fff087e0-6cea-4587-961d-b814f5e87e78', 'GRAYMAR ENVIRONMENTAL SERVICES INC.');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('a9772724-4a6b-4189-8ad5-16e37e9f17f9', 'GREENCARE DESIGNS');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('b05fa791-4a74-4c3b-8304-74a440f49bc3', 'GREENHOUSE GARDEN CENTER');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('06c39cd9-076a-41d0-a4cf-9b8b4997d282', 'GUIDEWELL');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('04ca8e54-7d69-4390-91d6-58ac72351702', 'H.E. HUNEWILL CONSTRUCTION CO. INC.');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('06b4094e-aeec-441b-b84e-2992fcf971a5', 'HALL''S EXCAVATING');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('a20409a1-2ea7-4a95-88dd-e1096d14f022', 'HAZ-TECH DRILLING INC');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('911f6d4d-8728-4a3b-89bc-809fce11b522', 'HEAVY DUTY CONCRETE & PAVERS');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('7d6b8d40-3d4c-407e-91c5-9c8888bda50c', 'HENRY CONTRACTING, LLC');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('34677f1c-4c08-4a11-816b-6c6d6acc237a', 'HIGHWAY STRIPING & SIGNS');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('bc63c541-0425-4cd1-8e04-2e2eefb81f79', 'HILL & HILL CONSTRUCTION, LLC.');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('016ec21c-8af4-4e4f-b9e7-7b1ddf754d50', 'HOFSOMMER EXCAVATING');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('0e0ba653-c788-49cc-a4f9-56b3135a9738', 'HOLCIM-SWR INC');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('a82bf037-05f2-4836-886f-5886031d71df', 'HOLE HOGZ, LLC');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('c7021323-d184-4219-baad-684a6f0ac5af', 'HORROCKS ENGINEERS');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('7a85d65b-9c64-4143-bd15-90c18a6efe81', 'HY-ROCK EXCAVATION LLC.');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('14f43bdf-0d6b-4055-a5b1-4320f33d41ac', 'HYLAN WEST');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('f4f94f47-eb9c-4d9e-8f72-acd6adae2e01', 'IES RESIDENTIAL');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('b47ee8a7-87e0-4d0c-ae06-573862283541', 'IMPACT SIGNS & GRAPHICS');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('35bffc12-7e10-4032-9753-64594ebda93c', 'IN-LINE UNDERGROUND SOLUTIONS LLC');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('5c9817d1-3b3a-4d2e-afd3-cbdbb4a0f709', 'INFINITY FENCE LLC.');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('e1440977-1832-4ec6-808b-27e01ce855f2', 'J & G LANDSCAPING');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('3b448f20-4265-4466-9cb2-e8d497f7501b', 'J & J ENTERPRISE SERVICES, INC.');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('86f50e3e-b81a-4954-a14c-69cd9b10472a', 'J&L CONSTRUCTION');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('dac5adf2-a821-4abb-b5ba-aa811aded964', 'JACOBS ENGINEERING GROUP');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('a3c20068-b14f-4ff9-a83b-8da573fe50f5', 'JBM UNDERGROUND');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('292e6dd9-053c-497f-9fb3-2c07408f2736', 'JC COMPANIES, LLC');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('8f5d1784-bb67-4e98-9e5b-40699ad67fe3', 'JCP PLUMBING INC.');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('b5b5687a-776c-44a2-9431-4c717f850375', 'JET PLUMBING & DRAIN SERVICES');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('ecc60fcd-5dde-4123-bf10-9bd4a0a506c4', 'JP FENCE LLC.');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('6973b279-bdad-4563-87fc-0f2adaea4252', 'JUMP 2 IT PLUMBING');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('85815f1b-272f-4795-974e-23d809f7d454', 'KCI TECHNOLOGIES');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('ccddeebb-587f-43be-afdc-a7289f222465', 'KELLER NORTH AMERICA, INC.');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('ae4e1855-922f-48e6-bc3d-2b138595bc6c', 'KING COMMUNICATION');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('65b56d6c-ebe4-4ce6-b6c3-4f8d2df6a654', 'KLEINFELDER');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('f1e3db3a-1e70-4436-8b77-0ed7910ec9d9', 'KNL CONSTRUCTION LLC');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('e1e61066-56f7-4a9a-9c5c-1e6fc0c45e13', 'KOKOPELLI LANDSCAPING');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('cdb574ac-f820-403c-82ef-51b2ce83c5ad', 'KP CONSTRUCTION');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('bb788ee1-abde-4f64-8869-7f2fbcc2924c', 'LAKESIDE EXCAVATION');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('592c2e8a-c0db-42bf-8396-35a5ebc33c7e', 'LANCE JOHNSON INC.');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('311241dd-1ecb-4247-8595-edb490328433', 'LANZ CONSTRUCTION LLC');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('68ff6bd3-8cf0-41d7-b486-6b28cb73cdd6', 'LAS VEGAS FLAG & SIGN');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('68d6adfe-365c-4688-92f6-ef6ba9dbc6b0', 'LAS VEGAS URBAN FOREST CENTER');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('e3d9b017-e4f3-4161-aae3-2c5e8d5e7edb', 'LEGACY CONSTRUCTION & DEVELOPMENT INC.');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('5197b423-1119-4979-84bb-c924a63c7dd5', 'LEGENDS LANDSCAPING, LLC');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('b32649ed-4aa5-49a4-bc80-6ae60c1343df', 'LITTLE CITY LANDSCAPE');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('6685bc60-b2a8-4a1d-bc6e-51aaedfd5250', 'LUMOS & ASSOCIATES');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('82f97f0d-72ca-4b85-ba64-2824b40b26ae', 'M & J ENTERPRISES CONSTRUCTION INC.');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('a3885031-1e44-4e7b-b49c-b1529bb4025b', 'M & M EXCAVATING & LANDSCAPE SERVICES LLC.');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('581f5d7b-ea6f-4774-9d48-8642b786aa11', 'M4 ENGINEERING LLC');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('4d9932f6-1ba0-4153-8fa7-35719c3d50e8', 'MAILE CONCRETE');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('a1fe0e23-f649-4e79-9238-d6e28f5c53e1', 'MALCOLM DRILLING');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('996eec6c-de8a-43ae-9882-1b68cd75e32d', 'MAS TEC');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('19ab695c-8dab-416e-b9f8-feab3f9e7a00', 'MAUI ONE EXCAVATING, INC.');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('9cc7562a-96cc-4ddd-8384-acdfb5cd15a0', 'MCKUIN PIPELINE');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('d580bce4-fe3d-4922-8755-051d93b7534d', 'MENICHINO CONSTRUCTION');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('ac4ad571-9697-4b61-9bdc-6c189a0f5172', 'MMC INC');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('9862c4c7-188c-4f73-95c5-fb6daf73671f', 'MOANA NURSERY');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('13e5a4ce-c59c-49e1-9dd6-b6b7e8d71cfe', 'MONSTER TREE SERVICE OF GREATER RENO');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('9393495c-7f57-4f99-ae4c-cc5d882b073b', 'MOON VALLEY NURSERY');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('ba9317d3-9391-4fc4-ac7e-46d152e4dbfb', 'MORGAN CONSTRUCTION, INC.');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('3537c81f-8aa6-47d2-8eaf-cd943b6b8a74', 'MORLEY GRADING LLC');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('4a16075a-078a-498d-89ed-81f94d553fbe', 'MOUNTAIN EXCAVATION CO LLC');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('046fb91f-2b5b-47b1-bb5b-37835263e906', 'NDX LLC.');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('2181df91-188c-4fba-a47f-6125ac7f3ce1', 'NEILS FUGAL & SONS');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('7749d1ef-09a5-4f6e-bf47-263a399d9256', 'NEVADA BARRICADE & SIGN COMPANY');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('9cbf4148-ab20-4ca3-a2c1-1a2981eae85c', 'NEVADA DIRT WORKS');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('512cdd7f-735f-49ab-b4ab-5193621afaa2', 'NEVADA FENCE');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('0972f907-0c83-4fbd-baa7-97ba7c9207df', 'NEW LIFE INDUSTRIES LLC.');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('908d7f4b-8544-49e0-8e76-72701b99c993', 'NEWFIELDS');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('70e6be81-24de-45ff-89d0-58fa08f02807', 'NINTH ISLAND CONSTRUCTION LLC');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('070da4a9-8fef-49b7-a87e-63e8cba7ae23', 'NINYO & MOORE');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('917184e0-0dcf-4694-b66d-bcaf5e337c3a', 'NNE CONSTRUCTION, INC.');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('659144ff-8a1c-4943-84f4-919cd1285fc4', 'NORTH SKY COMMUNICATIONS');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('12d10d92-598e-4ff5-9ebe-0b9bcd5ea83f', 'NV CONNECTIONS');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('847a1e72-9f97-4c3b-9a7a-ea94ad7f9daa', 'OSMOSE UTILITIES SERVICES INC.');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('21895f4e-2097-42ad-87f3-524cb202502f', 'PACIFIC NETWORK SOLUTION CONSTRUCTION, LLC');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('a9d1204c-642d-4041-b148-1ac371baae7f', 'PACIFIC UTILITY INSTALLATION');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('036d6b53-e73a-4c4a-8069-3b9503759d32', 'PAR 3 LANDSCAPE & MAINTENANCE');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('85ce58d8-6f57-4a9e-8c01-59bdab6860cd', 'PAVEMENT RECYCLING SYSTEMS');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('71629b37-3eb6-4a15-9a5f-977275a52077', 'PEARSON TRENCHING AND TRUCKING');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('de3e0bc0-631e-4e20-b66f-a37d14d3ac24', 'PEAVINE CONSTRUCTION');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('fa769511-ac03-421f-b791-fb25989af475', 'PEEK BROTHERS CONSTRUCTION');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('1d27b5d7-f9e3-4954-81b8-2cd2a7703643', 'PENNY ELECTRIC');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('3934043e-aefb-4eae-b5e8-e283cb387ef3', 'PERFORMANCE EXCAVATING LLC');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('ab286f82-89a4-4f86-99f3-9e49c05e72ba', 'PHOENIX LANDSCAPE');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('75a0e0d7-8fdc-44c7-a8eb-72a7b0d72435', 'PLATINUM CONTRACTING OF NEVADA, LLC');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('5445bf25-45e8-4136-a1ba-f56a29f0fe63', 'POKRAJAC CORPORATION');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('9f01b031-8d32-4dc5-9256-13e8e1e63ddb', 'POWER PLUS');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('49d5a050-2f30-4b34-b9cf-1396d9d7de86', 'PRECISION PIPELINE LLC');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('ba5b510d-d9b9-485e-8f28-43fc4890eed3', 'PREMIER POOLS AND SPAS');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('ccf7aded-8f24-4702-8d9d-647fc8c7feeb', 'PRIORITY GRADING');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('27191933-0bf7-48cc-a4fe-1b6d9c7d0355', 'PRO UTILITY CONSTRUCTION LLC');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('39d58217-4683-4a9d-9eaf-1b23bd524a6d', 'PURE PLUMBING & AIR LLC.');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('a9224253-2ad5-4d27-a395-1e6cc0158369', 'Q & D CONSTRUCTION');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('cb557048-9a80-4e01-ae82-ca50139c3fd2', 'QUALTEK WIRELESS');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('35405411-d330-4620-96d1-9a63e2202166', 'QUIK TRENCH');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('90a4d46e-4749-429b-8e7f-79758adcc98a', 'R & J JOY INC. DBA JOY ENGINEERING');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('d0de311c-3356-4e38-b1fc-4d7b91220a06', 'R & R CONSTRUCTION LLC.');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('c78ab6ff-f303-4145-9e76-ddff68e4fb88', 'R & S DIRECTIONAL UNDERGROUND DRILLING');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('4db43f0b-f930-4c8f-8199-29615a8b4027', 'R AND K CONCRETE CUTTING INC');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('7cc641fd-10a3-4779-97ac-5e080681f5ef', 'R CONSTRUCTION');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('95ba96c2-8974-44ff-82c9-abb7b7eba675', 'R&L DECIGA INC');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('42832838-d2c3-45c9-bda6-c5b87e59cd78', 'RAPID CONSTRUCTION INC.');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('04f80aca-910d-4582-8472-dbb5d0a143d4', 'RED STAR FENCE');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('c64624ba-fb7c-4356-a094-4223567c8892', 'REDMOND FENCING');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('ff796388-fb61-4c10-9268-9b92b03dd51c', 'RENO DRAIN OIL SERVICE');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('b5b8970e-4e00-456c-b163-501172d8d891', 'RENO GREEN LANDSCAPING');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('704a5379-3a75-47f2-be19-0e490f029c96', 'RENO TAHOE CONSTRUCTION');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('837dbbb2-0019-4098-a3bb-1695c820cdca', 'RESOLUTION PLUMBING');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('d676ebb0-827a-489c-968e-829c88b026b4', 'RLM UNDERGROUND, LLC');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('bcb324b6-2633-4a3c-a25a-21242a014c3d', 'RM CONTRACTING LLC.');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('2fb4113c-55af-43e9-a02b-7db4951b62ca', 'ROAD AND HIGHWAY BUILDERS');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('f6125eea-3390-49f5-addd-0866250ed5a3', 'ROCKY MOUNTAIN GRADING');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('959edcd9-e769-4d82-82a0-d172a742e5b5', 'ROOT-O-MATIC, INC');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('84b8a85f-563d-40b3-8641-f1efee53af8a', 'ROTO ROOTER');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('bcc16f02-6396-4973-945e-e737eb0e88c1', 'ROYALTY PLUMBING');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('de13304b-81cf-48c9-bf32-7459fdf2f467', 'SHAY CONSTRUCTION');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('89769c6e-0672-4a3f-a10a-01c87974bcd6', 'SIERRA LLC');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('e455dacc-60db-4abc-a312-617b7562f1a8', 'SIERRA NEVADA CONSTRUCTION');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('b8f5ab4c-c871-47af-a5ef-ac0f10464de6', 'SIGNATURE LANDSCAPES');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('faf6614c-56fd-4eae-8df0-abd105b712c6', 'SILVER LAKE CONSTRUCTION');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('c3813fe8-5c82-4a30-ae79-8a553f6d3d77', 'SILVER STATE FENCE AND STAIN');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('0e086568-bdb5-41bd-b321-c98894faf740', 'SOIL-TECH');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('e70901c6-8f39-4829-bbce-1a606d0cf6dd', 'SOMMERCAL CONSTRUCTION INC');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('90f815ad-9e9e-47cc-aadf-13390aa2670a', 'SORENSEN COMPANIES INC.');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('b45df5b5-a3db-4fd8-9137-68d01ba0f744', 'SORENSEN PLUMBING INC.');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('5764fb78-a7a4-4cb8-af69-e3f4130baca4', 'SOUTHWEST GEOTECHNICAL');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('4e54675f-73fb-4820-8fad-ac3d4b8131fa', 'SOUTHWEST LAWN SHAPING');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('75d3230b-ad90-469b-a65c-b367f287885b', 'SPANISH SPRINGS CONSTRUCTION INC.');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('88f6d7d1-6885-430b-ae1c-3ed658f276cd', 'STANDARD ROCK LTD');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('84f02144-62b6-4134-a6b9-c2354bf090c0', 'STRAIGHT-LINE INC.');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('6eb44ca0-2c03-47e8-8d46-96b1f6e22cc8', 'STRATA, INC.');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('b98a5680-ed75-4938-81aa-0769f970765b', 'STURGEON ELECTRIC');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('e68f6126-384d-44e1-9d6b-084ba108bbc1', 'SUMMIT LINE CONSTRUCTION');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('53289d7d-e7a4-475c-9dd5-6c82fc13af93', 'SUNRISE PAVING, INC.');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('6d1d3406-7122-4a99-b661-d674b053f6fa', 'SUNSTATE COMPANIES, LLC');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('8723f8f0-2547-4dcb-baab-474f40d42630', 'T AND D POWER');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('eef17b65-2a90-4033-a787-42f212fd4afa', 'T AND R CONSTRUCTION');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('e827e6a7-fde8-4d61-874e-7951e20a62c7', 'T-PAVE CONSTRUCTION LCC');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('954e1368-e768-4d6c-b0f6-a4ed4e1e555d', 'T&D POWER');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('b591e8d4-ebf4-4ebc-acca-9202f0afc80b', 'T2 UTILITY ENGINEERS');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('c7d3a663-11da-4228-b7ec-b6567f977343', 'TAB CONTRACTORS INC.');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('27cd43fb-cd86-44fd-a2c2-3d6c5d8ea54a', 'TABER DRILLING');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('137a731f-bfd3-4321-a08f-95e3c5dd3529', 'TAHOE FENCE CO.');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('4c0efab3-88a5-4a57-9c70-4a9ee8d3698c', 'TAND INC.');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('56bb9e89-44e3-4b97-a3eb-092ea74647c7', 'TERRACON CONSULTANTS INC');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('bbaeb281-238b-46b4-9b87-7c1d3c5970bb', 'THE BORING COMPANY');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('06d510b3-20b4-446e-92ba-89b014d7d0dd', 'THE PAVER COMPANY LLC');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('476f1eb8-a266-4c9d-b677-e50f9f94eb20', 'THOLL FENCE COMPANY');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('2a93a3fc-4c20-45d9-948c-93e4cfabf166', 'TIBERTI FENCE COMPANY');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('4e33fe53-0852-4ff5-a6a8-8fcabe57b3ca', 'TILSON TECHNOLOGY MANAGEMENT, INC');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('8283a040-e1d3-4b92-82cd-3b3de6ecf72e', 'TITAN ELECTRICAL CONTRACTING');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('2df5b7f7-cbcb-45e2-b98c-74088f6b25a9', 'TOM EDISS LANDSCAPE INC');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('2e800e4c-c772-4c04-858b-2d5378f16a33', 'TRACY RYDER LANDSCAPE');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('ea1fb048-7295-41e0-a6a8-318a5fe8cc61', 'TRIPLE J TRENCHING');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('b5a26375-bb60-4adc-8d6d-2f078cd81cda', 'UNITED SITE SERVICES');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('db697beb-d986-40ed-a709-23542811877a', 'URBAN JUNGLE CONSTRUCTORS LTD');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('43b77787-e9b3-40cf-9aad-41504a9c8537', 'VALLEY ELECTRIC ASSOCIATION INC NEVADA');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('0177c392-93a5-40ce-b344-4ceaa5ddf46b', 'VANTAGE CONCEPTS');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('26bd0148-5679-45ee-a47d-4d708316c9c1', 'VEGAS CIVIL, LLC');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('86badcf0-03ca-405e-86d9-2b31a744388e', 'VERSA GRADE');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('57189e77-b42a-45a3-af80-58317f03b2dd', 'VERSAGRADE INC.');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('876fa213-b830-4eb0-9812-dad47b1ebcf8', 'VIKING DRILLERS, INC');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('c384df71-6e0d-4fad-b788-c44e84ca732d', 'VINCO INC.');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('03d8f242-a61e-4c2b-81f7-cccd144a055b', 'VONALAS INCORPORATED');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('8ecb59ad-11f1-4abb-94a4-c52474cec0ed', 'VT CONSTRUCTION');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('bd9ce7c6-1cec-4cdb-b3f3-5e269847363a', 'WALKER RIVER IRRIGATION DISTRICT');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('0435cfc1-39fc-4edf-9599-04a22b121a5d', 'WASATCH ELECTRIC');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('15efe241-32bb-44a8-b018-244b3c105cb0', 'WELLS CARGO INC.');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('b962c2e1-bb6b-4017-a372-ecad08d8a16c', 'WEST RIDGE HOMES INC.');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('32241e06-da2d-479a-8b9c-cc83023a019b', 'WESTCOM LLC');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('7c49f271-8ad4-4537-9dfe-a1801d5211d4', 'WILLIAM CHARLES CONSTRUCTION');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('146337a9-ed09-425c-bd43-a16fe058fe08', 'WRIGHT VENTURES LLC');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('8f1e3353-b4b4-4220-9a2d-12edc41a9128', 'XL LANDSCAPE DEVELOPMENT');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('d1b413c3-b656-40ad-87d3-777c7c19186b', 'XRAM EXCAVATION');
+INSERT OR IGNORE INTO zero_damages (id, company) VALUES ('3e251fa6-c3ea-4458-97a5-25d1a9eae4dd', 'YESCO');
 INSERT OR REPLACE INTO committees (id, slug, name) VALUES ('budget', 'budget', 'Budget Committee');
 INSERT OR REPLACE INTO committees (id, slug, name) VALUES ('811Day', '811Day', '811 Day Committee');
 INSERT OR REPLACE INTO committees (id, slug, name) VALUES ('craigRogers', 'craigRogers', 'Craig Rogers Award Committee');
@@ -674,97 +674,97 @@ INSERT OR REPLACE INTO committees (id, slug, name) VALUES ('silverShovel', 'silv
 INSERT OR REPLACE INTO committees (id, slug, name) VALUES ('techSolutions', 'techSolutions', 'Technical Solutions Committee');
 INSERT OR REPLACE INTO committees (id, slug, name) VALUES ('embeddedFacilities', 'embeddedFacilities', 'Facilities Embedded in Sidewalks Task Force');
 INSERT OR REPLACE INTO committee_members (id, name, company, email)
-     VALUES ('ffc38972-b69f-4d4f-9338-2774b693b4dc', 'Adam Zeciri', 'Locating Dynamics', '');
+     VALUES ('104712ce-feca-44e6-96f1-d769ca657169', 'Adam Zeciri', 'Locating Dynamics', '');
 INSERT OR REPLACE INTO committee_members (id, name, company, email)
-     VALUES ('a2ddfc2a-9250-4dd9-add1-3a3338287514', 'Andrea Stainback', 'Stake Center', '');
+     VALUES ('53d9f762-a8fb-4bed-91c9-7f0c409983c3', 'Andrea Stainback', 'Stake Center', '');
 INSERT OR REPLACE INTO committee_members (id, name, company, email)
-     VALUES ('4daee7c4-3b1b-4b7e-adf1-15167726c22b', 'April Mitchell', 'Norfield', 'amitchell@norfielddp.com');
+     VALUES ('2f85b840-2858-47b7-aef2-9ff0fbeb1d37', 'April Mitchell', 'Norfield', 'amitchell@norfielddp.com');
 INSERT OR REPLACE INTO committee_members (id, name, company, email)
-     VALUES ('34a90147-2961-4097-8a48-907c7ebd7b34', 'Austin Benedict', 'ELM Utility Services', 'austin.benedict@elmutility.com');
+     VALUES ('fc637431-3cab-4693-ae9e-385df3a30809', 'Austin Benedict', 'ELM Utility Services', 'austin.benedict@elmutility.com');
 INSERT OR REPLACE INTO committee_members (id, name, company, email)
-     VALUES ('448dbcf6-3117-45aa-8125-fdbeb0216237', 'Beryl Cox', 'Cox Communications', 'beryl.cox@cox.com');
+     VALUES ('2b404b02-3eea-45d6-ac2a-8d285e147df0', 'Beryl Cox', 'Cox Communications', 'beryl.cox@cox.com');
 INSERT OR REPLACE INTO committee_members (id, name, company, email)
-     VALUES ('b5afce45-bc76-45ec-9851-03fd949ec5d3', 'Brian Gordon', 'DigContrax', 'bgordon@appliedanalysis.com');
+     VALUES ('b8835628-cd8f-4e30-9c1e-d1b8b295c43a', 'Brian Gordon', 'DigContrax', 'bgordon@appliedanalysis.com');
 INSERT OR REPLACE INTO committee_members (id, name, company, email)
-     VALUES ('da0d472b-0c25-47f2-adc0-4b409e4572fb', 'Bryan Kolstad', 'Mears Pipeline', 'bryan.kolstad@mearspipeline.com');
+     VALUES ('73c0e556-36f6-471f-b1a7-4aeaff23526c', 'Bryan Kolstad', 'Mears Pipeline', 'bryan.kolstad@mearspipeline.com');
 INSERT OR REPLACE INTO committee_members (id, name, company, email)
-     VALUES ('ab8b63e7-c44f-4d98-aacb-2b5d4d8b5868', 'Cesar Castillo', 'RP Weddell', 'ccastillo@rpweddell.com');
+     VALUES ('e6e1113e-d319-4b91-b53e-08ef49d022ba', 'Cesar Castillo', 'RP Weddell', 'ccastillo@rpweddell.com');
 INSERT OR REPLACE INTO committee_members (id, name, company, email)
-     VALUES ('00af59a4-7fb0-4de3-917e-671f2ddce90d', 'Chance Walker', 'Southwest Gas', 'chance.walker@swgas.com');
+     VALUES ('3c8aa91d-e64d-4315-9c98-98ea2aad10a1', 'Chance Walker', 'Southwest Gas', 'chance.walker@swgas.com');
 INSERT OR REPLACE INTO committee_members (id, name, company, email)
-     VALUES ('2f70f70b-7eb5-490e-a0a9-eed5f2c1d607', 'Charles Folashade', 'FMG LTD / Advanced Spade Company', 'folashade96@gmail.com');
+     VALUES ('5cd8aca4-a2b4-4817-8780-db5c6d3903eb', 'Charles Folashade', 'FMG LTD / Advanced Spade Company', 'folashade96@gmail.com');
 INSERT OR REPLACE INTO committee_members (id, name, company, email)
-     VALUES ('b8e50bb0-c073-4e79-af98-83ed220efaf4', 'Charles Gibson', 'Terra Contracting', '');
+     VALUES ('592b3f8c-26b9-4693-86b7-41fb9b3e095b', 'Charles Gibson', 'Terra Contracting', '');
 INSERT OR REPLACE INTO committee_members (id, name, company, email)
-     VALUES ('1dd640be-60c6-4edb-86c4-c807f06fb7a0', 'Collin Miyadi', 'Underground Service Alert', 'collin.miyadi@usan.org');
+     VALUES ('f0760e9f-eff8-425e-b0f5-5f1ce440106e', 'Collin Miyadi', 'Underground Service Alert', 'collin.miyadi@usan.org');
 INSERT OR REPLACE INTO committee_members (id, name, company, email)
-     VALUES ('358bbab5-f681-4412-933c-1eeee13e5ce5', 'Craig Panter', 'Stake Center', 'craig.panter@stakecenter.com');
+     VALUES ('2b234e5a-2364-446b-94a2-3f2339acfb51', 'Craig Panter', 'Stake Center', 'craig.panter@stakecenter.com');
 INSERT OR REPLACE INTO committee_members (id, name, company, email)
-     VALUES ('94a4a1e1-690f-406b-aa03-0036b66664d7', 'Dennis Bott', 'PUCN / Public Utilities Commission of Nevada', 'dbott@puc.nv.gov');
+     VALUES ('3cdd988b-f7f6-47a2-879f-8f209988190d', 'Dennis Bott', 'PUCN / Public Utilities Commission of Nevada', 'dbott@puc.nv.gov');
 INSERT OR REPLACE INTO committee_members (id, name, company, email)
-     VALUES ('303d48ad-3c66-41fa-8427-0ec4288d6b73', 'Derek Puffer', 'C&S Company', '');
+     VALUES ('db07c384-8229-4461-b35a-2f6c5d085b02', 'Derek Puffer', 'C&S Company', '');
 INSERT OR REPLACE INTO committee_members (id, name, company, email)
-     VALUES ('4e854813-963f-4b00-907c-9a4dcb7e3007', 'Felicia Tarin', 'Hole Hogz', 'holehogz@gmail.com');
+     VALUES ('31509231-acbd-42e9-8ddc-5dc9fc931949', 'Felicia Tarin', 'Hole Hogz', 'holehogz@gmail.com');
 INSERT OR REPLACE INTO committee_members (id, name, company, email)
-     VALUES ('2814636f-0ca8-4e5c-a455-04231b25ee9f', 'Greg Lane', 'GigaPower', 'greg.lane@gigapower.com');
+     VALUES ('b57ab930-2e1b-48bf-b9de-1b6026565c4e', 'Greg Lane', 'GigaPower', 'greg.lane@gigapower.com');
 INSERT OR REPLACE INTO committee_members (id, name, company, email)
-     VALUES ('0b0e9266-eb04-44d4-bfcf-36cadec43b07', 'Greg Noel', 'USIC', 'gregorynoel@usicllc.com');
+     VALUES ('55a64b69-fd4c-478e-8877-8014e43f020e', 'Greg Noel', 'USIC', 'gregorynoel@usicllc.com');
 INSERT OR REPLACE INTO committee_members (id, name, company, email)
-     VALUES ('2545e072-1260-4f6b-a560-2b4563a3cd30', 'Harley Hartman', 'ELM Utility Services', 'harley.hartman@elmutility.com');
+     VALUES ('52631f03-3454-491e-8371-5962f8d1b666', 'Harley Hartman', 'ELM Utility Services', 'harley.hartman@elmutility.com');
 INSERT OR REPLACE INTO committee_members (id, name, company, email)
-     VALUES ('8ee1f25e-138e-429a-aaa7-feefbd3666f4', 'Harold Lefler', 'Western States', 'hlefler@westernstatesco.com');
+     VALUES ('1cf87e50-5f97-4ff4-9fb6-2650922ea08d', 'Harold Lefler', 'Western States', 'hlefler@westernstatesco.com');
 INSERT OR REPLACE INTO committee_members (id, name, company, email)
-     VALUES ('563e8f42-76b4-4164-96e7-1f6d3dd8bfce', 'Jennifer Fagan', 'Stake Center', '');
+     VALUES ('b01dbb1a-0dc0-4ec2-8226-9644fadc6dea', 'Jennifer Fagan', 'Stake Center', '');
 INSERT OR REPLACE INTO committee_members (id, name, company, email)
-     VALUES ('72199577-aa34-421f-a0a4-60ef1b33577a', 'Jeremy Crawford', 'Kern River Gas', '');
+     VALUES ('04a61141-276f-4108-9834-f43c44ac9db0', 'Jeremy Crawford', 'Kern River Gas', '');
 INSERT OR REPLACE INTO committee_members (id, name, company, email)
-     VALUES ('3b8d97c3-a755-47dc-a7ad-10872d3ca2ab', 'Kaitlyn Cabrera', 'ELM Utility Services', 'kaitlyn.cabrera@elmutility.com');
+     VALUES ('ebd44c34-cfa9-44ae-b412-51c78461a08c', 'Kaitlyn Cabrera', 'ELM Utility Services', 'kaitlyn.cabrera@elmutility.com');
 INSERT OR REPLACE INTO committee_members (id, name, company, email)
-     VALUES ('2795d861-c0d9-41ec-9439-74484b700245', 'Kristen Garcia', 'NV Energy', 'Kristen.Garcia@nvenergy.com');
+     VALUES ('c6bbc644-6ace-4dac-ad59-490025185827', 'Kristen Garcia', 'NV Energy', 'Kristen.Garcia@nvenergy.com');
 INSERT OR REPLACE INTO committee_members (id, name, company, email)
-     VALUES ('6672e619-ba9f-4071-bf66-4d868377b4b1', 'Lance Olson', 'City of Henderson', '');
+     VALUES ('8a3b7fa0-59e5-4804-a415-289bedce2580', 'Lance Olson', 'City of Henderson', '');
 INSERT OR REPLACE INTO committee_members (id, name, company, email)
-     VALUES ('ce242488-2f5c-4a69-9d45-0ff88b34a53b', 'Lora Woodliff', 'HF Sinclair Midstream', 'lwoodliff@hfsinclair.com');
+     VALUES ('942811af-b662-4a61-8a65-bb7cc7c29123', 'Lora Woodliff', 'HF Sinclair Midstream', 'lwoodliff@hfsinclair.com');
 INSERT OR REPLACE INTO committee_members (id, name, company, email)
-     VALUES ('74a16142-ce27-4d9a-abe6-1b2a250eee95', 'Lynsay Demko', 'Southwest Gas', 'lynsay.demko@swgas.com');
+     VALUES ('5c887d2d-4c77-4d2d-87d4-93dab1212e01', 'Lynsay Demko', 'Southwest Gas', 'lynsay.demko@swgas.com');
 INSERT OR REPLACE INTO committee_members (id, name, company, email)
-     VALUES ('95364b04-e216-430e-bc1a-f406d07f66f0', 'Mark Benedict', 'ELM Utility Services', 'mark.benedict@elmutility.com');
+     VALUES ('f458ae56-afa1-407d-abc5-a11afb2e55f0', 'Mark Benedict', 'ELM Utility Services', 'mark.benedict@elmutility.com');
 INSERT OR REPLACE INTO committee_members (id, name, company, email)
-     VALUES ('07729358-531d-4468-bae2-357d23aef440', 'Matt Dodd', 'Underground Service Alert', 'matt.dodd@usan.org');
+     VALUES ('5640fd00-e395-4060-99b5-b08a0bdfd5bd', 'Matt Dodd', 'Underground Service Alert', 'matt.dodd@usan.org');
 INSERT OR REPLACE INTO committee_members (id, name, company, email)
-     VALUES ('504b9ddd-0ad5-41d6-a092-7b50c36063b7', 'Mike Austin', 'LVVWD / Las Vegas Valley Water District', 'michael.austin@lvvwd.com');
+     VALUES ('0821387d-6f00-44db-97f6-0aaa486635c2', 'Mike Austin', 'LVVWD / Las Vegas Valley Water District', 'michael.austin@lvvwd.com');
 INSERT OR REPLACE INTO committee_members (id, name, company, email)
-     VALUES ('f8729bd5-1ee2-4746-aa1a-43f4e5c76b94', 'Mike Marrero', 'USIC', 'MikeMarrero@usicllc.com');
+     VALUES ('797755b7-cc37-4c6a-b7bc-030b625b95b2', 'Mike Marrero', 'USIC', 'MikeMarrero@usicllc.com');
 INSERT OR REPLACE INTO committee_members (id, name, company, email)
-     VALUES ('cde00b21-ddf0-46c9-9351-b37f521f3472', 'Nancy Lopez', 'SW Gas / Southwest Gas', 'nancy.lopez@swgas.com');
+     VALUES ('6a89ff2e-9cc4-45bd-8437-a0718f77d70c', 'Nancy Lopez', 'SW Gas / Southwest Gas', 'nancy.lopez@swgas.com');
 INSERT OR REPLACE INTO committee_members (id, name, company, email)
-     VALUES ('98fbccae-3676-41fc-b6a0-2409f0b145a3', 'Rick Torrens', 'KCI Engineering', 'richard.torrens@kci.com');
+     VALUES ('99f1fc5d-8e86-48c5-9e15-e04678982be4', 'Rick Torrens', 'KCI Engineering', 'richard.torrens@kci.com');
 INSERT OR REPLACE INTO committee_members (id, name, company, email)
-     VALUES ('86d390ea-7c5b-4d84-9b8f-70333171eba6', 'Ryan White', 'USA North 811 / Underground Service Alert', 'ryan.white@usan.org');
+     VALUES ('5cbe3472-b87b-4730-b7c2-508bf827f081', 'Ryan White', 'USA North 811 / Underground Service Alert', 'ryan.white@usan.org');
 INSERT OR REPLACE INTO committee_members (id, name, company, email)
-     VALUES ('92d7a076-03e0-431a-9525-320875eaf0a3', 'Scott Allen', 'Las Vegas Paving', '');
+     VALUES ('d104c18b-27b7-4637-886d-a7289ec429f4', 'Scott Allen', 'Las Vegas Paving', '');
 INSERT OR REPLACE INTO committee_members (id, name, company, email)
-     VALUES ('3e5cd5b7-c7c4-487e-bd40-4880c4deba93', 'Sergio Hernandez', 'Western States', 'SHernandez@westernstatesco.com');
+     VALUES ('e185650f-f27b-4cbc-ab47-e8c8c2e1557a', 'Sergio Hernandez', 'Western States', 'SHernandez@westernstatesco.com');
 INSERT OR REPLACE INTO committee_members (id, name, company, email)
-     VALUES ('f1e21176-bc9a-4a1b-9c1c-7baddfa6ce08', 'Shane Ayers', 'Stake Center', '');
+     VALUES ('0cf46997-5566-472e-b5a0-9e59bdaae390', 'Shane Ayers', 'Stake Center', '');
 INSERT OR REPLACE INTO committee_members (id, name, company, email)
-     VALUES ('995ac83a-ba79-4e6f-8748-a40178c275a7', 'Siddarth Munivelu', 'Pelican Corp', '');
+     VALUES ('447b95a6-e8a3-49bf-bda3-e5fa14c3f8cd', 'Siddarth Munivelu', 'Pelican Corp', '');
 INSERT OR REPLACE INTO committee_members (id, name, company, email)
-     VALUES ('7282d79b-0afd-4224-90d9-4024d03e84fb', 'Terry Harpt', 'Southwest Gas', 'terry.harpt@swgas.com');
+     VALUES ('ac4f5ed0-4d32-454e-976c-76d1f1a93091', 'Terry Harpt', 'Southwest Gas', 'terry.harpt@swgas.com');
 INSERT OR REPLACE INTO committee_members (id, name, company, email)
-     VALUES ('251e83af-60fe-4840-b75a-ceb5f8d145f3', 'Tim Gates', 'City of Henderson', '');
+     VALUES ('9475d6c8-e6d3-4972-94d9-afb830c1a29a', 'Tim Gates', 'City of Henderson', '');
 INSERT OR REPLACE INTO committee_members (id, name, company, email)
-     VALUES ('d9bb85be-ac63-466b-99d1-aecd27c38bab', 'Tyler Byrd', 'Byrd Underground', 'tyler@byrdunderground.com');
+     VALUES ('a64a6807-627f-4a26-acc4-04bcb218078c', 'Tyler Byrd', 'Byrd Underground', 'tyler@byrdunderground.com');
 INSERT OR REPLACE INTO committee_members (id, name, company, email)
-     VALUES ('58f89741-2d82-464b-a20e-3a6d7e19feae', 'Vern Hadley', 'NV Energy', '');
+     VALUES ('990c47c7-80b1-4578-bc2f-e625aba7c574', 'Vern Hadley', 'NV Energy', '');
 INSERT OR REPLACE INTO committee_members (id, name, company, email)
-     VALUES ('9d553b8e-214b-462a-9d69-cad9e537e093', 'Rusty McLAughlin', 'Great Basin Gas', '');
+     VALUES ('c75e3899-1569-4a9c-90ef-48a58d5436ff', 'Rusty McLAughlin', 'Great Basin Gas', '');
 INSERT OR REPLACE INTO site_settings (key, value_json) VALUES ('navigation', '{"logo":{"image":"assets/images/NRCGA-Logo_Badge-Color-300x272.png","alt":"NRCGA Logo","text":"Nevada Regional Common Ground Alliance","link":"index.html"},"menuItems":[{"type":"dropdown","text":"About NRCGA","href":"about.html","items":[{"text":"About NRCGA","href":"about.html"},{"text":"Members","href":"members.html"},{"text":"Bylaws & Standing Rules","href":"bylaws.html"},{"text":"Archive","href":"archive.html"},{"text":"Calendar","href":"calendar.html"}]},{"type":"dropdown","text":"About 811","href":"about-811.html","items":[{"text":"About 811","href":"about-811.html"},{"text":"Create a Ticket","href":"https://usanorth811.org/","external":true},{"text":"General Questions","href":"about-811-questions.html"},{"text":"EPR Codes","href":"https://usanorth811.org/assets/PDF/NV-EPR-Codes_Update-Announcment.pdf","external":true}]},{"type":"dropdown","text":"Safety & Training","href":"training.html","items":[{"text":"Education and Training","href":"training.html"},{"text":"Training Schedule","href":"training.html#schedule"},{"text":"Request Training","href":"training.html#request-training"},{"text":"Training Database","href":"https://nrcga-my.sharepoint.com/:x:/g/personal/admin_nrcga_onmicrosoft_com/IQAL9RhjUb17QKI__vdu5GUVAftmygH4ktNbXb70uCHq9E0?e=ROlhAm","external":true}]},{"type":"link","text":"Programs & Committees","href":"programs.html"},{"type":"link","text":"Nevada Data","href":"data-maps.html"},{"type":"link","text":"Contact Us","href":"contact.html"}]}');
 INSERT OR REPLACE INTO site_settings (key, value_json) VALUES ('contact', '{"organization_name":"Nevada Regional Common Ground Alliance","email":"info@nrcga.org","phone":"","address":"","hours":"","response_time":"We typically respond within 1-2 business days."}');
 INSERT OR REPLACE INTO site_settings (key, value_json) VALUES ('footer', '{"tagline":"Promoting public safety and damage prevention across Nevada.","copyright":"© 2026 NRCGA. All rights reserved."}');
-INSERT OR REPLACE INTO membership_types (id, name, slug, description, sort_order, active) VALUES ('b9ce1d4f-fcf9-4471-b5ad-17aa2409f2bc', 'Stakeholder', 'stakeholder', 'Voting membership for organizations actively involved in damage prevention across Nevada.', 1, 1);
-INSERT OR REPLACE INTO membership_types (id, name, slug, description, sort_order, active) VALUES ('83234c10-a550-45d0-969c-bb0b46deae29', 'Associate', 'associate', 'Non-voting membership for organizations that support NRCGA''s mission and programs.', 2, 1);
-INSERT OR REPLACE INTO membership_types (id, name, slug, description, sort_order, active) VALUES ('5fade39c-6ef3-4ec4-b6fe-1edfd5e519e6', 'Affiliate', 'affiliate', 'Affiliate membership for partners and related organizations aligned with damage prevention.', 3, 1);
+INSERT OR REPLACE INTO membership_types (id, name, slug, description, sort_order, active) VALUES ('8ce4a36b-ee99-4aa3-97ee-caacc41d9c2a', 'Stakeholder', 'stakeholder', 'Voting membership for organizations actively involved in damage prevention across Nevada.', 1, 1);
+INSERT OR REPLACE INTO membership_types (id, name, slug, description, sort_order, active) VALUES ('fd6c0164-a20f-4749-8e3d-db38fa020011', 'Associate', 'associate', 'Non-voting membership for organizations that support NRCGA''s mission and programs.', 2, 1);
+INSERT OR REPLACE INTO membership_types (id, name, slug, description, sort_order, active) VALUES ('0306be35-f600-4c0c-906a-2caf87620921', 'Affiliate', 'affiliate', 'Affiliate membership for partners and related organizations aligned with damage prevention.', 3, 1);
 INSERT OR REPLACE INTO site_settings (key, value_json) VALUES ('breaking_news', '{"active":true,"title":"Join us on 811 day!","content":"811 Day is around the corner! NRCGA is celebrating 811 Day at the Aviators Stadium. Tickets just $8.11! Come out to support safe digging, connect with the industry, and enjoy a night at the Aviators ballpark!","image_url":"assets/images/programs/811 day/811day26flyer.png","read_more_url":"https://am.ticketmaster.com/aviatorslv/buy/quickbuy?id=OTc%3D&camefrom=CALL811&nscid=HaliteAlpha%3AMUIEAKYoGFvHPIuyUatCnFn2rv_IlI3vdE821DyNywNznVkNBJgxpu6oGuib1vjvsdsp8gc0WqgHdWxzdrGWwaeYGn1wXRY0dvmeH-ohiDRoxoHuegIY2hAmPe8hzP4NeCzbVP0t_FW0zCjSwfYKsEqZ_de2c5lnfbCtFeDVUG_JetG544Posz4-G78HxYvz","storage_key":"nrcga_breaking_news_dismissed","expires_at":null}');
 INSERT OR REPLACE INTO pages (id, slug, title, section_label, subtitle, body_md, body_json, body_html, regions_json, published, is_custom)
      VALUES ('00000000-0000-4000-8000-0000b537f6f5', 'budget-committee', 'Budget Committee', 'NRCGA Programs', 'The Budget Committee oversees NRCGA''s financial planning, budget development, and fiscal responsibility to ensure the organization''s long-term sustainability.', NULL, '[{"type":"section","bg":"default","padding":"md","children":[{"type":"text","body":"The Budget Committee plays a critical role in NRCGA''s financial management and strategic planning. This committee is responsible for developing annual budgets, monitoring financial performance, and ensuring the organization''s resources are allocated effectively to support our mission and programs.","style":{"align":"left","textSize":"md","textColor":"default"}},{"type":"heading","level":3,"text":"Key Responsibilities","style":{"align":"left","textSize":"md","textColor":"default"}},{"type":"text","body":"• ✓ Develop and review annual operating budgets\n• ✓ Monitor financial performance and expenditures\n• ✓ Provide financial oversight and recommendations to the Board\n• ✓ Ensure fiscal responsibility and transparency","style":{"align":"left","textSize":"md","textColor":"default"}}]}]', '<!-- Main Content -->
