@@ -75,6 +75,25 @@ function findEventOccurrence(seriesId, occurrenceDate) {
   return null;
 }
 
+async function ensureEventMapThumbs() {
+  await loadLeaflet();
+  if (window.initEventMapThumbs) return;
+  await new Promise((resolve, reject) => {
+    const existing = document.querySelector('script[data-event-map-thumbs]');
+    if (existing) {
+      existing.addEventListener('load', () => resolve());
+      existing.addEventListener('error', () => reject(new Error('Failed to load map thumbs')));
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = 'js/event-map-thumbs.js';
+    script.dataset.eventMapThumbs = 'true';
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error('Failed to load map thumbs'));
+    document.head.appendChild(script);
+  });
+}
+
 function loadLeaflet() {
   if (window.L) return Promise.resolve();
   if (leafletLoadPromise) return leafletLoadPromise;
@@ -139,7 +158,7 @@ function updateDirectionsLink(lat, lng) {
   }
 }
 
-async function initEventLocationMap(locationAddress) {
+async function initEventLocationMap(locationAddress, coords) {
   const mapEl = document.getElementById('event-reg-map');
   if (!mapEl) return;
 
@@ -150,7 +169,11 @@ async function initEventLocationMap(locationAddress) {
   let lon = NEVADA_CENTER.lon;
   let geocoded = false;
 
-  if (locationAddress?.trim()) {
+  if (coords && Number.isFinite(Number(coords.latitude)) && Number.isFinite(Number(coords.longitude))) {
+    lat = Number(coords.latitude);
+    lon = Number(coords.longitude);
+    geocoded = true;
+  } else if (locationAddress?.trim()) {
     try {
       const result = await geocodeWithPhoton(locationAddress.trim());
       if (result) {
@@ -461,7 +484,10 @@ async function showRegistrationModal(seriesId, occurrenceDate, eventTitle, sourc
 
   if (event.location?.trim()) {
     try {
-      await initEventLocationMap(event.location);
+      await initEventLocationMap(event.location, {
+        latitude: event.latitude,
+        longitude: event.longitude,
+      });
     } catch (err) {
       console.warn('Map initialization failed:', err);
     }
@@ -512,20 +538,32 @@ async function buildEventCard(event) {
       ? '<span class="events-calendar-category-badge events-calendar-category-badge--training">Training</span>'
       : '';
 
+  let thumbHtml = '<div class="event-card-thumb event-card-thumb-fallback" aria-hidden="true"></div>';
+  if (event.image_r2_key) {
+    const apiBase = (window.NRCGA_API && window.NRCGA_API.baseUrl) || '';
+    const src = `${apiBase}/api/v1/media/${encodeURIComponent(event.image_r2_key)}`;
+    thumbHtml = `<img class="event-card-thumb" src="${escapeHtml(src)}" alt="" loading="lazy" decoding="async">`;
+  } else if (event.latitude != null && event.longitude != null && Number.isFinite(Number(event.latitude)) && Number.isFinite(Number(event.longitude))) {
+    thumbHtml = `<div class="event-card-thumb event-card-map-thumb" data-event-map-thumb data-lat="${Number(event.latitude)}" data-lng="${Number(event.longitude)}" aria-hidden="true"></div>`;
+  }
+
   return `
-    <div class="event-card" style="background:white;border-radius:12px;padding:1.5rem;margin-bottom:1rem;box-shadow:var(--shadow-sm);">
-      <div style="display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;align-items:flex-start;">
-        <div>
-          <h3 style="margin:0 0 0.5rem;display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
-            ${escapeHtml(event.title)}${cancelled ? ' <span style="color:#b42318;">(Cancelled)</span>' : ''}
-            ${categoryBadge}
-          </h3>
-          <p style="margin:0;color:var(--text-secondary);">${escapeHtml(dateLabel)}${timeLabel ? ` · ${escapeHtml(timeLabel)}` : ''}</p>
-          ${event.location ? `<p style="margin:0.25rem 0 0;">${escapeHtml(event.location)}</p>` : ''}
-          ${event.description ? `<p style="margin:0.75rem 0 0;">${escapeHtml(event.description)}</p>` : ''}
-          ${availabilityHtml ? `<p style="margin:0.5rem 0 0;">${availabilityHtml}</p>` : ''}
+    <div class="event-card nrcga-event-card">
+      ${thumbHtml}
+      <div class="event-card-body">
+        <div style="display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;align-items:flex-start;">
+          <div>
+            <h3 style="margin:0 0 0.5rem;display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
+              ${escapeHtml(event.title)}${cancelled ? ' <span style="color:#b42318;">(Cancelled)</span>' : ''}
+              ${categoryBadge}
+            </h3>
+            <p style="margin:0;color:var(--text-secondary);">${escapeHtml(dateLabel)}${timeLabel ? ` · ${escapeHtml(timeLabel)}` : ''}</p>
+            ${event.location ? `<p style="margin:0.25rem 0 0;">${escapeHtml(event.location)}</p>` : ''}
+            ${event.description ? `<p style="margin:0.75rem 0 0;">${escapeHtml(event.description)}</p>` : ''}
+            ${availabilityHtml ? `<p style="margin:0.5rem 0 0;">${availabilityHtml}</p>` : ''}
+          </div>
+          <div>${registerBtn}</div>
         </div>
-        <div>${registerBtn}</div>
       </div>
     </div>`;
 }
@@ -765,6 +803,14 @@ async function renderEventsCalendar(container, options = {}) {
 
     container.innerHTML = `<div class="events-calendar-widget">${toolbar}${content}</div>`;
     bindCalendarControls(container, state);
+    if (state.view === 'list') {
+      try {
+        await ensureEventMapThumbs();
+        if (window.initEventMapThumbs) window.initEventMapThumbs(container);
+      } catch (err) {
+        console.warn('Event map thumbnails unavailable', err);
+      }
+    }
   } catch (err) {
     console.error(err);
     container.innerHTML =

@@ -1,4 +1,4 @@
-// Page content loader — renders CMS page metadata and blocks into the page shell.
+// Page content loader — renders CMS page metadata and HTML/blocks into the page shell.
 // Depends on page-blocks-render.js
 
 function updatePageHeader(page) {
@@ -14,8 +14,30 @@ function updatePageHeader(page) {
   if (subtitle && page.subtitle) subtitle.textContent = page.subtitle;
 }
 
+function parseRegions(page) {
+  if (!page || !page.regions_json) return null;
+  try {
+    return typeof page.regions_json === 'string'
+      ? JSON.parse(page.regions_json)
+      : page.regions_json;
+  } catch {
+    return null;
+  }
+}
+
+function fillRegion(id, html) {
+  if (!html) return;
+  const el = document.getElementById(id);
+  if (el) el.innerHTML = html;
+}
+
 async function loadPageContent() {
-  const slug = document.body.dataset.pageSlug;
+  let slug = document.body.dataset.pageSlug;
+  if (!slug) {
+    const params = new URLSearchParams(window.location.search);
+    slug = params.get('slug') || '';
+    if (slug) document.body.dataset.pageSlug = slug;
+  }
   if (!slug || !window.NRCGA_API || !window.NRCGA_pageBlocks) return;
 
   const bodyContainer = document.getElementById('page-body');
@@ -30,7 +52,13 @@ async function loadPageContent() {
       bodyContainer.innerHTML = bodyHtml;
     }
 
-    if (page.title) {
+    const regions = parseRegions(page);
+    if (regions) {
+      fillRegion('page-hero', regions.hero_html);
+      fillRegion('page-contact', regions.contact_html);
+    }
+
+    if (page.title && slug !== 'home') {
       const suffix = document.title.includes(' - ') ? document.title.split(' - ').pop() : 'NRCGA';
       document.title = `${page.title} - ${suffix}`;
     }

@@ -147,6 +147,9 @@
   }
 
   function renderPageBody(page) {
+    if (page.body_html) {
+      return String(page.body_html)
+    }
     if (page.body_json) {
       try {
         const blocks = JSON.parse(page.body_json)

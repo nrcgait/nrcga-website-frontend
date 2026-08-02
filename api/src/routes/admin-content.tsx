@@ -13,13 +13,11 @@ import { parsePageParam } from '../lib/pagination'
 import {
   deleteArchiveItem,
   deleteCarouselSlide,
-  deleteEmbed,
   deleteProgram,
   deleteQaItem,
   deleteZeroDamage,
   getArchiveItemById,
   getCarouselSlideById,
-  getEmbedById,
   getPageById,
   getProgramById,
   getQaItemById,
@@ -27,14 +25,12 @@ import {
   listArchiveItemsPaginated,
   listCarouselSlidesPaginated,
   listCommittees,
-  listEmbedsPaginated,
   listPagesPaginated,
   listProgramsPaginated,
   listQaItemsPaginated,
   listZeroDamagesPaginated,
   upsertArchiveItem,
   upsertCarouselSlide,
-  upsertEmbed,
   upsertPage,
   upsertProgram,
   upsertQaItem,
@@ -327,6 +323,36 @@ export function registerAdminContentRoutes(
   app.all('/admin/content/archive/new', async (c) => {
     const { ctx, denied } = await guardContent(c, requireAdmin, redirect)
     if (denied) return denied
+    const kind = (c.req.query('kind') ?? '').trim().toLowerCase()
+    const canPost = canManageAllContent(ctx.user.role)
+
+    if (!kind && c.req.method === 'GET') {
+      return c.html(
+        <AdminShell ctx={ctx} title="Add archive item" activePath="/admin/content" publicSiteOrigin={c.env.PUBLIC_SITE_ORIGIN}>
+          <p class="admin-muted">What would you like to add?</p>
+          <div class="admin-card-grid">
+            <a class="admin-card" href="/admin/content/archive/new?kind=archive">
+              <h3>Archive item</h3>
+              <p>Meeting minutes or historical document (external link)</p>
+            </a>
+            {canPost ? (
+              <a class="admin-card" href="/admin/content/posts/new">
+                <h3>Post / update</h3>
+                <p>Rich HTML newsletter or update published on the site</p>
+              </a>
+            ) : null}
+          </div>
+          <p>
+            <a href="/admin/content/archive">Back to archive</a>
+          </p>
+        </AdminShell>,
+      )
+    }
+
+    if (kind === 'post') {
+      return redirect(c, '/admin/content/posts/new')
+    }
+
     const committees = await listCommittees(c.env.DB)
     if (c.req.method === 'POST') {
       const body = await c.req.parseBody()
@@ -341,6 +367,9 @@ export function registerAdminContentRoutes(
     }
     return c.html(
       <AdminShell ctx={ctx} title="Add archive item" activePath="/admin/content" publicSiteOrigin={c.env.PUBLIC_SITE_ORIGIN}>
+        <p>
+          <a href="/admin/content/archive/new">← Choose a different type</a>
+        </p>
         <ArchiveForm ctx={ctx} committees={committees as Array<{ slug: string; name: string }>} />
       </AdminShell>,
     )
@@ -585,7 +614,11 @@ export function registerAdminContentRoutes(
                     <>
                       {' '}
                       ·{' '}
-                      <a href={`${c.env.PUBLIC_SITE_ORIGIN}/${String(row.slug)}.html`} target="_blank" rel="noopener noreferrer">
+                      <a
+                        href={pageLiveUrl(c.env.PUBLIC_SITE_ORIGIN, String(row.slug), row.is_custom)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
                         Preview
                       </a>
                     </>
@@ -636,113 +669,63 @@ export function registerAdminContentRoutes(
       </AdminShell>,
     )
   })
-
-  app.get('/admin/content/embeds', async (c) => {
-    const { ctx, denied } = await guardContent(c, requireAdmin, redirect)
-    if (denied) return denied
-    const page = parsePageParam(c.req.query('page'))
-    const slugFilter = chairPageSlugs(ctx)
-    const result = await listEmbedsPaginated(c.env.DB, page, slugFilter)
-    return c.html(
-      <AdminShell ctx={ctx} title="Embeds" activePath="/admin/content" publicSiteOrigin={c.env.PUBLIC_SITE_ORIGIN}>
-        {canManageAllContent(ctx.user.role) ? (
-          <p>
-            <a class="btn btn-primary" href="/admin/content/embeds/new">
-              Add embed
-            </a>
-          </p>
-        ) : null}
-        <table class="admin-table">
-          <thead>
-            <tr>
-              <th>Page</th>
-              <th>Type</th>
-              <th>URL</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {result.items.map((row) => (
-              <tr>
-                <td>{escapeHtml(String(row.page_slug ?? ''))}</td>
-                <td>{escapeHtml(String(row.embed_type ?? ''))}</td>
-                <td>{escapeHtml(String(row.url ?? ''))}</td>
-                <td>
-                  <a href={`/admin/content/embeds/${row.id}/edit`}>Edit</a>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        <Pagination page={result.page} totalPages={result.totalPages} total={result.total} basePath="/admin/content/embeds" />
-      </AdminShell>,
-    )
-  })
-
-  app.all('/admin/content/embeds/new', async (c) => {
-    const { ctx, denied } = await guardContent(c, requireAdmin, redirect)
-    if (denied) return denied
-    if (!canManageAllContent(ctx.user.role)) return c.text('Forbidden', 403)
-    if (c.req.method === 'POST') {
-      const body = await c.req.parseBody()
-      await upsertEmbed(c.env.DB, {
-        page_slug: body.page_slug,
-        embed_type: body.embed_type,
-        url: body.url,
-        label: body.label,
-        config_json: body.config_json,
-      })
-      return redirect(c, '/admin/content/embeds')
-    }
-    return c.html(
-      <AdminShell ctx={ctx} title="Add embed" activePath="/admin/content" publicSiteOrigin={c.env.PUBLIC_SITE_ORIGIN}>
-        <EmbedForm />
-      </AdminShell>,
-    )
-  })
-
-  app.all('/admin/content/embeds/:id/edit', async (c) => {
-    const { ctx, denied } = await guardContent(c, requireAdmin, redirect)
-    if (denied) return denied
-    const embed = await getEmbedById(c.env.DB, c.req.param('id'))
-    if (!embed) return c.text('Not found', 404)
-    if (!chairCanAccessPageSlug(ctx, String(embed.page_slug ?? ''))) return c.text('Forbidden', 403)
-    if (c.req.method === 'POST') {
-      const body = await c.req.parseBody()
-      if (body._action === 'delete') {
-        await deleteEmbed(c.env.DB, embed.id as string)
-        return redirect(c, '/admin/content/embeds')
-      }
-      await upsertEmbed(
-        c.env.DB,
-        {
-          page_slug: body.page_slug,
-          embed_type: body.embed_type,
-          url: body.url,
-          label: body.label,
-          config_json: body.config_json,
-        },
-        embed.id as string,
-      )
-      return redirect(c, '/admin/content/embeds')
-    }
-    return c.html(
-      <AdminShell ctx={ctx} title="Edit embed" activePath="/admin/content" publicSiteOrigin={c.env.PUBLIC_SITE_ORIGIN}>
-        <EmbedForm embed={embed} />
-      </AdminShell>,
-    )
-  })
 }
 
+function pageLiveUrl(publicSiteOrigin: string, slug: string, isCustom?: unknown) {
+  if (!slug) return undefined
+  if (slug === 'home') return `${publicSiteOrigin}/index.html`
+  if (isCustom) return `${publicSiteOrigin}/page.html?slug=${encodeURIComponent(slug)}`
+  return `${publicSiteOrigin}/${slug}.html`
+}
+
+const DEFAULT_HOME_HERO = `<div class="hero-badge">Nevada Regional Common Ground Alliance</div>
+<h1 class="hero-title">
+    Safer digging starts with<br>
+    <span class="highlight">clear communication</span><br>
+    and solid process.
+</h1>
+<p class="hero-description">
+    NRCGA supports Nevada's damage prevention community with education, training, and programs
+    that promote safe excavation and protection of buried infrastructure.
+</p>
+<div class="hero-actions">
+    <a href="about.html" class="btn btn-primary">Learn About The NRCGA</a>
+    <a href="about-811.html" class="btn btn-secondary">Learn About 811</a>
+    <a href="training.html" class="btn btn-primary">View Training</a>
+</div>`
+
+const DEFAULT_HOME_CONTACT = `<h2>Get in Touch</h2>
+<p>Have questions? Want to get involved? We'd love to hear from you.</p>
+<div class="contact-details">
+    <div class="contact-item">
+        <strong>Email</strong>
+        <a href="mailto:info@nrcga.org">info@nrcga.org</a>
+    </div>
+    <div class="contact-item">
+        <strong>Response Time</strong>
+        <span>1–2 business days</span>
+    </div>
+</div>`
+
 function parsePageForm(body: Record<string, string | File>) {
+  const slug = String(body.slug ?? '')
+  let regionsJson: string | null = body.regions_json ? String(body.regions_json) : null
+  if (slug === 'home') {
+    const hero = body.hero_html != null ? String(body.hero_html) : ''
+    const contact = body.contact_html != null ? String(body.contact_html) : ''
+    regionsJson = JSON.stringify({ hero_html: hero, contact_html: contact })
+  }
   return {
-    slug: String(body.slug ?? ''),
+    slug,
     title: String(body.title ?? ''),
     section_label: body.section_label ? String(body.section_label) : null,
     subtitle: body.subtitle ? String(body.subtitle) : null,
     body_md: body.body_md ? String(body.body_md) : null,
     body_json: body.body_json ? String(body.body_json) : null,
+    body_html: body.body_html != null ? String(body.body_html) : null,
+    regions_json: regionsJson,
     published: body.published === '1' ? 1 : 0,
+    is_custom: body.is_custom === '1' ? 1 : 0,
   }
 }
 
@@ -894,121 +877,112 @@ function QaForm({ item }: { item?: Record<string, unknown> }) {
 }
 
 function PageForm({ page, publicSiteOrigin }: { page?: Record<string, unknown>; publicSiteOrigin: string }) {
-  const blocksJson = page?.body_json ? String(page.body_json) : '[]'
+  const slug = String(page?.slug ?? '')
+  const isHome = slug === 'home'
+  let regions: { hero_html?: string; contact_html?: string } = {}
+  if (page?.regions_json) {
+    try {
+      regions = JSON.parse(String(page.regions_json)) as { hero_html?: string; contact_html?: string }
+    } catch {
+      regions = {}
+    }
+  }
+  const heroHtml = String(regions.hero_html || (isHome ? DEFAULT_HOME_HERO : ''))
+  const contactHtml = String(regions.contact_html || (isHome ? DEFAULT_HOME_CONTACT : ''))
+  const bodyHtml = page?.body_html != null ? String(page.body_html) : ''
+  const bodyJsonFallback = !bodyHtml && page?.body_json ? String(page.body_json) : ''
+  const liveHref = pageLiveUrl(publicSiteOrigin, slug, page?.is_custom)
+
   return (
-    <div class="admin-page-editor-visual" data-public-site-origin={publicSiteOrigin}>
-      <form method="post" class="admin-form admin-page-meta-form" id="page-form">
-        <div class="admin-page-meta-grid">
-          <label>Slug (URL key)</label>
-          <input name="slug" required value={String(page?.slug ?? '')} placeholder="silver-shovel-award" />
-          <label>Title</label>
-          <input name="title" required value={String(page?.title ?? '')} />
-          <label>Section label</label>
-          <input name="section_label" value={String(page?.section_label ?? '')} />
-          <label>Subtitle</label>
-          <input name="subtitle" value={String(page?.subtitle ?? '')} />
-          <label class="admin-checkbox-label">
-            <input type="checkbox" name="published" value="1" checked={page?.published !== 0} /> Published
-          </label>
-        </div>
-        <input type="hidden" id="body_json" name="body_json" value={blocksJson} />
-        <div class="admin-actions">
-          <button class="btn btn-primary" type="submit">
-            Save page
-          </button>
-          {page ? (
-            <button class="btn btn-danger" name="_action" value="delete" type="submit">
-              Delete
-            </button>
-          ) : null}
-          <a
-            class="btn btn-secondary"
-            id="page-live-link"
-            href={page?.slug ? `${publicSiteOrigin}/${String(page.slug)}.html` : undefined}
-            target="_blank"
-            rel="noopener noreferrer"
-            hidden={!page?.slug}
-          >
-            View live page
-          </a>
-        </div>
-      </form>
-
-      <div class="admin-page-workspace">
-        <div class="admin-page-preview-col">
-          <div class="admin-page-editor-preview-header">
-            <div>
-              <h3>Live preview</h3>
-              <p class="admin-muted">Click any section to edit it.</p>
-            </div>
-            <div class="admin-page-editor-preview-actions">
-              <button type="button" class="btn btn-secondary btn-sm" id="page-preview-refresh">
-                Refresh
-              </button>
-              <button type="button" class="btn btn-secondary btn-sm" id="page-preview-open-tab">
-                Open in tab
-              </button>
-            </div>
-          </div>
-          <iframe
-            id="page-preview-frame"
-            class="admin-page-preview-frame"
-            title="Page preview"
-            sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
-          ></iframe>
-        </div>
-
-        <aside class="admin-page-inspector-col">
-          <h3>Block editor</h3>
-          <div id="page-add-block-menu" class="page-add-block-menu"></div>
-          <p id="page-inspector-empty" class="inspector-hint">
-            Click a block in the preview to edit its content and design.
-          </p>
-          <div id="page-inspector-panel" class="page-inspector-panel" hidden></div>
-        </aside>
+    <form method="post" class="admin-form admin-page-rich-form" id="page-form">
+      <div class="admin-page-meta-grid">
+        <label>Slug (URL key)</label>
+        <input name="slug" required value={slug} placeholder="silver-shovel-award" id="page-slug-input" />
+        <label>Title</label>
+        <input name="title" required value={String(page?.title ?? '')} />
+        <label>Section label</label>
+        <input name="section_label" value={String(page?.section_label ?? '')} />
+        <label>Subtitle</label>
+        <input name="subtitle" value={String(page?.subtitle ?? '')} />
+        <label class="admin-checkbox-label">
+          <input type="checkbox" name="published" value="1" checked={page?.published !== 0} /> Published
+        </label>
+        <label class="admin-checkbox-label">
+          <input type="checkbox" name="is_custom" value="1" checked={!!page?.is_custom} /> Custom page (served via
+          page.html?slug=…)
+        </label>
       </div>
 
-      <script src="/page-blocks-render.js"></script>
-      <script src="/page-blocks-editor.js"></script>
-      <script src="/page-block-inspector.js"></script>
-      <script src="/page-preview.js"></script>
-    </div>
-  )
-}
+      {isHome ? (
+        <div class="admin-rich-section">
+          <h3>Hero</h3>
+          <p class="admin-muted">Badge, headline, description, and CTA buttons shown under the hero image.</p>
+          <div
+            class="tiptap-host"
+            data-rich-editor
+            data-field="hero_html"
+            data-form="page-form"
+            data-initial={heroHtml}
+          ></div>
+          <textarea name="hero_html" id="hero_html" class="admin-hidden-field">{heroHtml}</textarea>
+        </div>
+      ) : null}
 
-function EmbedForm({ embed }: { embed?: Record<string, unknown> }) {
-  return (
-    <form method="post" class="admin-form">
-      <label>Page slug</label>
-      <input name="page_slug" required value={String(embed?.page_slug ?? '')} placeholder="contact" />
-      <label>Embed type</label>
-      <select name="embed_type">
-        <option value="ms_forms" selected={embed?.embed_type === 'ms_forms'}>
-          Microsoft Forms
-        </option>
-        <option value="youtube" selected={embed?.embed_type === 'youtube'}>
-          YouTube
-        </option>
-        <option value="pdf" selected={embed?.embed_type === 'pdf'}>
-          PDF
-        </option>
-      </select>
-      <label>URL</label>
-      <input name="url" required value={String(embed?.url ?? '')} />
-      <label>Label</label>
-      <input name="label" value={String(embed?.label ?? '')} />
-      <label>Config JSON (optional)</label>
-      <textarea name="config_json">{String(embed?.config_json ?? '')}</textarea>
+      <div class="admin-rich-section">
+        <h3>{isHome ? 'Mission / main content' : 'Page body'}</h3>
+        <p class="admin-muted">
+          Edit text inline. Use the toolbar for formatting, or insert Image, Button, Callout, Embed, or Spacer.
+        </p>
+        <div
+          class="tiptap-host"
+          data-rich-editor
+          data-field="body_html"
+          data-form="page-form"
+          data-initial={bodyHtml}
+          data-fallback-json={bodyJsonFallback || undefined}
+        ></div>
+        <textarea name="body_html" id="body_html" class="admin-hidden-field">{bodyHtml}</textarea>
+        {page?.body_json ? <input type="hidden" name="body_json" value={String(page.body_json)} /> : null}
+      </div>
+
+      {isHome ? (
+        <div class="admin-rich-section">
+          <h3>Contact copy</h3>
+          <p class="admin-muted">Heading, blurb, and contact details. The contact form stays on the page separately.</p>
+          <div
+            class="tiptap-host"
+            data-rich-editor
+            data-field="contact_html"
+            data-form="page-form"
+            data-initial={contactHtml}
+          ></div>
+          <textarea name="contact_html" id="contact_html" class="admin-hidden-field">{contactHtml}</textarea>
+        </div>
+      ) : null}
+
       <div class="admin-actions">
         <button class="btn btn-primary" type="submit">
-          Save
+          Save page
         </button>
-        {embed ? (
+        {page ? (
           <button class="btn btn-danger" name="_action" value="delete" type="submit">
             Delete
           </button>
         ) : null}
+        <a
+          class="btn btn-secondary"
+          id="page-live-link"
+          href={liveHref}
+          target="_blank"
+          rel="noopener noreferrer"
+          hidden={!slug}
+        >
+          View live page
+        </a>
       </div>
+
+      <script src="/page-blocks-render.js"></script>
+      <script src="/tiptap-editor.js"></script>
     </form>
   )
 }

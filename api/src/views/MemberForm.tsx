@@ -10,9 +10,9 @@ export function MemberForm({
   error?: string
   readOnlyType?: boolean
 }) {
-  const type = String(member?.type ?? 'Stakeholder')
+  const rawType = String(member?.type ?? 'Stakeholder')
+  const type = rawType === 'Officer' || rawType === 'Director' ? 'Stakeholder' : rawType
   const isStakeholder = type === 'Stakeholder'
-  const isOfficer = type === 'Officer'
 
   return (
     <form method="post" class="admin-form">
@@ -25,7 +25,6 @@ export function MemberForm({
         </>
       ) : (
         <select name="type" id="member-type-select">
-          <option selected={type === 'Officer'}>Officer</option>
           <option selected={type === 'Stakeholder'}>Stakeholder</option>
           <option selected={type === 'Associate'}>Associate</option>
         </select>
@@ -33,14 +32,6 @@ export function MemberForm({
 
       <label>Company name</label>
       <input name="company_name" required value={String(member?.company_name ?? '')} />
-
-      {isOfficer ? (
-        <>
-          <OfficerPositionFields member={member} />
-          <label>Term</label>
-          <input name="term" value={String(member?.term ?? '')} placeholder="2025-2026" />
-        </>
-      ) : null}
 
       {isStakeholder ? (
         <>
@@ -67,14 +58,12 @@ export function MemberForm({
             group is allowed.
           </p>
           <OfficerPositionFields member={member} />
-          <label>Term (for officers)</label>
+          <label>Term (for officers / board members)</label>
           <input name="term" value={String(member?.term ?? '')} placeholder="2025-2026" />
         </>
       ) : null}
 
-      {!isOfficer && !isStakeholder ? (
-        <input type="hidden" name="stakeholder_group" value="" />
-      ) : null}
+      {!isStakeholder ? <input type="hidden" name="stakeholder_group" value="" /> : null}
 
       <label>Contact person</label>
       <input name="contact_person" value={String(member?.contact_person ?? '')} />

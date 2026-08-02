@@ -38,14 +38,21 @@ npx wrangler pages deploy . --project-name nrcga-website-staging --branch featur
 - **Admin:** https://nrcga-api-staging.thefieldmappinggroup.workers.dev/admin
 - **Frontend:** https://nrcga-website-staging.pages.dev (latest preview URL shown after `pages deploy`)
 
-### Production
+## Production
 
-1. Create D1 database and R2 bucket in Cloudflare dashboard
-2. Update `database_id` in `wrangler.jsonc`
-3. Set secrets: `JWT_SECRET`, `ADMIN_PASSWORD`
-4. Route `api.nrcga.org/*` to this Worker
+1. Create D1 database `nrcga-cms` and R2 bucket `nrcga-media` in the Cloudflare dashboard (or `npx wrangler d1 create nrcga-cms`).
+2. Put the real `database_id` in [`wrangler.jsonc`](wrangler.jsonc) (replace `local-dev-placeholder`).
+3. Set secrets: `npx wrangler secret put JWT_SECRET` and `npx wrangler secret put ADMIN_PASSWORD`.
+4. Route `api.nrcga.org/*` to this Worker.
 5. `npx wrangler d1 migrations apply nrcga-cms --remote`
-6. `npm run deploy`
+6. `npm run seed` against remote (or seed staging first, then promote).
+7. `npm run deploy`
+
+Public JSON GETs send `Cache-Control: public, max-age=60` (no KV cache layer — fine for chapter traffic).
+
+## Pages editor
+
+CMS pages use a rich-text editor (same toolbar model as posts) with insertable blocks: Image, Button, Callout, Embed, Spacer. Content is stored in `pages.body_html`. The home page (`slug=home`) also stores hero and contact copy in `pages.regions_json`. Legacy `body_json` remains as a read fallback until pages are re-saved.
 
 ## Public site
 

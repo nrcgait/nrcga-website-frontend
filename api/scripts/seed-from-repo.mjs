@@ -8,6 +8,7 @@
 import { execSync } from 'node:child_process'
 import fs from 'node:fs'
 import path from 'node:path'
+import { createHash, randomUUID } from 'node:crypto'
 import { fileURLToPath } from 'node:url'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -15,6 +16,12 @@ const repoRoot = path.resolve(__dirname, '../..')
 
 function sqlEscape(value) {
   return String(value ?? '').replace(/'/g, "''")
+}
+
+/** Stable UUID-shaped id so re-seeding upserts instead of duplicating. */
+function stableId(...parts) {
+  const hash = createHash('sha256').update(parts.join('|')).digest('hex')
+  return `${hash.slice(0, 8)}-${hash.slice(8, 12)}-${hash.slice(12, 16)}-${hash.slice(16, 20)}-${hash.slice(20, 32)}`
 }
 
 function parseCsv(text) {
@@ -87,27 +94,36 @@ const target = remote ? `--remote${wranglerEnv}` : '--local'
 
 const statements = []
 
-// Members
+// Members — only Stakeholder / Associate types; officers & directors are flags on stakeholders
+statements.push('DELETE FROM members;')
 for (const row of readCsv('data/members.csv')) {
+  const type = String(row.Type || '').trim()
+  if (type === 'Officer' || type === 'Director') continue
+  if (type !== 'Stakeholder' && type !== 'Associate') continue
   const id = crypto.randomUUID()
+  const isBoard = row['Is Board Member'] === '1' || row['Is Board Member'] === 'true' ? 1 : 0
+  const isChair = row['Is Chair'] === '1' || row['Is Chair'] === 'true' ? 1 : 0
+  const isViceChair = row['Is Vice Chair'] === '1' || row['Is Vice Chair'] === 'true' ? 1 : 0
   statements.push(
-    `INSERT OR REPLACE INTO members (id, type, company_name, stakeholder_group, voting_member, website, category, term, contact_person, active)
-     VALUES ('${id}', '${sqlEscape(row.Type)}', '${sqlEscape(row['Company Name'])}', '${sqlEscape(row['Stakeholder Group'])}', '${sqlEscape(row['Voting Member'])}', '${sqlEscape(row.Website)}', '${sqlEscape(row.Category)}', '${sqlEscape(row.Term)}', '${sqlEscape(row['Contact Person'])}', 1);`,
+    `INSERT INTO members (id, type, company_name, stakeholder_group, voting_member, website, category, term, contact_person, active, is_board_member, is_chair, is_vice_chair)
+     VALUES ('${id}', '${sqlEscape(type)}', '${sqlEscape(row['Company Name'])}', '${sqlEscape(row['Stakeholder Group'])}', '${sqlEscape(row['Voting Member'])}', '${sqlEscape(row.Website)}', '${sqlEscape(row.Category)}', '${sqlEscape(row.Term)}', '${sqlEscape(row['Contact Person'])}', 1, ${isBoard}, ${isChair}, ${isViceChair});`,
   )
 }
 
-// Programs
+// Programs (replace seeded rows so re-runs do not duplicate links)
+statements.push('DELETE FROM programs;')
 readCsv('data/programs.csv').forEach((row, idx) => {
-  const id = crypto.randomUUID()
+  const id = stableId('program', row.link || '', row.title || '')
   statements.push(
     `INSERT OR REPLACE INTO programs (id, title, description, link, icon, sort_order)
      VALUES ('${id}', '${sqlEscape(row.title)}', '${sqlEscape(row.description)}', '${sqlEscape(row.link)}', '${sqlEscape(row.icon)}', ${idx});`,
   )
 })
 
-// Archive
+// Archive (replace seeded rows so re-runs do not duplicate links)
+statements.push('DELETE FROM archive_items;')
 for (const row of readCsv('data/archive.csv')) {
-  const id = crypto.randomUUID()
+  const id = stableId('archive', row.link || '', row.type || '', row.date || '', row.title || '')
   statements.push(
     `INSERT OR REPLACE INTO archive_items (id, type, title, date, link)
      VALUES ('${id}', '${sqlEscape(row.type)}', '${sqlEscape(row.title)}', '${sqlEscape(row.date)}', '${sqlEscape(row.link)}');`,
@@ -175,6 +191,32 @@ statements.push(
 statements.push(
   `INSERT OR REPLACE INTO site_settings (key, value_json) VALUES ('footer', '${sqlEscape(JSON.stringify({ tagline: 'Promoting public safety and damage prevention across Nevada.', copyright: '© 2026 NRCGA. All rights reserved.' }))}');`,
 )
+
+const memberTypes = [
+  {
+    name: 'Stakeholder',
+    slug: 'stakeholder',
+    description: 'Voting membership for organizations actively involved in damage prevention across Nevada.',
+    sort_order: 1,
+  },
+  {
+    name: 'Associate',
+    slug: 'associate',
+    description: 'Non-voting membership for organizations that support NRCGA\'s mission and programs.',
+    sort_order: 2,
+  },
+  {
+    name: 'Affiliate',
+    slug: 'affiliate',
+    description: 'Affiliate membership for partners and related organizations aligned with damage prevention.',
+    sort_order: 3,
+  },
+]
+for (const t of memberTypes) {
+  statements.push(
+    `INSERT OR REPLACE INTO membership_types (id, name, slug, description, sort_order, active) VALUES ('${randomUUID()}', '${sqlEscape(t.name)}', '${sqlEscape(t.slug)}', '${sqlEscape(t.description)}', ${t.sort_order}, 1);`,
+  )
+}
 
 const breaking = readCsv('data/front-page-breaking-news.csv')[0]
 if (breaking) {

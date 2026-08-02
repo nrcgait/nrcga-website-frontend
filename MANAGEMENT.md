@@ -2,19 +2,28 @@
 
 ## Cloudflare CMS (staff portal)
 
-NRCGA content is moving from CSV-only editing to a **Cloudflare Worker CMS** (`api/` in this repo). Staff can manage members, events, carousel, archive, programs, and site settings in the browser at **`/admin`** on the API host (e.g. `https://api.nrcga.org/admin`).
+NRCGA content is managed primarily through the **Cloudflare Worker CMS** in `api/`. Staff sign in at **`/admin`** on the API host (staging or `https://api.nrcga.org/admin`).
 
 ### Roles
 
 | Role | Access |
 |------|--------|
-| **Admin** | Full access including users and navigation |
-| **Editor** | Content, members, events |
-| **Committee Chair** | Committee-scoped content (future) |
+| **Admin** | Full access: users, navigation, all content, inboxes, settings |
+| **Committee Chair** | Committee-scoped programs, pages, archive, events |
+| **Trainer** | Training events and related assets |
+| **User** | Own linked member organization profile |
+
+### What staff can edit without a code deploy
+
+- Site settings (logo, theme, contact, footer, breaking news)
+- Navigation, carousel, programs, archive, Q&A, zero damages
+- Rich-text pages (home hero/mission/contact + program pages), leadership, committees, resources, membership types, rich posts
+- Events/registrations, assets, form inboxes (contact, applications, training, newsletter)
+- Own password at `/admin/profile`
 
 ### Public site behavior
 
-Static HTML pages on Cloudflare Pages load data from **`/api/v1/*`** when `js/api-client.js` is present. If the API is unreachable, loaders fall back to the original CSV files under `data/` and `assets/`.
+Static HTML on Cloudflare Pages loads **`/api/v1/*`** via `js/api-client.js`. Many loaders still fall back to CSV under `data/` if the API is unreachable. Prefer the admin portal for day-to-day edits.
 
 ### Local development
 
@@ -22,7 +31,7 @@ See **`api/README.md`** for Worker setup: D1 migrations, seed script, and `npm r
 
 ### CSV files (legacy fallback)
 
-The sections below still describe CSV editing. CSV files remain in the repo as backup and fallback until the CMS is fully live in production.
+The sections below still describe CSV editing. CSV files remain as backup/fallback until production confidence is high enough to remove them.
 
 ---
 
@@ -30,17 +39,11 @@ The sections below still describe CSV editing. CSV files remain in the repo as b
 
 Welcome! You've taken on an important responsibility. This website is central to NRCGA's mission: Facilitate communication and collaboration within Nevada's damage prevention community.
 
-You might wonder why this is a custom-built static site rather than a WordPress page or similar CMS. The answer is freedom. This approach gives our community the flexibility to innovate, experiment, and adapt quickly to new needs without being constrained by a single system's limitations.
-
-This documentation is here to help you succeed. The site is designed to be maintainable by someone with basic technical skills, and most updates are straightforward edits to **CSV data files** under `data/` (and `assets/` where noted) plus the navigation config in `js/nav-config.js`. When you need help, don't hesitate to reach out—the technical support contact information is below.
-
-Take ownership of this project. Make it your own. The community will benefit from your care and creativity.
-
-You got this, and thank you for continuing this work.
+Day-to-day content belongs in the **staff portal**. CSV files and HTML shells are the legacy path and emergency fallback.
 
 *—Charles Folashade Jr, 2026*
 
-This document provides instructions for managing and updating content on the NRCGA website.
+This document also provides CSV/HTML instructions for maintainers who need the fallback path.
 
 ## Table of Contents
 - [CSV data files (overview)](#csv-data-files-overview)
@@ -205,44 +208,51 @@ Members data is stored in **`data/members.csv`**. It is loaded on `members.html`
 The first line must be exactly:
 
 ```text
-Type,Company Name,Stakeholder Group,Voting Member,Website,Category,Term,Contact Person
+Type,Company Name,Stakeholder Group,Voting Member,Website,Category,Term,Contact Person,Is Board Member,Is Chair,Is Vice Chair
 ```
 
 Each following row is one member:
 
-- **Type**: `Officer`, `Director`, `Stakeholder`, or `Associate`
-- **Company Name**: For stakeholders/associates, enter the company name; see note below for officers/directors
-- **Stakeholder Group**: e.g. `Excavator`, `Locator`, `Chair`, `Vice Chair` (can be empty where appropriate)
+- **Type**: `Stakeholder` or `Associate` only
+- **Company Name**: Organization / company name
+- **Stakeholder Group**: e.g. `Excavator`, `Locator`, `Electric` (required for stakeholders; empty for associates)
 - **Voting Member**: `Yes` or `No`
 - **Website**: Full URL or empty
-- **Category**: Display category (e.g. `Officer`, `Excavator`)
-- **Term**: Term label for officers/directors (e.g. `2025-2026`) or empty
-- **Contact Person**: Contact name or empty; see note below for officers/directors
+- **Category**: Display category (often same as stakeholder group)
+- **Term**: Term label when the stakeholder is an officer and/or board member (e.g. `2025-2026`)
+- **Contact Person**: Contact name for the company (also used for officer/director display)
+- **Is Board Member**: `1` if this stakeholder holds the board seat for their group (shown as Director on the public site)
+- **Is Chair**: `1` if this stakeholder is NRCGA Chair
+- **Is Vice Chair**: `1` if this stakeholder is NRCGA Vice Chair
 
-### Important note about Officers and Directors
+### Officers and Directors
 
-For **Officer** and **Director** rows, the columns are used in a specific way on the site:
+Officer and director are **not** member types. They are flags on a **Stakeholder** row:
 
-- **Company Name** holds the **person's name** (e.g. Kristen Garcia).
-- **Contact Person** holds the **organization name** (e.g. NV Energy).
+- Mark **Is Board Member** for the directors table (one board member per stakeholder group).
+- Mark **Is Chair** / **Is Vice Chair** for the officers table (one holder per position).
 
-Keep that pattern when adding or editing officers and directors so tables still render correctly.
+Company name stays the organization; contact person is the person shown on the board tables.
 
 ### Example rows
 
 ```csv
-Type,Company Name,Stakeholder Group,Voting Member,Website,Category,Term,Contact Person
-Stakeholder,ABC Excavation,Excavator,Yes,https://abcexcavation.com,Excavator,,
-Associate,XYZ Services,,No,https://xyzservices.com,Associate,,
-Officer,Jane Doe,Chair,Yes,,Officer,2025-2026,ABC Company
+Type,Company Name,Stakeholder Group,Voting Member,Website,Category,Term,Contact Person,Is Board Member,Is Chair,Is Vice Chair
+Stakeholder,ABC Excavation,Excavator,Yes,https://abcexcavation.com,Excavator,2025-2026,Jane Doe,1,1,0
+Associate,XYZ Services,,No,https://xyzservices.com,Associate,,,0,0,0
 ```
 
-### Member types (display)
+### Member types (stored)
 
-- **Officer** — Officers table  
-- **Director** — Directors table  
-- **Stakeholder** — Stakeholder members grid  
-- **Associate** — Associate members grid  
+- **Stakeholder** — Stakeholder members grid; may also appear as Officer and/or Director via flags
+- **Associate** — Associate members grid
+
+### Display sections (derived)
+
+- **Officer** — from stakeholders with Is Chair / Is Vice Chair
+- **Director** — from stakeholders with Is Board Member
+- **Stakeholder** — all stakeholder rows
+- **Associate** — all associate rows
 
 ### Tips
 
@@ -304,7 +314,7 @@ Items are grouped by year (newest first). External `http`/`https` links open in 
 
 ## Updating Programs
 
-Programs and committees are stored in **`data/programs.csv`**. The programs list on `programs.html` is filled by `js/programs-loader.js`. To add a form on a program page, embed **Microsoft Forms** (or similar) directly in that page’s HTML—there is no CSV-driven form loader.
+Programs and committees are stored in **`data/programs.csv`**. The programs list on `programs.html` is filled by `js/programs-loader.js`. To add a form, video, or PDF on a program page, use the page editor’s **Embed** insert (or paste an iframe into the page HTML).
 
 ### Location
 **`data/programs.csv`**

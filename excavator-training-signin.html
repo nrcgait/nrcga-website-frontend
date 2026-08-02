@@ -9,106 +9,58 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        html, body {
-            margin: 0;
-            padding: 0;
-            overflow-x: hidden;
-            min-height: 100vh;
+        .compact-header { padding: 6rem 2rem 1.5rem; margin-top: 70px; text-align: center; }
+        .nrcga-form { max-width: 560px; margin: 0 auto; padding: 2rem; }
+        .nrcga-form .form-group { margin-bottom: 1rem; }
+        .nrcga-form label { display: block; font-weight: 600; margin-bottom: 0.35rem; }
+        .nrcga-form input, .nrcga-form textarea {
+            width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 8px; font: inherit;
         }
-        
-        body {
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-        }
-        
-        #nav-placeholder {
-            flex-shrink: 0;
-        }
-        
-        #footer-placeholder {
-            display: none; /* Hide footer on this page for full-page form experience */
-        }
-        
-        .compact-header {
-            flex-shrink: 0;
-            padding: 6rem 2rem 1.5rem;
-            background: var(--bg-primary);
-            margin-top: 70px;
-        }
-        
-        .full-page-form {
-            padding: 0;
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            padding-bottom: 3rem;
-            overflow: visible;
-        }
-        
-        .form-container {
-            width: 100%;
-            padding: 2rem;
-            margin: 0;
-            display: flex;
-            align-items: flex-start;
-            justify-content: center;
-            overflow: visible;
-        }
-        
-        .form-container iframe {
-            border: none;
-            width: 100%;
-            max-width: 640px;
-            display: block;
-            height: 2000px;
-            min-height: 2000px;
-            margin: 0 auto;
-        }
-        
-        /* Responsive adjustments */
-        @media (max-width: 968px) {
-            .compact-header {
-                padding: 5rem 1rem 1rem;
-            }
-        }
-        
-        @media (max-width: 640px) {
-            .compact-header {
-                padding: 4rem 1rem 0.75rem;
-            }
-            
-            .compact-header h1 {
-                font-size: 1.5rem !important;
-            }
-            
-            .compact-header p {
-                font-size: 0.875rem !important;
-            }
-            
-            .form-container iframe {
-                height: 2000px;
-                min-height: 2000px;
-            }
-        }
+        .honeypot { position: absolute; left: -9999px; }
     </style>
 </head>
 <body>
     <div id="nav-placeholder"></div>
-    
 
-    <!-- Compact Header -->
     <section class="compact-header">
-        <div class="container" style="text-align: center;">
-            <h1 style="font-size: 2rem; margin-bottom: 0.5rem; color: var(--text-primary);">Attendance Form</h1>
-            <p style="color: var(--text-secondary); font-size: 1rem;">Please complete the form below to record your attendance. A certificate of completion will be emailed to you.</p>
+        <div class="container">
+            <h1 style="font-size: 2rem; margin-bottom: 0.5rem;">Attendance Form</h1>
+            <p style="color: var(--text-secondary);">Please complete the form below to record your attendance.</p>
         </div>
     </section>
 
-    <!-- Full Page Form Section -->
-    <section class="full-page-form">
-        <div class="form-container">
-            <iframe src="https://forms.office.com/Pages/ResponsePage.aspx?id=l_bTl4Fr-UGCMvL2nXpxRyBVFANpJf9BgeFLspJ7BSZURVRQMjczWEU3VFNGVkVQNTJCVzhBTTFORi4u&embed=true" frameborder="0" marginwidth="0" marginheight="0" style="border: none; max-width:100%;" allowfullscreen webkitallowfullscreen mozallowfullscreen msallowfullscreen> </iframe>        </div>
+    <section>
+        <form class="nrcga-form" data-nrcga-form="training_signin">
+            <div class="honeypot" aria-hidden="true">
+                <input type="text" name="website_url" tabindex="-1" autocomplete="off">
+            </div>
+            <div class="form-group">
+                <label for="si-name">Name *</label>
+                <input id="si-name" name="name" required>
+            </div>
+            <div class="form-group">
+                <label for="si-email">Email *</label>
+                <input id="si-email" name="email" type="email" required>
+            </div>
+            <div class="form-group">
+                <label for="si-phone">Phone</label>
+                <input id="si-phone" name="phone">
+            </div>
+            <div class="form-group">
+                <label for="si-company">Company</label>
+                <input id="si-company" name="company">
+            </div>
+            <div class="form-group">
+                <label for="si-date">Training date</label>
+                <input id="si-date" name="training_date" type="date">
+            </div>
+            <div class="form-group">
+                <label for="si-notes">Notes</label>
+                <textarea id="si-notes" name="notes" rows="3"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Submit attendance</button>
+            <p data-form-status></p>
+        </form>
     </section>
 
     <div id="footer-placeholder"></div>
@@ -116,8 +68,6 @@
     <script src="js/nav-config.js"></script>
     <script src="js/api-client.js"></script>
     <script src="js/components.js"></script>
-    <script src="js/script.js"></script>
-</body>
-    
+    <script src="js/native-forms.js"></script>
 </body>
 </html>

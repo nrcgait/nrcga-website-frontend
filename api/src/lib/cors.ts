@@ -19,7 +19,18 @@ export function corsHeaders(origin: string, env: Env): HeadersInit {
   }
 }
 
-export function withCors(c: Context<{ Bindings: Env }>, body: unknown, status = 200) {
-  const headers = corsHeaders(c.req.header('Origin') ?? '', c.env) as Record<string, string>
+export function withCors(
+  c: Context<{ Bindings: Env }>,
+  body: unknown,
+  status = 200,
+  extraHeaders?: Record<string, string>,
+) {
+  const headers = {
+    ...(corsHeaders(c.req.header('Origin') ?? '', c.env) as Record<string, string>),
+    ...(extraHeaders ?? {}),
+  }
   return c.json(body, status as 200, headers)
 }
+
+/** Short browser/CDN cache for public read-only JSON (admin/forms stay uncached). */
+export const PUBLIC_JSON_CACHE = { 'Cache-Control': 'public, max-age=60, s-maxage=60' }

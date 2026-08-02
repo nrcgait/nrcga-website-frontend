@@ -97,46 +97,24 @@ function renderNavigation() {
 
 // Footer Component
 function renderFooter() {
+    const logoSrc =
+        (window.nrcgaLogoUrl) ||
+        (window.navConfig && window.navConfig.logo && window.navConfig.logo.image) ||
+        'assets/images/NRCGA-Logo_Badge-Color-300x272.png';
+    const orgName =
+        (window.nrcgaContactSettings && window.nrcgaContactSettings.organization_name) ||
+        'Nevada Regional Common Ground Alliance';
     return `
         <footer class="footer">
             <div class="container">
                 <div class="footer-content">
                     <div class="footer-brand" style="text-align: center; width: 100%;">
                         <div class="logo" style="justify-content: center;">
-                            <img src="assets/images/NRCGA-Logo_Badge-Color-300x272.png" alt="NRCGA Logo" class="logo-img footer-logo">
-                            <span class="logo-text">Nevada Regional Common Ground Alliance</span>
+                            <img src="${logoSrc}" alt="NRCGA Logo" class="logo-img footer-logo">
+                            <span class="logo-text">${orgName}</span>
                         </div>
                         <p style="text-align: center;">${(window.nrcgaFooterSettings && window.nrcgaFooterSettings.tagline) || 'Promoting public safety and damage prevention across Nevada.'}</p>
                     </div>
-                    <!-- Footer links commented out - all links are available in the top navigation bar
-                    <div class="footer-links">
-                        <div class="footer-column">
-                            <h4>Quick Links</h4>
-                            <ul>
-                                <li><a href="about.html">About NRCGA</a></li>
-                                <li><a href="about-811.html">About 811</a></li>
-                                <li><a href="training.html">Safety Training</a></li>
-                                <li><a href="programs.html">Programs</a></li>
-                            </ul>
-                        </div>
-                        <div class="footer-column">
-                            <h4>Resources</h4>
-                            <ul>
-                                <li><a href="calendar.html">Calendar</a></li>
-                                <li><a href="programs.html">Programs and Committees</a></li>
-                                <li><a href="about-811.html">811 Tools</a></li>
-                                <li><a href="contact.html">Contact Us</a></li>
-                            </ul>
-                        </div>
-                        <div class="footer-column">
-                            <h4>Connect</h4>
-                            <ul>
-                                <li><a href="https://www.linkedin.com/company/nrcga/posts/?feedView=all" target="_blank" rel="noopener noreferrer">LinkedIn</a></li>
-                                <li><a href="contact.html">Newsletter</a></li>
-                            </ul>
-                        </div>
-                    </div>
-                    -->
                 </div>
                 <div class="footer-bottom">
                     <p>${(window.nrcgaFooterSettings && window.nrcgaFooterSettings.copyright) || '&copy; 2026 NRCGA. All rights reserved.'}</p>
@@ -183,6 +161,20 @@ async function applyRemoteSiteConfig() {
         }
         if (settings && settings.contact) {
             window.nrcgaContactSettings = settings.contact;
+        }
+        if (settings && settings.logo_url) {
+            window.nrcgaLogoUrl = settings.logo_url;
+            if (window.navConfig && window.navConfig.logo) {
+                window.navConfig.logo.image = settings.logo_url;
+            }
+        }
+        if (settings && settings.theme) {
+            window.nrcgaThemeSettings = settings.theme;
+            const root = document.documentElement;
+            if (settings.theme.primary) root.style.setProperty('--primary', settings.theme.primary);
+            if (settings.theme.primary_dark) root.style.setProperty('--primary-dark', settings.theme.primary_dark);
+            if (settings.theme.secondary) root.style.setProperty('--secondary', settings.theme.secondary);
+            if (settings.theme.accent) root.style.setProperty('--accent', settings.theme.accent);
         }
     } catch (err) {
         console.warn('Site config API unavailable, using local nav-config.js', err);

@@ -51,9 +51,18 @@ import {
 } from '../lib/permissions'
 import { registerAdminAssetRoutes } from './admin-assets'
 import { deleteRegistration, listRegistrationsPaginated } from '../lib/event-registrations'
-import { getBreakingNews, getContactInfo, getFooterInfo, getNavigation, setSetting } from '../lib/site-settings'
+import {
+  getBreakingNews,
+  getContactInfo,
+  getFooterInfo,
+  getNavigation,
+  getSiteLogoUrl,
+  getThemeSettings,
+  setSetting,
+} from '../lib/site-settings'
 import { notifyCancelledGuests } from './api'
 import { registerAdminContentRoutes } from './admin-content'
+import { registerAdminParityRoutes } from './admin-parity'
 import {
   clearSessionCookieHeader,
   createSessionToken,
@@ -63,6 +72,12 @@ import {
 } from '../lib/session'
 import { combineDateTime, formatEventDateTime, splitDateTime, toDateInputValue } from '../lib/event-datetime'
 import { parsePageParam, parseSearchParam } from '../lib/pagination'
+import {
+  geocodeNevadaAddress,
+  geocodeNevadaAddressCandidates,
+  parseManualCoordinates,
+  resolveEventFormCoordinates,
+} from '../lib/geocode'
 import { AdminShell, LoginPage } from '../views/AdminShell'
 import { Pagination, CommitteeSelect, ListSearch } from '../views/AdminComponents'
 import { MemberForm, UserForm } from '../views/MemberForm'
@@ -106,6 +121,16 @@ async function memberValidationError(
   data: ReturnType<typeof parseMemberForm>,
   memberId?: string,
 ): Promise<string | undefined> {
+  if (data.type !== 'Stakeholder' && data.type !== 'Associate') {
+    return 'Member type must be Stakeholder or Associate. Officers and directors are set with checkboxes on stakeholder members.'
+  }
+  if (data.type === 'Associate' && (data.is_board_member === 1 || data.is_chair === 1 || data.is_vice_chair === 1)) {
+    return 'Only stakeholder members can be board members or officers.'
+  }
+  if (data.type === 'Stakeholder' && !data.stakeholder_group) {
+    return 'Stakeholder members require a stakeholder group.'
+  }
+
   const boardConflict = await checkBoardMemberConflict(
     db,
     data.stakeholder_group as string | null,
@@ -147,6 +172,9 @@ function parseEventForm(body: Record<string, string | File>) {
     capacity: body.capacity ? Number(body.capacity) : null,
     capacity_scope: (body.capacity_scope === 'series' ? 'series' : 'occurrence') as 'occurrence' | 'series',
     registration_cutoff_hours: Number(body.registration_cutoff_hours ?? 0),
+    latitude: body.latitude ? Number(body.latitude) : null,
+    longitude: body.longitude ? Number(body.longitude) : null,
+    skip_map: body.map_skip === '1',
   }
 }
 
@@ -162,14 +190,51 @@ function eventListFilter(ctx: AdminContext): EventListFilter | undefined {
   return undefined
 }
 
-function buildEventInput(ctx: AdminContext, body: Record<string, string | File>) {
+function buildEventInput(
+  ctx: AdminContext,
+  body: Record<string, string | File>,
+  coords: { latitude: number | null; longitude: number | null },
+) {
   const committee_slug = String(body.committee_slug ?? '')
   const category = resolveEventCategory(committee_slug, String(body.category ?? ''), ctx)
+  const parsed = parseEventForm(body)
   return {
-    ...parseEventForm(body),
-    committee_slug: committee_slug || null,
+    title: parsed.title,
+    starts_at: parsed.starts_at,
+    ends_at: parsed.ends_at,
+    location: parsed.location,
+    description: parsed.description,
     category,
+    committee_slug: committee_slug || null,
+    published: parsed.published,
+    repeat_rule: parsed.repeat_rule,
+    repeat_interval_days: parsed.repeat_interval_days,
+    repeat_until: parsed.repeat_until,
+    registration_enabled: parsed.registration_enabled,
+    capacity: parsed.capacity,
+    capacity_scope: parsed.capacity_scope,
+    registration_cutoff_hours: parsed.registration_cutoff_hours,
+    latitude: coords.latitude,
+    longitude: coords.longitude,
   }
+}
+
+async function resolveCoordsFromBody(
+  body: Record<string, string | File>,
+  existing?: Awaited<ReturnType<typeof getEventById>>,
+) {
+  const parsed = parseEventForm(body)
+  return resolveEventFormCoordinates(parsed.location, {
+    existing: existing
+      ? {
+          location: existing.location,
+          latitude: existing.latitude ?? null,
+          longitude: existing.longitude ?? null,
+        }
+      : null,
+    manual: parseManualCoordinates(body.latitude, body.longitude),
+    skipMap: parsed.skip_map,
+  })
 }
 
 export function registerAdminRoutes(app: Hono<{ Bindings: Env }>) {
@@ -180,6 +245,38 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>) {
   app.get('/page-block-inspector.js', async (c) => c.env.ASSETS.fetch(new URL('/page-block-inspector.js', c.req.url)))
   app.get('/admin-forms.js', async (c) => c.env.ASSETS.fetch(new URL('/admin-forms.js', c.req.url)))
   app.get('/navigation-editor.js', async (c) => c.env.ASSETS.fetch(new URL('/navigation-editor.js', c.req.url)))
+  app.get('/event-location-picker.js', async (c) =>
+    c.env.ASSETS.fetch(new URL('/event-location-picker.js', c.req.url)),
+  )
+  app.get('/inbox-schema-editor.js', async (c) =>
+    c.env.ASSETS.fetch(new URL('/inbox-schema-editor.js', c.req.url)),
+  )
+
+  app.get('/admin/api/geocode', async (c) => {
+    const ctx = await requireAdmin(c)
+    if (!ctx || !canViewEvents(ctx)) return c.json({ ok: false, error: 'Unauthorized' }, 401)
+    const address = c.req.query('address')?.trim() ?? ''
+    if (!address) return c.json({ ok: false, error: 'Address required' }, 400)
+    if (c.req.query('suggest') === '1') {
+      const candidates = await geocodeNevadaAddressCandidates(address).catch(() => [])
+      return c.json({
+        ok: true,
+        candidates: candidates.map((candidate) => ({
+          formatted: candidate.formatted,
+          latitude: candidate.lat,
+          longitude: candidate.lng,
+        })),
+      })
+    }
+    const result = await geocodeNevadaAddress(address).catch(() => null)
+    if (!result) return c.json({ ok: false })
+    return c.json({
+      ok: true,
+      latitude: result.lat,
+      longitude: result.lng,
+      formatted: result.formatted,
+    })
+  })
 
   app.get('/admin/login', async (c) => c.html(<LoginPage />))
 
@@ -218,7 +315,7 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>) {
               <h3>Members</h3>
               <p>
                 {canManageMembers(ctx.user.role)
-                  ? 'Officers, stakeholders, and member companies'
+                  ? 'Stakeholder and associate member companies'
                   : 'Edit your organization profile'}
               </p>
             </a>
@@ -238,7 +335,7 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>) {
           {canAccessContentSection(ctx.user.role, ctx.chairCommittees) ? (
             <a class="admin-card" href="/admin/content">
               <h3>Content</h3>
-              <p>{ctx.user.role === 'chair' ? 'Programs, pages, archive, and embeds for your committees' : 'Carousel, archive, programs, pages'}</p>
+              <p>{ctx.user.role === 'chair' ? 'Programs, pages, and archive for your committees' : 'Carousel, archive, programs, pages'}</p>
             </a>
           ) : null}
           {canAccessAssets(ctx.user.role) ? (
@@ -253,12 +350,34 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>) {
               <p>Staff portal accounts</p>
             </a>
           ) : null}
+          {canManageUsers(ctx.user.role) ? (
+            <a class="admin-card" href="/admin/inbox">
+              <h3>
+                <span>Inboxes</span>
+                {ctx.inboxNewCount > 0 ? (
+                  <span class="inbox-count" aria-label={`${ctx.inboxNewCount} new`}>
+                    {ctx.inboxNewCount > 99 ? '99+' : ctx.inboxNewCount}
+                  </span>
+                ) : null}
+              </h3>
+              <p>
+                Contact, applications, training, newsletter
+                {ctx.inboxNewCount > 0
+                  ? ` · ${ctx.inboxNewCount === 1 ? '1 new' : `${ctx.inboxNewCount} new`}`
+                  : ''}
+              </p>
+            </a>
+          ) : null}
           {canManageNavigation(ctx.user.role) ? (
             <a class="admin-card" href="/admin/navigation">
               <h3>Navigation</h3>
               <p>Site menu and logo</p>
             </a>
           ) : null}
+          <a class="admin-card" href="/admin/profile">
+            <h3>My profile</h3>
+            <p>Change your password</p>
+          </a>
         </div>
       </AdminShell>,
     )
@@ -445,7 +564,8 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>) {
     let error: string | undefined
     if (c.req.method === 'POST') {
       const body = await c.req.parseBody()
-      const input = buildEventInput(ctx, body as Record<string, string | File>)
+      const coords = await resolveCoordsFromBody(body as Record<string, string | File>)
+      const input = buildEventInput(ctx, body as Record<string, string | File>, coords)
       error = validateEventAssignment(ctx, String(input.committee_slug ?? ''), input.category) ?? undefined
       if (!error) {
         await createEvent(c.env.DB, input)
@@ -473,7 +593,8 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>) {
         await deleteEvent(c.env.DB, event.id)
         return redirect(c, '/admin/events')
       }
-      const input = buildEventInput(ctx, body as Record<string, string | File>)
+      const coords = await resolveCoordsFromBody(body as Record<string, string | File>, event)
+      const input = buildEventInput(ctx, body as Record<string, string | File>, coords)
       error = validateEventAssignment(ctx, String(input.committee_slug ?? ''), input.category) ?? undefined
       if (!error) {
         await updateEvent(c.env.DB, event.id, input)
@@ -598,17 +719,20 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>) {
           { href: '/admin/content/programs', title: 'Programs', desc: 'Program cards for your committees' },
           { href: '/admin/content/pages', title: 'Committee pages', desc: 'Edit pages for your assigned committees' },
           { href: '/admin/content/archive', title: 'Archive', desc: 'Minutes and documents for your committees' },
-          { href: '/admin/content/embeds', title: 'Embeds', desc: 'Forms, videos, and PDFs on committee pages' },
         ]
       : [
-          { href: '/admin/content/settings', title: 'Site settings', desc: 'Contact, footer, breaking news' },
+          { href: '/admin/content/settings', title: 'Site settings', desc: 'Logo, theme, contact, footer, breaking news' },
           { href: '/admin/content/carousel', title: 'Home carousel', desc: 'Front page slides' },
           { href: '/admin/content/programs', title: 'Programs', desc: 'Program cards' },
           { href: '/admin/content/archive', title: 'Archive', desc: 'Minutes and newsletters' },
+          { href: '/admin/content/posts', title: 'Posts', desc: 'Rich HTML newsletters and updates' },
+          { href: '/admin/content/leadership', title: 'Leadership', desc: 'Public leadership roster' },
+          { href: '/admin/content/committees', title: 'Committees', desc: 'Committees and enrollment people' },
+          { href: '/admin/content/resources', title: 'Resources', desc: 'Resource link list' },
+          { href: '/admin/content/member-types', title: 'Membership types', desc: 'Directory and application types' },
           { href: '/admin/content/zero-damages', title: 'Zero at-fault', desc: 'Company list' },
           { href: '/admin/content/qa', title: 'Q & A', desc: '811 questions' },
           { href: '/admin/content/pages', title: 'Editable pages', desc: 'Program and content pages' },
-          { href: '/admin/content/embeds', title: 'Embeds', desc: 'MS Forms, YouTube, PDFs' },
         ]
     return c.html(
       <AdminShell ctx={ctx} title="Content" activePath="/admin/content" publicSiteOrigin={c.env.PUBLIC_SITE_ORIGIN}>
@@ -627,10 +751,12 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>) {
   app.all('/admin/content/settings', async (c) => {
     const ctx = await requireAdmin(c)
     if (!ctx || ctx.user.role !== 'admin') return redirect(c, '/admin/login')
-    const [contact, footer, breaking] = await Promise.all([
+    const [contact, footer, breaking, logoUrl, theme] = await Promise.all([
       getContactInfo(c.env.DB),
       getFooterInfo(c.env.DB),
       getBreakingNews(c.env.DB),
+      getSiteLogoUrl(c.env.DB),
+      getThemeSettings(c.env.DB),
     ])
     if (c.req.method === 'POST') {
       const body = await c.req.parseBody()
@@ -655,11 +781,36 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>) {
         storage_key: body.breaking_storage_key || 'nrcga_breaking_news_dismissed',
         expires_at: body.breaking_expires_at || null,
       })
+      await setSetting(
+        c.env.DB,
+        'site_logo_url',
+        typeof body.site_logo_url === 'string' && body.site_logo_url.trim()
+          ? body.site_logo_url.trim()
+          : null,
+      )
+      await setSetting(c.env.DB, 'theme', {
+        primary: body.theme_primary || '#0066cc',
+        primary_dark: body.theme_primary_dark || '#0052a3',
+        secondary: body.theme_secondary || '#00a86b',
+        accent: body.theme_accent || '#ff6b35',
+      })
       return redirect(c, '/admin/content/settings')
     }
     return c.html(
       <AdminShell ctx={ctx} title="Site settings" activePath="/admin/content" publicSiteOrigin={c.env.PUBLIC_SITE_ORIGIN}>
         <form method="post" class="admin-form">
+          <h3>Brand</h3>
+          <label>Logo URL</label>
+          <input name="site_logo_url" value={logoUrl ?? ''} placeholder="https://… or /api/v1/media/…" />
+          <h3>Theme colors</h3>
+          <label>Primary</label>
+          <input name="theme_primary" type="color" value={theme.primary} />
+          <label>Primary dark</label>
+          <input name="theme_primary_dark" type="color" value={theme.primary_dark} />
+          <label>Secondary</label>
+          <input name="theme_secondary" type="color" value={theme.secondary} />
+          <label>Accent</label>
+          <input name="theme_accent" type="color" value={theme.accent} />
           <h3>Contact</h3>
           <label>Organization</label>
           <input name="organization_name" value={contact.organization_name} />
@@ -669,6 +820,8 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>) {
           <input name="phone" value={contact.phone} />
           <label>Address</label>
           <textarea name="address">{contact.address}</textarea>
+          <label>Hours</label>
+          <input name="hours" value={contact.hours} />
           <label>Response time note</label>
           <input name="response_time" value={contact.response_time} />
           <h3>Footer</h3>
@@ -698,7 +851,58 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>) {
     )
   })
 
+  app.all('/admin/profile', async (c) => {
+    const ctx = await requireAdmin(c)
+    if (!ctx) return redirect(c, '/admin/login')
+    let error = ''
+    let success = ''
+    if (c.req.method === 'POST') {
+      const body = await c.req.parseBody()
+      const current = typeof body.current_password === 'string' ? body.current_password : ''
+      const next = typeof body.new_password === 'string' ? body.new_password : ''
+      const confirm = typeof body.confirm_password === 'string' ? body.confirm_password : ''
+      if (!current || !next) {
+        error = 'Current and new password are required.'
+      } else if (next.length < 8) {
+        error = 'New password must be at least 8 characters.'
+      } else if (next !== confirm) {
+        error = 'New password and confirmation do not match.'
+      } else {
+        const ok = await verifyUserLogin(c.env, ctx.user.email, current)
+        if (!ok) {
+          error = 'Current password is incorrect.'
+        } else {
+          await updateUser(c.env.DB, ctx.user.id, { password: next })
+          success = 'Password updated.'
+        }
+      }
+    }
+    return c.html(
+      <AdminShell ctx={ctx} title="My profile" activePath="/admin/profile" publicSiteOrigin={c.env.PUBLIC_SITE_ORIGIN}>
+        {error ? <div class="error">{escapeHtml(error)}</div> : null}
+        {success ? <div class="success">{escapeHtml(success)}</div> : null}
+        <p>
+          Signed in as <strong>{escapeHtml(ctx.user.email)}</strong>
+        </p>
+        <form method="post" class="admin-form">
+          <label>Current password</label>
+          <input type="password" name="current_password" required autoComplete="current-password" />
+          <label>New password</label>
+          <input type="password" name="new_password" required minlength={8} autoComplete="new-password" />
+          <label>Confirm new password</label>
+          <input type="password" name="confirm_password" required minlength={8} autoComplete="new-password" />
+          <div class="admin-actions">
+            <button class="btn btn-primary" type="submit">
+              Change password
+            </button>
+          </div>
+        </form>
+      </AdminShell>,
+    )
+  })
+
   registerAdminContentRoutes(app, requireAdmin, redirect)
+  registerAdminParityRoutes(app, requireAdmin, redirect)
   registerAdminAssetRoutes(app, requireAdmin, redirect)
 
   app.all('/admin/navigation', async (c) => {
@@ -905,7 +1109,8 @@ function EventForm({
   const lockCategory = ctx.user.role === 'trainer' || defaultCommittee === 'educationTraining'
 
   return (
-    <form method="post" class="admin-form">
+    <>
+    <form method="post" class="admin-form" action={event ? `/admin/events/${event.id}/edit` : '/admin/events/new'}>
       {error ? <div class="error">{escapeHtml(error)}</div> : null}
       <label>Title</label>
       <input name="title" required value={event?.title ?? ''} />
@@ -945,8 +1150,41 @@ function EventForm({
         </div>
       </fieldset>
 
-      <label>Location</label>
-      <input name="location" value={event?.location ?? ''} />
+      <div
+        data-event-location-field
+        data-initial-location={event?.location ?? ''}
+        data-initial-latitude={event?.latitude != null ? String(event.latitude) : ''}
+        data-initial-longitude={event?.longitude != null ? String(event.longitude) : ''}
+      >
+        <label>Location</label>
+        <input
+          name="location"
+          data-event-location-input
+          value={event?.location ?? ''}
+          placeholder="Street address, city, NV"
+          autocomplete="off"
+        />
+        <p class="muted">Press Enter to search address suggestions. Location is geocoded when you save.</p>
+        <ul
+          class="event-location-suggestions"
+          data-event-location-suggestions
+          role="listbox"
+          hidden
+        ></ul>
+        <input type="hidden" name="latitude" data-event-latitude value={event?.latitude ?? ''} />
+        <input type="hidden" name="longitude" data-event-longitude value={event?.longitude ?? ''} />
+        <input type="hidden" name="map_skip" data-event-map-skip value="0" />
+        <p
+          class="muted"
+          data-event-coords-hint
+          hidden={event?.latitude == null || event?.longitude == null}
+        >
+          {event?.latitude != null && event?.longitude != null
+            ? `Map coordinates saved (${Number(event.latitude).toFixed(5)}, ${Number(event.longitude).toFixed(5)}).`
+            : ''}
+        </p>
+      </div>
+
       <label>Description</label>
       <textarea name="description">{event?.description ?? ''}</textarea>
       <label>Category</label>
@@ -1016,5 +1254,38 @@ function EventForm({
         ) : null}
       </div>
     </form>
+
+    <dialog id="event-location-picker" class="event-location-picker-dialog">
+      <div class="event-location-picker-panel">
+        <h3>Place event on the map</h3>
+        <p data-event-location-picker-message></p>
+        <div id="event-location-map" class="event-location-map"></div>
+        <p data-event-location-picker-coords class="muted">Click the map to place a pin.</p>
+        <div class="admin-actions">
+          <button type="button" class="btn btn-primary" data-event-location-confirm disabled>
+            Use this pin
+          </button>
+          <button type="button" class="btn btn-secondary" data-event-location-skip>
+            Save without map
+          </button>
+          <button type="button" class="btn btn-secondary" data-modal-close>
+            Cancel
+          </button>
+        </div>
+      </div>
+    </dialog>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin=""
+    />
+    <script
+      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+      crossorigin=""
+    ></script>
+    <script src="/event-location-picker.js"></script>
+    </>
   )
 }

@@ -12,7 +12,7 @@ import {
 } from '../config/roles'
 import type { UserRole } from '../config/roles'
 
-type NavItem = { href: string; label: string }
+type NavItem = { href: string; label: string; badge?: number }
 
 function navItems(ctx: AdminContext): NavItem[] {
   const { user, chairCommittees } = ctx
@@ -47,6 +47,16 @@ function navItems(ctx: AdminContext): NavItem[] {
   if (canManageNavigation(user.role)) {
     items.push({ href: '/admin/navigation', label: 'Navigation' })
   }
+
+  if (canManageUsers(user.role)) {
+    items.push({
+      href: '/admin/inbox',
+      label: 'Inboxes',
+      badge: ctx.inboxNewCount > 0 ? ctx.inboxNewCount : undefined,
+    })
+  }
+
+  items.push({ href: '/admin/profile', label: 'My profile' })
 
   return items
 }
@@ -90,7 +100,12 @@ export function AdminShell({
               {nav.map((item) => (
                 <li>
                   <a href={item.href} class={activePath === item.href ? 'active' : ''}>
-                    {item.label}
+                    <span>{item.label}</span>
+                    {item.badge != null ? (
+                      <span class="admin-nav-badge" aria-label={`${item.badge} new`}>
+                        {item.badge > 99 ? '99+' : item.badge}
+                      </span>
+                    ) : null}
                   </a>
                 </li>
               ))}

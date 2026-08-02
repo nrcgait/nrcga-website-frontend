@@ -1,325 +1,318 @@
-// Archive Data Loader
-// Loads and displays archive data (meeting minutes and historical documents) from data/archive.csv
+// Archive Data Loader — unified feed with type filters and pagination (20/page)
 
-// Parse YYYY-MM-DD as local date (avoids UTC-midnight shifting display to previous day)
+const ARCHIVE_PAGE_SIZE = 20;
+const ARCHIVE_FILTERS = [
+  { id: 'all', label: 'All' },
+  { id: 'meeting-minute', label: 'Meeting Minutes' },
+  { id: 'historical-document', label: 'Historical Documents' },
+  { id: 'post', label: 'Updates & Posts' },
+];
+
+const TYPE_LABELS = {
+  'meeting-minute': 'Meeting Minutes',
+  'historical-document': 'Historical Documents',
+  post: 'Updates & Posts',
+};
+
 function parseLocalDate(dateString) {
-    const match = typeof dateString === 'string' && dateString.match(/^(\d{4})-(\d{2})-(\d{2})/);
-    if (match) {
-        const year = parseInt(match[1], 10);
-        const month = parseInt(match[2], 10) - 1;
-        const day = parseInt(match[3], 10);
-        const date = new Date(year, month, day);
-        if (!isNaN(date.getTime())) return date;
-    }
-    return new Date(dateString);
+  const match = typeof dateString === 'string' && dateString.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (match) {
+    const year = parseInt(match[1], 10);
+    const month = parseInt(match[2], 10) - 1;
+    const day = parseInt(match[3], 10);
+    const date = new Date(year, month, day);
+    if (!isNaN(date.getTime())) return date;
+  }
+  return new Date(dateString);
 }
 
-// Format date for display
 function formatDate(dateString) {
-    try {
-        const date = parseLocalDate(dateString);
-        if (isNaN(date.getTime())) {
-            return dateString;
-        }
-        return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-    } catch (e) {
-        return dateString;
-    }
+  try {
+    const date = parseLocalDate(dateString);
+    if (isNaN(date.getTime())) return dateString || '';
+    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  } catch (e) {
+    return dateString || '';
+  }
 }
 
-// Extract year from date string
-function getYear(dateString) {
-    try {
-        const date = parseLocalDate(dateString);
-        if (!isNaN(date.getTime())) {
-            return date.getFullYear().toString();
-        }
-        const yearMatch = dateString.match(/\d{4}/);
-        return yearMatch ? yearMatch[0] : 'Unknown';
-    } catch (e) {
-        return 'Unknown';
-    }
-}
-
-// Store grouped data globally
-let meetingMinutesByYear = {};
-let historicalDocumentsByYear = {};
-let allMeetingMinutesYears = [];
-let allHistoricalDocumentsYears = [];
-
-/** Map spreadsheet variants to the two canonical type values (order in file does not matter). */
 function normalizeArchiveRowType(raw) {
-    const s = String(raw || '').trim().toLowerCase().replace(/\u00a0/g, ' ').replace(/_/g, '-');
-    if (s === 'meeting-minute' || s === 'meeting minute' || s === 'minutes' || s === 'meeting minutes') {
-        return 'meeting-minute';
-    }
-    if (s === 'historical-document' || s === 'historical document' || s === 'document' || s === 'news' || s === 'newsletter') {
-        return 'historical-document';
-    }
-    return s;
+  const s = String(raw || '')
+    .trim()
+    .toLowerCase()
+    .replace(/\u00a0/g, ' ')
+    .replace(/_/g, '-');
+  if (s === 'meeting-minute' || s === 'meeting minute' || s === 'minutes' || s === 'meeting minutes') {
+    return 'meeting-minute';
+  }
+  if (
+    s === 'historical-document' ||
+    s === 'historical document' ||
+    s === 'document' ||
+    s === 'news' ||
+    s === 'newsletter'
+  ) {
+    return 'historical-document';
+  }
+  if (s === 'post' || s === 'update' || s === 'updates' || s === 'updates-posts') {
+    return 'post';
+  }
+  return s;
 }
 
-// Load and display archive items
-async function loadArchive() {
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function escapeAttr(value) {
+  return escapeHtml(value).replace(/'/g, '&#39;');
+}
+
+function getItemHref(item) {
+  if (item.type === 'post' && item.slug) {
+    return `post.html?slug=${encodeURIComponent(item.slug)}`;
+  }
+  return item.link || '#';
+}
+
+function getItemIcon(item) {
+  if (item.type === 'post') return '📰';
+  const link = String(item.link || '');
+  const title = String(item.title || '');
+  if (
+    link.includes('photos') ||
+    link.includes('photo') ||
+    /photos?/i.test(title)
+  ) {
+    return '📷';
+  }
+  if (link.includes('youtube.com') || link.includes('video')) return '🎥';
+  return '📄';
+}
+
+function readArchiveStateFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  const typeRaw = params.get('type') || 'all';
+  const type = ARCHIVE_FILTERS.some((f) => f.id === typeRaw) ? typeRaw : 'all';
+  const page = Math.max(1, parseInt(params.get('page') || '1', 10) || 1);
+  return { type, page };
+}
+
+function writeArchiveStateToUrl(state) {
+  const params = new URLSearchParams();
+  if (state.type && state.type !== 'all') params.set('type', state.type);
+  if (state.page > 1) params.set('page', String(state.page));
+  const qs = params.toString();
+  const next = qs ? `${window.location.pathname}?${qs}` : window.location.pathname;
+  window.history.replaceState({}, '', next);
+}
+
+function itemSortDate(item) {
+  return item.sort_date || item.published_at || item.date || item.created_at || '';
+}
+
+function dedupeByLink(items) {
+  const seen = new Set();
+  const out = [];
+  for (const item of items) {
+    const key = item.type === 'post' ? `post:${item.id || item.slug}` : String(item.link || item.id || '');
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    out.push(item);
+  }
+  return out;
+}
+
+async function fetchArchivePage(type, page) {
+  if (window.NRCGA_API) {
     try {
-        meetingMinutesByYear = {};
-        historicalDocumentsByYear = {};
-        allMeetingMinutesYears = [];
-        allHistoricalDocumentsYears = [];
-
-        // Load data (API first, CSV fallback)
-        let archiveItems = null;
-        if (window.NRCGA_API) {
-            try {
-                archiveItems = await window.NRCGA_API.get('/archive');
-            } catch (e) {
-                console.warn('Archive API unavailable, falling back to CSV', e);
-            }
-        }
-        if (!archiveItems) {
-            archiveItems = await loadCSV('data/archive.csv');
-        }
-
-        // Canonical field names (pickCsvField: case-insensitive headers from Excel)
-        archiveItems.forEach(item => {
-            item.type = normalizeArchiveRowType(pickCsvField(item, 'type'));
-            item.title = pickCsvField(item, 'title');
-            item.date = pickCsvField(item, 'date');
-            item.link = pickCsvField(item, 'link');
-        });
-        
-        // Separate items by type (any row order in the CSV is fine)
-        const meetingMinutes = archiveItems.filter(item => item.type === 'meeting-minute');
-        const historicalDocuments = archiveItems.filter(item => item.type === 'historical-document');
-        
-        // Group meeting minutes by year
-        meetingMinutes.forEach(minute => {
-            const year = getYear(minute.date);
-            if (!meetingMinutesByYear[year]) {
-                meetingMinutesByYear[year] = [];
-            }
-            meetingMinutesByYear[year].push(minute);
-        });
-        
-        // Sort minutes within each year by date (newest first)
-        Object.keys(meetingMinutesByYear).forEach(year => {
-            meetingMinutesByYear[year].sort((a, b) => {
-                const dateA = parseLocalDate(a.date);
-                const dateB = parseLocalDate(b.date);
-                return dateB - dateA;
-            });
-        });
-        
-        // Get sorted years for meeting minutes
-        allMeetingMinutesYears = Object.keys(meetingMinutesByYear).sort((a, b) => b.localeCompare(a));
-        
-        // Group historical documents by year
-        historicalDocuments.forEach(doc => {
-            const year = getYear(doc.date);
-            if (!historicalDocumentsByYear[year]) {
-                historicalDocumentsByYear[year] = [];
-            }
-            historicalDocumentsByYear[year].push(doc);
-        });
-        
-        // Sort documents within each year by date (newest first)
-        Object.keys(historicalDocumentsByYear).forEach(year => {
-            historicalDocumentsByYear[year].sort((a, b) => {
-                const dateA = parseLocalDate(a.date);
-                const dateB = parseLocalDate(b.date);
-                return dateB - dateA;
-            });
-        });
-        
-        // Get sorted years for historical documents
-        allHistoricalDocumentsYears = Object.keys(historicalDocumentsByYear).sort((a, b) => b.localeCompare(a));
-        
-        // Initialize display with dropdowns
-        initializeMeetingMinutes();
-        initializeHistoricalDocuments();
-        
-    } catch (error) {
-        console.error('Error loading archive:', error);
-        const meetingMinutesContent = document.getElementById('meeting-minutes-content');
-        if (meetingMinutesContent) {
-            meetingMinutesContent.innerHTML = '<h2>Meeting Minutes</h2><p style="color: var(--text-secondary); text-align: center; padding: 2rem;">Unable to load meeting minutes. Please try again later.</p>';
-        }
+      const qs = new URLSearchParams({ page: String(page) });
+      if (type && type !== 'all') qs.set('type', type);
+      const result = await window.NRCGA_API.get(`/archive?${qs.toString()}`);
+      if (result && Array.isArray(result.items)) {
+        return {
+          items: result.items,
+          page: result.page || page,
+          totalPages: result.totalPages || 1,
+          total: result.total ?? result.items.length,
+        };
+      }
+      // Legacy array response
+      if (Array.isArray(result)) {
+        return paginateClientSide(normalizeCsvItems(result), type, page);
+      }
+    } catch (e) {
+      console.warn('Archive API unavailable, falling back to CSV', e);
     }
+  }
+
+  const rows = await loadCSV('data/archive.csv');
+  return paginateClientSide(normalizeCsvItems(rows), type, page);
 }
 
-// Initialize meeting minutes section with dropdown
-function initializeMeetingMinutes() {
-    const container = document.getElementById('meeting-minutes-content');
-    if (!container) return;
-    
-    if (allMeetingMinutesYears.length === 0) {
-        container.innerHTML = '<h2>Meeting Minutes</h2><p>Historical meeting minutes and records from NRCGA board meetings, committee meetings, and general assemblies. NRCGA monthly membership meetings take place the second Tuesday of January, March, May, July, September, and November.</p><p style="text-align: center; padding: 2rem; color: var(--text-secondary);">No meeting minutes available.</p>';
-        return;
-    }
-    
-    let html = '<h2>Meeting Minutes</h2>';
-    html += '<p>Historical meeting minutes and records from NRCGA board meetings, committee meetings, and general assemblies. NRCGA monthly membership meetings take place the second Tuesday of January, March, May, July, September, and November.</p>';
-    html += '<div style="margin: 1.5rem 0;">';
-    html += '<label for="meeting-minutes-year-select" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Select Year:</label>';
-    html += '<select id="meeting-minutes-year-select" style="width: 100%; max-width: 300px; padding: 0.75rem; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; background: white;">';
-    html += '<option value="">-- All Years -- (Default)</option>';
-    
-    allMeetingMinutesYears.forEach(year => {
-        html += `<option value="${year}">${year}</option>`;
+function normalizeCsvItems(rows) {
+  return rows.map((item) => {
+    const type = normalizeArchiveRowType(
+      typeof pickCsvField === 'function' ? pickCsvField(item, 'type') : item.type,
+    );
+    const title =
+      typeof pickCsvField === 'function' ? pickCsvField(item, 'title') : item.title;
+    const date =
+      typeof pickCsvField === 'function' ? pickCsvField(item, 'date') : item.date;
+    const link =
+      typeof pickCsvField === 'function' ? pickCsvField(item, 'link') : item.link;
+    return {
+      ...item,
+      type,
+      title,
+      date,
+      sort_date: date,
+      link,
+    };
+  });
+}
+
+function paginateClientSide(allItems, type, page) {
+  let filtered = dedupeByLink(allItems);
+  if (type && type !== 'all') {
+    filtered = filtered.filter((item) => item.type === type);
+  }
+  filtered.sort((a, b) => {
+    const dateA = parseLocalDate(itemSortDate(a));
+    const dateB = parseLocalDate(itemSortDate(b));
+    return dateB - dateA;
+  });
+  const total = filtered.length;
+  const totalPages = Math.max(1, Math.ceil(total / ARCHIVE_PAGE_SIZE));
+  const safePage = Math.min(Math.max(1, page), totalPages);
+  const start = (safePage - 1) * ARCHIVE_PAGE_SIZE;
+  return {
+    items: filtered.slice(start, start + ARCHIVE_PAGE_SIZE),
+    page: safePage,
+    totalPages,
+    total,
+  };
+}
+
+function renderFilters(activeType) {
+  return `
+    <div class="archive-filters" role="group" aria-label="Archive type filter">
+      ${ARCHIVE_FILTERS.map(
+        (f) =>
+          `<button type="button" class="btn btn-secondary archive-filter-btn${
+            activeType === f.id ? ' active' : ''
+          }" data-filter="${f.id}">${escapeHtml(f.label)}</button>`,
+      ).join('')}
+    </div>`;
+}
+
+function renderPagination(currentPage, totalPages) {
+  if (totalPages <= 1) return '';
+  return `
+    <div class="archive-pagination">
+      <button type="button" class="btn btn-secondary archive-page-btn" data-page="${
+        currentPage - 1
+      }"${currentPage <= 1 ? ' disabled' : ''}>Previous</button>
+      <span class="archive-page-label">Page ${currentPage} of ${totalPages}</span>
+      <button type="button" class="btn btn-secondary archive-page-btn" data-page="${
+        currentPage + 1
+      }"${currentPage >= totalPages ? ' disabled' : ''}>Next</button>
+    </div>`;
+}
+
+function renderItems(items) {
+  if (!items.length) {
+    return '<p class="archive-empty">No archive items found for this filter.</p>';
+  }
+  return `<ul class="archive-list">${items
+    .map((item) => {
+      const href = getItemHref(item);
+      const isExternal =
+        item.type !== 'post' &&
+        (String(href).startsWith('http://') || String(href).startsWith('https://'));
+      const linkTarget = isExternal ? ' target="_blank" rel="noopener noreferrer"' : '';
+      const typeLabel = TYPE_LABELS[item.type] || item.type || '';
+      const dateLabel = formatDate(itemSortDate(item));
+      const excerpt =
+        item.type === 'post' && item.excerpt
+          ? `<p class="archive-item-excerpt">${escapeHtml(item.excerpt)}</p>`
+          : '';
+      return `<li class="archive-item">
+        <span class="archive-item-icon" aria-hidden="true">${getItemIcon(item)}</span>
+        <div class="archive-item-body">
+          <a href="${escapeAttr(href)}"${linkTarget} class="archive-item-title">${escapeHtml(
+            item.title,
+          )}</a>
+          <p class="archive-item-meta">
+            <span class="archive-item-type">${escapeHtml(typeLabel)}</span>
+            ${dateLabel ? `<span class="archive-item-date">${escapeHtml(dateLabel)}</span>` : ''}
+          </p>
+          ${excerpt}
+        </div>
+      </li>`;
+    })
+    .join('')}</ul>`;
+}
+
+async function renderArchive(state) {
+  const container = document.getElementById('archive-content');
+  if (!container) return;
+
+  container.innerHTML = `
+    <p class="archive-intro">Browse the most recent materials across meeting minutes, historical documents, and updates &amp; posts. Use the filters to narrow the list.</p>
+    ${renderFilters(state.type)}
+    <div class="archive-loading">Loading archive...</div>`;
+
+  try {
+    const result = await fetchArchivePage(state.type, state.page);
+    state.page = result.page;
+    writeArchiveStateToUrl(state);
+
+    container.innerHTML = `
+      <p class="archive-intro">Browse the most recent materials across meeting minutes, historical documents, and updates &amp; posts. Use the filters to narrow the list.</p>
+      ${renderFilters(state.type)}
+      <p class="archive-count">${result.total} item${result.total === 1 ? '' : 's'}</p>
+      ${renderItems(result.items)}
+      ${renderPagination(result.page, result.totalPages)}`;
+
+    bindArchiveControls(state);
+  } catch (error) {
+    console.error('Error loading archive:', error);
+    container.innerHTML = `
+      <p class="archive-intro">Browse the most recent materials across meeting minutes, historical documents, and updates &amp; posts.</p>
+      ${renderFilters(state.type)}
+      <p class="archive-empty">Unable to load archive. Please try again later.</p>`;
+    bindArchiveControls(state);
+  }
+}
+
+function bindArchiveControls(state) {
+  const container = document.getElementById('archive-content');
+  if (!container) return;
+
+  container.querySelectorAll('.archive-filter-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const nextType = btn.getAttribute('data-filter') || 'all';
+      renderArchive({ type: nextType, page: 1 });
     });
-    
-    html += '</select>';
-    html += '</div>';
-    html += '<div id="meeting-minutes-list"></div>';
-    
-    container.innerHTML = html;
-    
-    // Display all years initially
-    displayMeetingMinutesByYear('');
-    
-    // Add event listener
-    const select = document.getElementById('meeting-minutes-year-select');
-    if (select) {
-        select.addEventListener('change', (e) => {
-            displayMeetingMinutesByYear(e.target.value);
-        });
-    }
-}
+  });
 
-// Display meeting minutes for selected year
-function displayMeetingMinutesByYear(selectedYear) {
-    const container = document.getElementById('meeting-minutes-list');
-    if (!container) return;
-    
-    let html = '';
-    
-    const yearsToShow = selectedYear ? [selectedYear] : allMeetingMinutesYears;
-    
-    if (yearsToShow.length === 0) {
-        html = '<p style="text-align: center; padding: 2rem; color: var(--text-secondary);">No meeting minutes available.</p>';
-    } else {
-        yearsToShow.forEach(year => {
-            const minutes = meetingMinutesByYear[year];
-            if (minutes && minutes.length > 0) {
-                html += `<div style="margin-top: 2rem;">`;
-                html += `<h3 style="margin-bottom: 1rem; color: var(--primary);">${year}</h3>`;
-                html += `<ul style="list-style: none; padding: 0; display: flex; flex-direction: column; gap: 0.75rem;">`;
-                
-                minutes.forEach(minute => {
-                    const formattedDate = formatDate(minute.date);
-                    const isExternal = minute.link.startsWith('http://') || minute.link.startsWith('https://');
-                    const linkTarget = isExternal ? ' target="_blank" rel="noopener noreferrer"' : '';
-                    
-                    html += `<li style="display: flex; align-items: flex-start; gap: 0.75rem;">`;
-                    html += `<span style="color: var(--primary); font-size: 1.25rem;">📄</span>`;
-                    html += `<div>`;
-                    html += `<a href="${minute.link}"${linkTarget} style="color: var(--primary); text-decoration: none; font-weight: 500;">${minute.title}</a>`;
-                    html += `<p style="margin: 0.25rem 0 0 0; color: var(--text-light); font-size: 0.9375rem;">${formattedDate}</p>`;
-                    html += `</div>`;
-                    html += `</li>`;
-                });
-                
-                html += `</ul>`;
-                html += `</div>`;
-            }
-        });
-    }
-    
-    container.innerHTML = html;
-}
-
-// Initialize historical documents section with dropdown
-function initializeHistoricalDocuments() {
-    const container = document.getElementById('historical-documents-content');
-    if (!container) return;
-    
-    if (allHistoricalDocumentsYears.length === 0) {
-        container.innerHTML = '<h2>Historical Documents</h2><p>NRCGA news articles and historical documents organized by year.</p><p style="text-align: center; padding: 2rem; color: var(--text-secondary);">No historical documents available.</p>';
-        return;
-    }
-    
-    let html = '<h2>Historical Documents</h2>';
-    html += '<p>NRCGA news articles and historical documents organized by year.</p>';
-    html += '<div style="margin: 1.5rem 0;">';
-    html += '<label for="historical-documents-year-select" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Select Year:</label>';
-    html += '<select id="historical-documents-year-select" style="width: 100%; max-width: 300px; padding: 0.75rem; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; background: white;">';
-    html += '<option value="">-- All Years -- (Default)</option>';
-    
-    allHistoricalDocumentsYears.forEach(year => {
-        html += `<option value="${year}">${year}</option>`;
+  container.querySelectorAll('.archive-page-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      if (btn.disabled) return;
+      const nextPage = parseInt(btn.getAttribute('data-page') || '1', 10) || 1;
+      renderArchive({ type: state.type, page: nextPage });
+      const top = document.getElementById('archive-content');
+      if (top) top.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
-    
-    html += '</select>';
-    html += '</div>';
-    html += '<div id="historical-documents-list"></div>';
-    
-    container.innerHTML = html;
-    
-    // Display all years initially
-    displayHistoricalDocumentsByYear('');
-    
-    // Add event listener
-    const select = document.getElementById('historical-documents-year-select');
-    if (select) {
-        select.addEventListener('change', (e) => {
-            displayHistoricalDocumentsByYear(e.target.value);
-        });
-    }
+  });
 }
 
-// Display historical documents for selected year
-function displayHistoricalDocumentsByYear(selectedYear) {
-    const container = document.getElementById('historical-documents-list');
-    if (!container) return;
-    
-    let html = '';
-    
-    const yearsToShow = selectedYear ? [selectedYear] : allHistoricalDocumentsYears;
-    
-    if (yearsToShow.length === 0) {
-        html = '<p style="text-align: center; padding: 2rem; color: var(--text-secondary);">No historical documents available.</p>';
-    } else {
-        yearsToShow.forEach(year => {
-            const documents = historicalDocumentsByYear[year];
-            if (documents && documents.length > 0) {
-                html += `<div style="margin-top: 2rem;">`;
-                html += `<h3 style="margin-bottom: 1rem; color: var(--primary);">${year}</h3>`;
-                html += `<ul style="list-style: none; padding: 0; display: flex; flex-direction: column; gap: 0.75rem;">`;
-                
-                documents.forEach(doc => {
-                    const formattedDate = formatDate(doc.date);
-                    const isExternal = doc.link.startsWith('http://') || doc.link.startsWith('https://');
-                    const linkTarget = isExternal ? ' target="_blank" rel="noopener noreferrer"' : '';
-                    
-                    // Determine icon based on link type
-                    let icon = '📄';
-                    if (doc.link.includes('photos') || doc.link.includes('photo') || doc.title.includes('photos') || doc.title.includes('photo') || doc.title.includes('Photos')) {
-                        icon = '📷';
-                    } else if (doc.link.includes('youtube.com') || doc.link.includes('video')) {
-                        icon = '🎥';
-                    }
-                    
-                    html += `<li style="display: flex; align-items: flex-start; gap: 0.75rem;">`;
-                    html += `<span style="color: var(--primary); font-size: 1.25rem;">${icon}</span>`;
-                    html += `<div>`;
-                    html += `<a href="${doc.link}"${linkTarget} style="color: var(--primary); text-decoration: none; font-weight: 500;">${doc.title}</a>`;
-                    html += `<p style="margin: 0.25rem 0 0 0; color: var(--text-light); font-size: 0.9375rem;">${formattedDate}</p>`;
-                    html += `</div>`;
-                    html += `</li>`;
-                });
-                
-                html += `</ul>`;
-                html += `</div>`;
-            }
-        });
-    }
-    
-    container.innerHTML = html;
-}
-
-// Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', async () => {
-    if (document.getElementById('meeting-minutes-content') || document.getElementById('historical-documents-content')) {
-        await loadArchive();
-    }
+  if (!document.getElementById('archive-content')) return;
+  await renderArchive(readArchiveStateFromUrl());
 });

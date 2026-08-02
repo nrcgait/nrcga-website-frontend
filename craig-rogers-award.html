@@ -231,12 +231,39 @@
 
     <!-- Nominate CTA -->
     <section class="content-section">
-        <div class="container">
+        <div class="container" style="max-width: 640px;">
             <div class="cta-content">
                 <h2>Nominate a Champion</h2>
                 <p>Know someone who exemplifies Craig Rogers' legacy? Nominate them for the Craig Rogers Award.</p>
-                <a href="contact.html" class="btn btn-primary">Submit a Nomination</a>
             </div>
+            <form class="nrcga-form" data-nrcga-form="award_application" style="margin-top: 2rem;">
+                <div style="position:absolute;left:-9999px;" aria-hidden="true">
+                    <input type="text" name="website_url" tabindex="-1" autocomplete="off">
+                </div>
+                <input type="hidden" name="award" value="Craig Rogers Award">
+                <div class="form-group" style="margin-bottom:1rem;">
+                    <label for="aw-nominee">Nominee name *</label>
+                    <input id="aw-nominee" name="nominee_name" required style="width:100%;padding:0.75rem;border-radius:8px;border:1px solid var(--border);">
+                </div>
+                <div class="form-group" style="margin-bottom:1rem;">
+                    <label for="aw-nominator">Your name</label>
+                    <input id="aw-nominator" name="nominator_name" style="width:100%;padding:0.75rem;border-radius:8px;border:1px solid var(--border);">
+                </div>
+                <div class="form-group" style="margin-bottom:1rem;">
+                    <label for="aw-email">Email *</label>
+                    <input id="aw-email" name="email" type="email" required style="width:100%;padding:0.75rem;border-radius:8px;border:1px solid var(--border);">
+                </div>
+                <div class="form-group" style="margin-bottom:1rem;">
+                    <label for="aw-org">Organization</label>
+                    <input id="aw-org" name="organization" style="width:100%;padding:0.75rem;border-radius:8px;border:1px solid var(--border);">
+                </div>
+                <div class="form-group" style="margin-bottom:1rem;">
+                    <label for="aw-statement">Nomination statement</label>
+                    <textarea id="aw-statement" name="statement" rows="5" style="width:100%;padding:0.75rem;border-radius:8px;border:1px solid var(--border);"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Submit nomination</button>
+                <p data-form-status></p>
+            </form>
         </div>
     </section>
     </div>
@@ -267,6 +294,7 @@
     <script src="js/components.js"></script>
     <script src="js/page-blocks-render.js"></script>
     <script src="js/page-loader.js"></script>
+    <script src="js/native-forms.js"></script>
     <script src="js/script.js"></script>
 </body>
 </html>

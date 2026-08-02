@@ -114,19 +114,36 @@
              </div>
 
              <div class="contact-form-wrapper" style="max-width: 700px; margin: 0 auto;">
-                <!-- Mobile Button (hidden on desktop) -->
-                <div class="training-form-mobile-button" style="display: none; text-align: center; margin: 2rem 0;">
-                    <p style="margin-bottom: 1.5rem; color: var(--text-secondary); line-height: 1.7; font-size: 1rem;">
-                        Unable to attend our scheduled training sessions? Request a trainer to come to your location. We can arrange on-site training for groups when standard training schedules don't work for your team.
-                    </p>
-                    <a href="https://forms.office.com/Pages/ResponsePage.aspx?id=l_bTl4Fr-UGCMvL2nXpxRyBVFANpJf9BgeFLspJ7BSZUMldFOUxIVDQzS1FQMVlQQTUzUThSMktTRi4u" target="_blank" rel="noopener noreferrer" class="btn btn-primary" style="font-size: 1.125rem; padding: 1rem 2.5rem;">
-                        Open Training Request Form
-                    </a>
-                </div>
-                <!-- Desktop Iframe (hidden on mobile) -->
-                <div class="training-form-iframe" style="display: flex; justify-content: center; align-items: flex-start; width: 100%;">
-                    <iframe width="640px" src="https://forms.office.com/Pages/ResponsePage.aspx?id=l_bTl4Fr-UGCMvL2nXpxRyBVFANpJf9BgeFLspJ7BSZUMldFOUxIVDQzS1FQMVlQQTUzUThSMktTRi4u&embed=true" frameborder="0" marginwidth="0" marginheight="0" style="border: none; max-width:100%; min-height: 1950px;" allowfullscreen webkitallowfullscreen mozallowfullscreen msallowfullscreen> </iframe>
-                </div>
+                <p style="margin-bottom: 1.5rem; color: var(--text-secondary); line-height: 1.7;">
+                    Unable to attend our scheduled training sessions? Request a trainer to come to your location.
+                </p>
+                <form class="nrcga-form" data-nrcga-form="training_registration">
+                    <div style="position:absolute;left:-9999px;" aria-hidden="true">
+                        <input type="text" name="website_url" tabindex="-1" autocomplete="off">
+                    </div>
+                    <div class="form-group" style="margin-bottom:1rem;">
+                        <label for="tr-name">Name *</label>
+                        <input id="tr-name" name="name" required style="width:100%;padding:0.75rem;border-radius:8px;border:1px solid var(--border);">
+                    </div>
+                    <div class="form-group" style="margin-bottom:1rem;">
+                        <label for="tr-email">Email *</label>
+                        <input id="tr-email" name="email" type="email" required style="width:100%;padding:0.75rem;border-radius:8px;border:1px solid var(--border);">
+                    </div>
+                    <div class="form-group" style="margin-bottom:1rem;">
+                        <label for="tr-phone">Phone</label>
+                        <input id="tr-phone" name="phone" style="width:100%;padding:0.75rem;border-radius:8px;border:1px solid var(--border);">
+                    </div>
+                    <div class="form-group" style="margin-bottom:1rem;">
+                        <label for="tr-org">Organization / Company</label>
+                        <input id="tr-org" name="organization" style="width:100%;padding:0.75rem;border-radius:8px;border:1px solid var(--border);">
+                    </div>
+                    <div class="form-group" style="margin-bottom:1rem;">
+                        <label for="tr-notes">Notes / preferred dates</label>
+                        <textarea id="tr-notes" name="notes" rows="4" style="width:100%;padding:0.75rem;border-radius:8px;border:1px solid var(--border);"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Request Training</button>
+                    <p data-form-status></p>
+                </form>
             </div>
         </div>
     </section>
@@ -158,6 +175,7 @@
     <script src="js/events-loader.js"></script>
     <script src="js/page-blocks-render.js"></script>
     <script src="js/page-loader.js"></script>
+    <script src="js/native-forms.js"></script>
     <script src="js/script.js"></script>
 </body>
 </html>

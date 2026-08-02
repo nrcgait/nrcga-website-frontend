@@ -10,6 +10,8 @@ export type EventRecord = {
   category: 'general' | 'training'
   committee_slug: string | null
   image_r2_key: string | null
+  latitude: number | null
+  longitude: number | null
   published: number
   repeat_rule: EventRepeatRule | null
   repeat_interval_days: number | null

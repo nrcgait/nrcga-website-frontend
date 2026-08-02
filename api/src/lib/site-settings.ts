@@ -40,6 +40,13 @@ export type NavigationConfig = {
   }>
 }
 
+export type ThemeSettings = {
+  primary: string
+  primary_dark: string
+  secondary: string
+  accent: string
+}
+
 const DEFAULT_CONTACT: ContactInfo = {
   organization_name: 'Nevada Regional Common Ground Alliance',
   email: 'info@nrcga.org',
@@ -62,6 +69,13 @@ const DEFAULT_BREAKING: BreakingNews = {
   read_more_url: '',
   storage_key: 'nrcga_breaking_news_dismissed',
   expires_at: null,
+}
+
+const DEFAULT_THEME: ThemeSettings = {
+  primary: '#0066cc',
+  primary_dark: '#0052a3',
+  secondary: '#00a86b',
+  accent: '#ff6b35',
 }
 
 async function getSetting<T>(db: D1Database, key: string, fallback: T): Promise<T> {
@@ -105,6 +119,10 @@ export async function getNavigation(db: D1Database): Promise<NavigationConfig | 
 
 export async function getSiteLogoUrl(db: D1Database): Promise<string | null> {
   return getSetting<string | null>(db, 'site_logo_url', null)
+}
+
+export async function getThemeSettings(db: D1Database): Promise<ThemeSettings> {
+  return getSetting(db, 'theme', DEFAULT_THEME)
 }
 
 export async function sendRegistrationConfirmation(

@@ -253,22 +253,51 @@
     <script src="js/components.js"></script>
     <script src="js/csv-parser.js"></script>
     <script>
-        // Load committee data from CSV files
+        // Load committee data from API (CSV fallback)
         async function loadCommitteeData() {
             try {
-                // Load committees and members from CSV
+                if (window.NRCGA_API) {
+                    const data = await window.NRCGA_API.get('/committees');
+                    if (data && Array.isArray(data.committees) && data.committees.length) {
+                        const committees = {};
+                        data.committees.forEach((c) => {
+                            committees[c.id] = c.name;
+                        });
+                        const members = {};
+                        const memberships = data.memberships || [];
+                        (data.members || []).forEach((m) => {
+                            const memberObj = {
+                                name: m.name,
+                                company: m.company || '',
+                                email: m.email || '',
+                            };
+                            Object.keys(committees).forEach((committeeId) => {
+                                memberObj[committeeId] = 0;
+                            });
+                            memberships
+                                .filter((row) => row.member_id === m.id)
+                                .forEach((row) => {
+                                    memberObj[row.committee_id] = Number(row.role) || 1;
+                                });
+                            if (m.name) members[m.name] = memberObj;
+                        });
+                        window.committeeMemberships = { committees, members };
+                        return;
+                    }
+                }
+            } catch (error) {
+                console.warn('Committee API unavailable, falling back to CSV', error);
+            }
+
+            try {
                 const committeesData = await loadCSV('data/committee-members-committees.csv');
                 const membersData = await loadCSV('data/committee-members-members.csv');
-                
-                // Convert committees array to object (headers may vary in casing)
                 const committees = {};
                 committeesData.forEach(committee => {
                     const id = pickCsvField(committee, 'id');
                     const name = pickCsvField(committee, 'name');
                     if (id) committees[id] = name;
                 });
-                
-                // Convert members array to object keyed by name
                 const members = {};
                 membersData.forEach(member => {
                     const displayName = pickCsvField(member, 'name');
@@ -277,8 +306,6 @@
                         company: pickCsvField(member, 'company'),
                         email: pickCsvField(member, 'email')
                     };
-                    
-                    // Add all committee membership fields (convert strings to numbers)
                     Object.keys(committees).forEach(committeeId => {
                         const value = pickCsvField(member, committeeId);
                         if (value !== undefined && value !== '') {
@@ -287,15 +314,9 @@
                             memberObj[committeeId] = 0;
                         }
                     });
-                    
                     if (displayName) members[displayName] = memberObj;
                 });
-                
-                // Create the window.committeeMemberships object
-                window.committeeMemberships = {
-                    committees: committees,
-                    members: members
-                };
+                window.committeeMemberships = { committees, members };
             } catch (error) {
                 console.error('Error loading committee data:', error);
                 window.committeeMemberships = { committees: {}, members: {} };

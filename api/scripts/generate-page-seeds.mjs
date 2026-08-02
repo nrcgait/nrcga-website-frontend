@@ -1,5 +1,7 @@
 /**
  * Extract CMS page seeds from migrated HTML files (with #page-body).
+ * Emits body_html (preferred) and keeps body_json for fallback.
+ * Home also gets regions_json for hero + contact copy.
  * Usage (from api/): node scripts/generate-page-seeds.mjs
  */
 import fs from 'node:fs'
@@ -23,6 +25,11 @@ const PAGE_FILES = [
   'embedded-facilities-taskforce.html',
   'about-811.html',
   'contact.html',
+  'about.html',
+  'index.html',
+  'bylaws.html',
+  'data-maps.html',
+  'training-database.html',
 ]
 
 function sqlEscape(value) {
@@ -35,11 +42,12 @@ function extractBetweenTag(html, tag, attr) {
   return match ? match[1].trim() : ''
 }
 
-function extractPageBody(html) {
-  const marker = 'id="page-body"'
+function extractDivById(html, id) {
+  const marker = `id="${id}"`
   const startIdx = html.indexOf(marker)
-  if (startIdx === -1) throw new Error('Missing #page-body')
+  if (startIdx === -1) return ''
   const openEnd = html.indexOf('>', startIdx) + 1
+  if (openEnd <= 0) return ''
 
   let depth = 1
   let i = openEnd
@@ -56,7 +64,13 @@ function extractPageBody(html) {
       i = nextClose + 6
     }
   }
-  throw new Error('Unclosed #page-body')
+  return ''
+}
+
+function extractPageBody(html) {
+  const marker = 'id="page-body"'
+  if (!html.includes(marker)) throw new Error('Missing #page-body')
+  return extractDivById(html, 'page-body')
 }
 
 function slugFromHtml(html, filename) {
@@ -87,9 +101,17 @@ for (const file of PAGE_FILES) {
   const bodyJson = JSON.stringify(blocks)
   const id = stablePageId(slug)
 
+  let regionsSql = 'NULL'
+  if (slug === 'home') {
+    const heroHtml = extractDivById(html, 'page-hero')
+    const contactHtml = extractDivById(html, 'page-contact')
+    const regions = JSON.stringify({ hero_html: heroHtml, contact_html: contactHtml })
+    regionsSql = `'${sqlEscape(regions)}'`
+  }
+
   statements.push(
-    `INSERT OR REPLACE INTO pages (id, slug, title, section_label, subtitle, body_md, body_json, published)
-     VALUES ('${id}', '${sqlEscape(slug)}', '${sqlEscape(title)}', '${sqlEscape(sectionLabel)}', '${sqlEscape(subtitle)}', NULL, '${sqlEscape(bodyJson)}', 1);`,
+    `INSERT OR REPLACE INTO pages (id, slug, title, section_label, subtitle, body_md, body_json, body_html, regions_json, published, is_custom)
+     VALUES ('${id}', '${sqlEscape(slug)}', '${sqlEscape(title || slug)}', '${sqlEscape(sectionLabel)}', '${sqlEscape(subtitle)}', NULL, '${sqlEscape(bodyJson)}', '${sqlEscape(bodyHtml)}', ${regionsSql}, 1, 0);`,
   )
 }
 

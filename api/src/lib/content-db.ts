@@ -138,27 +138,30 @@ export async function checkOfficerConflicts(
 }
 
 function officerApiRow(m: Record<string, unknown>, position: string) {
+  // Public officers table expects person in Company Name and org in Contact Person
+  // (same layout as the legacy CSV). Stakeholder rows store the opposite.
+  const person = String(m.contact_person ?? '').trim() || String(m.company_name ?? '')
+  const org = String(m.contact_person ?? '').trim() ? String(m.company_name ?? '') : ''
   return {
     Type: 'Officer',
-    'Company Name': m.company_name,
+    'Company Name': person,
     'Stakeholder Group': position,
     'Voting Member': m.voting_member,
     Website: m.website,
     Category: m.category,
     Term: m.term,
-    'Contact Person': m.contact_person,
+    'Contact Person': org,
     Active: m.active,
   }
 }
 
 export async function upsertMember(db: D1Database, data: Record<string, unknown>, id?: string) {
   const memberId = id ?? crypto.randomUUID()
-  const isChair = Number(data.is_chair ?? 0)
-  const isViceChair = Number(data.is_vice_chair ?? 0)
-  let stakeholderGroup = data.stakeholder_group ?? null
-  if (String(data.type ?? '') === 'Officer') {
-    stakeholderGroup = isChair ? 'Chair' : isViceChair ? 'Vice Chair' : null
-  }
+  const type = String(data.type ?? 'Stakeholder')
+  const isStakeholder = type === 'Stakeholder'
+  const isChair = isStakeholder ? Number(data.is_chair ?? 0) : 0
+  const isViceChair = isStakeholder ? Number(data.is_vice_chair ?? 0) : 0
+  const isBoardMember = isStakeholder ? Number(data.is_board_member ?? 0) : 0
   await db
     .prepare(
       `INSERT INTO members (id, type, company_name, stakeholder_group, voting_member, website, category, term, contact_person, active, is_board_member, is_chair, is_vice_chair)
@@ -180,16 +183,16 @@ export async function upsertMember(db: D1Database, data: Record<string, unknown>
     )
     .bind(
       memberId,
-      String(data.type ?? ''),
+      type,
       String(data.company_name ?? ''),
-      stakeholderGroup,
+      isStakeholder ? (data.stakeholder_group ?? null) : null,
       data.voting_member ?? null,
       data.website ?? null,
       data.category ?? null,
-      data.term ?? null,
+      isStakeholder ? (data.term ?? null) : null,
       data.contact_person ?? null,
       Number(data.active ?? 1),
-      Number(data.is_board_member ?? 0),
+      isBoardMember,
       isChair,
       isViceChair,
     )
@@ -214,16 +217,11 @@ export function membersForPublicApi(rows: Record<string, unknown>[]) {
   const result: Record<string, unknown>[] = []
   for (const m of rows) {
     const type = String(m.type ?? '')
-    if (type === 'Director') continue
+    // Officer/Director are not stored types; ignore any legacy rows.
+    if (type === 'Officer' || type === 'Director') continue
 
     const isChair = Number(m.is_chair) === 1
     const isViceChair = Number(m.is_vice_chair) === 1
-
-    if (type === 'Officer') {
-      const position = isChair ? 'Chair' : isViceChair ? 'Vice Chair' : String(m.stakeholder_group ?? '')
-      if (position) result.push(officerApiRow(m, position))
-      continue
-    }
 
     result.push({
       Type: m.type,
@@ -237,7 +235,7 @@ export function membersForPublicApi(rows: Record<string, unknown>[]) {
       Active: m.active,
     })
 
-    if (type === 'Stakeholder' && m.is_board_member) {
+    if (type === 'Stakeholder' && Number(m.is_board_member) === 1) {
       result.push({
         Type: 'Director',
         'Company Name': m.company_name,
@@ -251,8 +249,8 @@ export function membersForPublicApi(rows: Record<string, unknown>[]) {
       })
     }
 
-    if (isChair) result.push(officerApiRow(m, 'Chair'))
-    if (isViceChair) result.push(officerApiRow(m, 'Vice Chair'))
+    if (type === 'Stakeholder' && isChair) result.push(officerApiRow(m, 'Chair'))
+    if (type === 'Stakeholder' && isViceChair) result.push(officerApiRow(m, 'Vice Chair'))
   }
   return result
 }
@@ -328,6 +326,47 @@ export async function listArchiveItems(db: D1Database) {
     .prepare('SELECT * FROM archive_items ORDER BY date DESC, title')
     .all()
   return results ?? []
+}
+
+export type ArchiveFeedType = 'all' | 'meeting-minute' | 'historical-document' | 'post'
+
+export function parseArchiveFeedType(value: string | undefined): ArchiveFeedType {
+  const v = (value ?? 'all').trim().toLowerCase()
+  if (v === 'meeting-minute' || v === 'historical-document' || v === 'post') return v
+  return 'all'
+}
+
+/** Public archive feed: minutes + historical docs + published posts, newest first. */
+export async function listArchiveFeed(
+  db: D1Database,
+  page: number,
+  type: ArchiveFeedType = 'all',
+): Promise<PaginatedResult<Row>> {
+  const archiveSelect = `SELECT id, type, title, date AS sort_date, link, NULL AS slug, NULL AS excerpt, NULL AS cover_url
+    FROM archive_items`
+  const postSelect = `SELECT id, 'post' AS type, title, COALESCE(published_at, created_at) AS sort_date,
+    NULL AS link, slug, excerpt, cover_url
+    FROM posts WHERE published = 1`
+
+  let unionSql: string
+  if (type === 'meeting-minute' || type === 'historical-document') {
+    unionSql = `${archiveSelect} WHERE type = ?`
+  } else if (type === 'post') {
+    unionSql = postSelect
+  } else {
+    unionSql = `${archiveSelect} UNION ALL ${postSelect}`
+  }
+
+  const binds: unknown[] =
+    type === 'meeting-minute' || type === 'historical-document' ? [type] : []
+
+  return paginateQuery(
+    db,
+    `SELECT COUNT(*) as c FROM (${unionSql})`,
+    `SELECT * FROM (${unionSql}) ORDER BY sort_date DESC, title`,
+    page,
+    binds,
+  )
 }
 
 export async function listArchiveItemsPaginated(
@@ -553,8 +592,8 @@ export async function upsertPage(db: D1Database, data: Record<string, unknown>, 
   const pageId = id ?? crypto.randomUUID()
   await db
     .prepare(
-      `INSERT INTO pages (id, slug, title, section_label, subtitle, body_md, body_json, published)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `INSERT INTO pages (id, slug, title, section_label, subtitle, body_md, body_json, body_html, regions_json, published, is_custom)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT(id) DO UPDATE SET
          slug = excluded.slug,
          title = excluded.title,
@@ -562,7 +601,10 @@ export async function upsertPage(db: D1Database, data: Record<string, unknown>, 
          subtitle = excluded.subtitle,
          body_md = excluded.body_md,
          body_json = excluded.body_json,
+         body_html = excluded.body_html,
+         regions_json = excluded.regions_json,
          published = excluded.published,
+         is_custom = excluded.is_custom,
          updated_at = datetime('now')`,
     )
     .bind(
@@ -573,67 +615,13 @@ export async function upsertPage(db: D1Database, data: Record<string, unknown>, 
       data.subtitle ?? null,
       data.body_md ?? null,
       data.body_json ?? null,
+      data.body_html ?? null,
+      data.regions_json ?? null,
       Number(data.published ?? 1),
+      Number(data.is_custom ?? 0),
     )
     .run()
   return pageId
-}
-
-export async function listEmbeds(db: D1Database) {
-  const { results } = await db.prepare('SELECT * FROM embeds ORDER BY page_slug, label').all()
-  return results ?? []
-}
-
-export async function listEmbedsPaginated(db: D1Database, page: number, pageSlugFilter?: string[]): Promise<PaginatedResult<Row>> {
-  if (pageSlugFilter && pageSlugFilter.length > 0) {
-    const placeholders = pageSlugFilter.map(() => '?').join(', ')
-    return paginateQuery(
-      db,
-      `SELECT COUNT(*) as c FROM embeds WHERE page_slug IN (${placeholders})`,
-      `SELECT * FROM embeds WHERE page_slug IN (${placeholders}) ORDER BY page_slug, label`,
-      page,
-      pageSlugFilter,
-    )
-  }
-  return paginateQuery(
-    db,
-    'SELECT COUNT(*) as c FROM embeds',
-    'SELECT * FROM embeds ORDER BY page_slug, label',
-    page,
-  )
-}
-
-export async function getEmbedById(db: D1Database, id: string) {
-  return db.prepare('SELECT * FROM embeds WHERE id = ?').bind(id).first()
-}
-
-export async function deleteEmbed(db: D1Database, id: string) {
-  await db.prepare('DELETE FROM embeds WHERE id = ?').bind(id).run()
-}
-
-export async function upsertEmbed(db: D1Database, data: Record<string, unknown>, id?: string) {
-  const embedId = id ?? crypto.randomUUID()
-  await db
-    .prepare(
-      `INSERT INTO embeds (id, page_slug, embed_type, url, label, config_json)
-       VALUES (?, ?, ?, ?, ?, ?)
-       ON CONFLICT(id) DO UPDATE SET
-         page_slug = excluded.page_slug,
-         embed_type = excluded.embed_type,
-         url = excluded.url,
-         label = excluded.label,
-         config_json = excluded.config_json`,
-    )
-    .bind(
-      embedId,
-      String(data.page_slug ?? ''),
-      String(data.embed_type ?? 'ms_forms'),
-      String(data.url ?? ''),
-      data.label ?? null,
-      data.config_json ?? null,
-    )
-    .run()
-  return embedId
 }
 
 export async function listCommitteesData(db: D1Database) {

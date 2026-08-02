@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leadership - NRCGA</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        #leadership-roster { display: grid; gap: 1.5rem; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+        .leadership-card { background: var(--bg-secondary); padding: 1.25rem; border-radius: 12px; }
+        .leadership-photo { width: 100%; max-height: 220px; object-fit: cover; border-radius: 8px; margin-bottom: 0.75rem; }
+        .leadership-title { color: var(--text-secondary); font-weight: 600; }
+    </style>
+</head>
+<body>
+    <div id="nav-placeholder"></div>
+
+    <section class="page-header">
+        <div class="container">
+            <span class="section-label">About</span>
+            <h1 class="page-title">Leadership</h1>
+            <p class="page-subtitle">Meet the people guiding NRCGA.</p>
+        </div>
+    </section>
+
+    <section class="content-section">
+        <div class="container" id="leadership-roster"></div>
+    </section>
+
+    <div id="footer-placeholder"></div>
+
+    <script src="js/nav-config.js"></script>
+    <script src="js/api-client.js"></script>
+    <script src="js/components.js"></script>
+    <script src="js/leadership-loader.js"></script>
+</body>
+</html>

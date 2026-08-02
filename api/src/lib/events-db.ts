@@ -33,6 +33,8 @@ export type EventInput = {
   category?: 'general' | 'training'
   committee_slug?: string | null
   image_r2_key?: string | null
+  latitude?: number | null
+  longitude?: number | null
   published?: number
   repeat_rule?: string | null
   repeat_interval_days?: number | null
@@ -82,10 +84,11 @@ export async function createEvent(db: D1Database, input: EventInput): Promise<st
   await db
     .prepare(
       `INSERT INTO events (
-        id, title, starts_at, ends_at, location, description, category, committee_slug, image_r2_key, published,
+        id, title, starts_at, ends_at, location, description, category, committee_slug, image_r2_key,
+        latitude, longitude, published,
         repeat_rule, repeat_interval_days, repeat_until, registration_enabled, capacity,
         capacity_scope, registration_cutoff_hours
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     )
     .bind(
       id,
@@ -97,6 +100,8 @@ export async function createEvent(db: D1Database, input: EventInput): Promise<st
       input.category ?? 'general',
       input.committee_slug ?? null,
       input.image_r2_key ?? null,
+      input.latitude ?? null,
+      input.longitude ?? null,
       input.published ?? 1,
       input.repeat_rule ?? null,
       input.repeat_interval_days ?? null,
@@ -115,8 +120,8 @@ export async function updateEvent(db: D1Database, id: string, input: EventInput)
     .prepare(
       `UPDATE events SET
         title = ?, starts_at = ?, ends_at = ?, location = ?, description = ?, category = ?, committee_slug = ?,
-        image_r2_key = ?, published = ?, repeat_rule = ?, repeat_interval_days = ?, repeat_until = ?,
-        registration_enabled = ?, capacity = ?, capacity_scope = ?, registration_cutoff_hours = ?,
+        image_r2_key = ?, latitude = ?, longitude = ?, published = ?, repeat_rule = ?, repeat_interval_days = ?,
+        repeat_until = ?, registration_enabled = ?, capacity = ?, capacity_scope = ?, registration_cutoff_hours = ?,
         updated_at = datetime('now')
        WHERE id = ?`,
     )
@@ -129,6 +134,8 @@ export async function updateEvent(db: D1Database, id: string, input: EventInput)
       input.category ?? 'general',
       input.committee_slug ?? null,
       input.image_r2_key ?? null,
+      input.latitude ?? null,
+      input.longitude ?? null,
       input.published ?? 1,
       input.repeat_rule ?? null,
       input.repeat_interval_days ?? null,

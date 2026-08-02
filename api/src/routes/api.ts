@@ -6,12 +6,13 @@ import {
   getFooterInfo,
   getNavigation,
   getSiteLogoUrl,
+  getThemeSettings,
+  sendCancellationNotifications,
 } from '../lib/site-settings'
 import {
-  listArchiveItems,
+  listArchiveFeed,
   listCarouselSlides,
   listCommitteesData,
-  listEmbeds,
   listMembers,
   listPages,
   listPrograms,
@@ -19,7 +20,26 @@ import {
   listZeroDamages,
   getPageBySlug,
   membersForPublicApi,
+  parseArchiveFeedType,
 } from '../lib/content-db'
+import { parsePageParam } from '../lib/pagination'
+import {
+  listLeadership,
+  listMembershipTypes,
+  listPosts,
+  listResourceLinks,
+  getPostBySlug,
+} from '../lib/parity-db'
+import {
+  createFormSubmission,
+  getFormInboxBySlug,
+  inboxToPublicSchema,
+  isFormType,
+  parseFormFields,
+  upsertNewsletterSubscriber,
+  validateFormPayload,
+  validateSchemaPayload,
+} from '../lib/forms-db'
 import {
   cancelEventOccurrence,
   cancelEventSeries,
@@ -28,8 +48,11 @@ import {
   markOccurrenceGuestsNotified,
 } from '../lib/events-db'
 import { getAvailability, listRegistrations, registerGuest } from '../lib/event-registrations'
-import { sendCancellationNotifications } from '../lib/site-settings'
-import { withCors, corsHeaders } from '../lib/cors'
+import { withCors, corsHeaders, PUBLIC_JSON_CACHE } from '../lib/cors'
+
+function cachedJson(c: Parameters<typeof withCors>[0], body: unknown, status = 200) {
+  return withCors(c, body, status, PUBLIC_JSON_CACHE)
+}
 
 export function registerPublicApiRoutes(app: Hono<{ Bindings: Env }>) {
   app.options('/api/v1/*', (c) => {
@@ -39,10 +62,14 @@ export function registerPublicApiRoutes(app: Hono<{ Bindings: Env }>) {
 
   app.get('/api/v1/members', async (c) => {
     const rows = await listMembers(c.env.DB)
-    return withCors(c, membersForPublicApi(rows as Record<string, unknown>[]))
+    return cachedJson(c, membersForPublicApi(rows as Record<string, unknown>[]))
   })
-  app.get('/api/v1/programs', async (c) => withCors(c, await listPrograms(c.env.DB)))
-  app.get('/api/v1/archive', async (c) => withCors(c, await listArchiveItems(c.env.DB)))
+  app.get('/api/v1/programs', async (c) => cachedJson(c, await listPrograms(c.env.DB)))
+  app.get('/api/v1/archive', async (c) => {
+    const page = parsePageParam(c.req.query('page'))
+    const type = parseArchiveFeedType(c.req.query('type'))
+    return cachedJson(c, await listArchiveFeed(c.env.DB, page, type))
+  })
   app.get('/api/v1/carousel', async (c) => {
     const slides = await listCarouselSlides(c.env.DB)
     const mapped = slides.map((s: Record<string, unknown>) => ({
@@ -52,34 +79,43 @@ export function registerPublicApiRoutes(app: Hono<{ Bindings: Env }>) {
       display_order: s.display_order,
       active: s.active,
     }))
-    return withCors(c, mapped)
+    return cachedJson(c, mapped)
   })
-  app.get('/api/v1/breaking-news', async (c) => withCors(c, await getBreakingNews(c.env.DB)))
-  app.get('/api/v1/committees', async (c) => withCors(c, await listCommitteesData(c.env.DB)))
-  app.get('/api/v1/zero-damages', async (c) => withCors(c, await listZeroDamages(c.env.DB)))
-  app.get('/api/v1/qa', async (c) => withCors(c, await listQaItems(c.env.DB, true)))
-  app.get('/api/v1/embeds', async (c) => withCors(c, await listEmbeds(c.env.DB)))
-  app.get('/api/v1/pages', async (c) => withCors(c, await listPages(c.env.DB)))
+  app.get('/api/v1/breaking-news', async (c) => cachedJson(c, await getBreakingNews(c.env.DB)))
+  app.get('/api/v1/committees', async (c) => cachedJson(c, await listCommitteesData(c.env.DB)))
+  app.get('/api/v1/zero-damages', async (c) => cachedJson(c, await listZeroDamages(c.env.DB)))
+  app.get('/api/v1/qa', async (c) => cachedJson(c, await listQaItems(c.env.DB, true)))
+  app.get('/api/v1/pages', async (c) => cachedJson(c, await listPages(c.env.DB)))
+  app.get('/api/v1/leadership', async (c) => cachedJson(c, await listLeadership(c.env.DB, true)))
+  app.get('/api/v1/resources', async (c) => cachedJson(c, await listResourceLinks(c.env.DB, true)))
+  app.get('/api/v1/member-types', async (c) => cachedJson(c, await listMembershipTypes(c.env.DB, true)))
+  app.get('/api/v1/posts', async (c) => cachedJson(c, await listPosts(c.env.DB, true)))
+  app.get('/api/v1/posts/:slug', async (c) => {
+    const post = await getPostBySlug(c.env.DB, c.req.param('slug'), true)
+    if (!post) return cachedJson(c, { error: 'Not found' }, 404)
+    return cachedJson(c, post)
+  })
 
   app.get('/api/v1/pages/:slug', async (c) => {
     const page = await getPageBySlug(c.env.DB, c.req.param('slug'), true)
-    if (!page) return withCors(c, { error: 'Not found' }, 404)
-    return withCors(c, page)
+    if (!page) return cachedJson(c, { error: 'Not found' }, 404)
+    return cachedJson(c, page)
   })
 
-  app.get('/api/v1/navigation', async (c) => withCors(c, (await getNavigation(c.env.DB)) ?? null))
+  app.get('/api/v1/navigation', async (c) => cachedJson(c, (await getNavigation(c.env.DB)) ?? null))
   app.get('/api/v1/settings', async (c) =>
-    withCors(c, {
+    cachedJson(c, {
       contact: await getContactInfo(c.env.DB),
       footer: await getFooterInfo(c.env.DB),
       logo_url: await getSiteLogoUrl(c.env.DB),
+      theme: await getThemeSettings(c.env.DB),
     }),
   )
 
   app.get('/api/v1/events', async (c) => {
     const category = c.req.query('category') ?? undefined
     const events = await listExpandedPublishedEvents(c.env.DB, category, true)
-    return withCors(c, { events })
+    return cachedJson(c, { events })
   })
 
   app.get('/api/v1/events/:id/availability', async (c) => {
@@ -131,6 +167,81 @@ export function registerPublicApiRoutes(app: Hono<{ Bindings: Env }>) {
 
   app.post('/api/v1/events/:id/cancel', async (c) => {
     return withCors(c, { error: 'Use admin portal to cancel events.' }, 403)
+  })
+
+  app.get('/api/v1/forms/:type', async (c) => {
+    const formType = c.req.param('type')
+    if (isFormType(formType)) {
+      return cachedJson(c, {
+        slug: formType,
+        title: formType.replace(/_/g, ' '),
+        builtin: true,
+        fields: null,
+        submit_label: 'Submit',
+        success_message: 'Thank you — your submission was received.',
+      })
+    }
+    const inbox = await getFormInboxBySlug(c.env.DB, formType)
+    if (!inbox || !inbox.active) {
+      return withCors(c, { success: false, error: 'Unknown form type.' }, 404)
+    }
+    return cachedJson(c, { ...inboxToPublicSchema(inbox), builtin: false })
+  })
+
+  app.post('/api/v1/forms/:type', async (c) => {
+    const formType = c.req.param('type')
+    let body: Record<string, unknown>
+    try {
+      body = await c.req.json<Record<string, unknown>>()
+    } catch {
+      return withCors(c, { success: false, error: 'Invalid JSON body.' }, 400)
+    }
+
+    let validated: { ok: true; payload: Record<string, unknown> } | { ok: false; error: string }
+    let notifyEmail: string | null = null
+    let successMessage = 'Thank you — your submission was received.'
+
+    if (isFormType(formType)) {
+      validated = validateFormPayload(formType, body)
+    } else {
+      const inbox = await getFormInboxBySlug(c.env.DB, formType)
+      if (!inbox || !inbox.active) {
+        return withCors(c, { success: false, error: 'Unknown form type.' }, 404)
+      }
+      validated = validateSchemaPayload(parseFormFields(inbox.fields_json), body)
+      notifyEmail = inbox.notify_email ? String(inbox.notify_email) : null
+      successMessage = String(inbox.success_message ?? successMessage)
+    }
+
+    if (!validated.ok) return withCors(c, { success: false, error: validated.error }, 400)
+
+    if (formType === 'newsletter') {
+      await upsertNewsletterSubscriber(
+        c.env.DB,
+        String(validated.payload.email),
+        validated.payload.name ? String(validated.payload.name) : null,
+      )
+    }
+
+    const id = await createFormSubmission(c.env.DB, formType, validated.payload)
+
+    // Best-effort notify org contact for non-newsletter forms
+    if (formType !== 'newsletter' && c.env.EMAIL) {
+      try {
+        const contact = await getContactInfo(c.env.DB)
+        const to = notifyEmail || contact.email
+        await c.env.EMAIL.send({
+          to,
+          from: `NRCGA <noreply@${new URL(c.env.PUBLIC_SITE_ORIGIN).hostname}>`,
+          subject: `New ${formType.replace(/_/g, ' ')} submission`,
+          text: `A new ${formType} submission was received (id ${id}).\n\n${JSON.stringify(validated.payload, null, 2)}`,
+        })
+      } catch {
+        /* non-fatal */
+      }
+    }
+
+    return withCors(c, { success: true, id, message: successMessage })
   })
 
   app.get('/api/v1/media/*', async (c) => {
