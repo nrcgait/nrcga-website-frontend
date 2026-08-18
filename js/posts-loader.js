@@ -9,7 +9,11 @@ async function loadPostsList() {
     }
     container.innerHTML = rows
       .map((post) => {
-        const date = post.published_at ? new Date(post.published_at).toLocaleDateString() : '';
+        const date = post.published_at
+          ? window.NRCGATime
+            ? window.NRCGATime.formatShortDate(post.published_at)
+            : new Date(post.published_at).toLocaleDateString('en-US', { timeZone: 'America/Los_Angeles' })
+          : '';
         const excerpt = post.excerpt ? `<p>${escapeHtml(post.excerpt)}</p>` : '';
         const cover = post.cover_url
           ? `<img src="${escapeAttr(post.cover_url)}" alt="" class="post-cover">`
@@ -39,7 +43,11 @@ async function loadSinglePost() {
   try {
     const post = await window.NRCGA_API.get(`/posts/${encodeURIComponent(slug)}`);
     document.title = `${post.title} - NRCGA`;
-    const date = post.published_at ? new Date(post.published_at).toLocaleDateString() : '';
+    const date = post.published_at
+      ? window.NRCGATime
+        ? window.NRCGATime.formatShortDate(post.published_at)
+        : new Date(post.published_at).toLocaleDateString('en-US', { timeZone: 'America/Los_Angeles' })
+      : '';
     const cover = post.cover_url ? `<img src="${escapeAttr(post.cover_url)}" alt="" class="post-cover">` : '';
     const pdf = post.pdf_url
       ? `<p><a class="btn btn-secondary" href="${escapeAttr(post.pdf_url)}" target="_blank" rel="noopener">Download PDF</a></p>`

@@ -1,5 +1,15 @@
 // Navigation Component
 // Reads configuration from nav-config.js
+function isStagingHost(host) {
+    return (
+        host === 'nrcga-website-staging.pages.dev' ||
+        host.endsWith('.nrcga-website-staging.pages.dev') ||
+        host === 'nrcga.ayowerks.com' ||
+        host === 'ayowerks.com' ||
+        host.endsWith('.ayowerks.com')
+    );
+}
+
 function getStaffPortalUrl() {
     if (window.NRCGA_API && window.NRCGA_API.staffPortalUrl) {
         return window.NRCGA_API.staffPortalUrl;
@@ -8,7 +18,7 @@ function getStaffPortalUrl() {
     if (host === 'localhost' || host === '127.0.0.1') {
         return 'http://localhost:8787/admin';
     }
-    if (host === 'nrcga-website-staging.pages.dev' || host.endsWith('.nrcga-website-staging.pages.dev')) {
+    if (isStagingHost(host)) {
         return 'https://nrcga-api-staging.thefieldmappinggroup.workers.dev/admin';
     }
     return 'https://api.nrcga.org/admin';
@@ -98,7 +108,6 @@ function renderNavigation() {
 // Footer Component
 function renderFooter() {
     const logoSrc =
-        (window.nrcgaLogoUrl) ||
         (window.navConfig && window.navConfig.logo && window.navConfig.logo.image) ||
         'assets/images/NRCGA-Logo_Badge-Color-300x272.png';
     const orgName =
@@ -161,12 +170,6 @@ async function applyRemoteSiteConfig() {
         }
         if (settings && settings.contact) {
             window.nrcgaContactSettings = settings.contact;
-        }
-        if (settings && settings.logo_url) {
-            window.nrcgaLogoUrl = settings.logo_url;
-            if (window.navConfig && window.navConfig.logo) {
-                window.navConfig.logo.image = settings.logo_url;
-            }
         }
         if (settings && settings.theme) {
             window.nrcgaThemeSettings = settings.theme;

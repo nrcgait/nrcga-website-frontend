@@ -39,6 +39,9 @@ import {
   deleteEvent,
   getEventById,
   listAllEventsPaginated,
+  listCancelledOccurrences,
+  uncancelEventOccurrence,
+  uncancelEventSeries,
   updateEvent,
   type EventListFilter,
 } from '../lib/events-db'
@@ -56,7 +59,6 @@ import {
   getContactInfo,
   getFooterInfo,
   getNavigation,
-  getSiteLogoUrl,
   getThemeSettings,
   setSetting,
 } from '../lib/site-settings'
@@ -540,7 +542,10 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>) {
           <tbody>
             {result.items.map((e) => (
               <tr>
-                <td>{escapeHtml(e.title)}</td>
+                <td>
+                  {escapeHtml(e.title)}
+                  {e.cancelled_at ? <span class="muted"> (Cancelled)</span> : null}
+                </td>
                 <td>{escapeHtml(formatEventDateTime(e.starts_at))}</td>
                 <td>{escapeHtml(e.committee_slug ?? '—')}</td>
                 <td>{escapeHtml(e.category)}</td>
@@ -605,19 +610,35 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>) {
     return c.html(
       <AdminShell ctx={ctx} title="Edit event" activePath="/admin/events" publicSiteOrigin={c.env.PUBLIC_SITE_ORIGIN}>
         <EventForm ctx={ctx} committees={committees as Array<{ slug: string; name: string }>} event={event} error={error} />
-        <form method="post" class="admin-form admin-form-compact">
-          <input type="hidden" name="_action" value="cancel_series" />
-          <label>Cancellation message (optional)</label>
-          <textarea name="cancellation_message" />
-          <label>
-            <input type="checkbox" name="notify_guests" value="1" /> Notify registered guests
-          </label>
-          <div class="admin-actions">
-            <button class="btn btn-danger" type="submit" formaction={`/admin/events/${event.id}/cancel-series`}>
-              Cancel entire series
-            </button>
-          </div>
-        </form>
+        {event.cancelled_at ? (
+          <form method="post" action={`/admin/events/${event.id}/uncancel-series`} class="admin-form admin-form-compact">
+            <h3>This series is cancelled</h3>
+            <p class="muted">
+              It is hidden from the public calendar
+              {event.cancellation_message ? ` — ${event.cancellation_message}` : ''}.
+              Uncancelling does not restore individually cancelled dates.
+            </p>
+            <div class="admin-actions">
+              <button class="btn btn-primary" type="submit">
+                Uncancel series
+              </button>
+            </div>
+          </form>
+        ) : (
+          <form method="post" class="admin-form admin-form-compact">
+            <input type="hidden" name="_action" value="cancel_series" />
+            <label>Cancellation message (optional)</label>
+            <textarea name="cancellation_message" />
+            <label>
+              <input type="checkbox" name="notify_guests" value="1" /> Notify registered guests
+            </label>
+            <div class="admin-actions">
+              <button class="btn btn-danger" type="submit" formaction={`/admin/events/${event.id}/cancel-series`}>
+                Cancel entire series
+              </button>
+            </div>
+          </form>
+        )}
       </AdminShell>,
     )
   })
@@ -634,6 +655,15 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>) {
     return redirect(c, '/admin/events')
   })
 
+  app.post('/admin/events/:id/uncancel-series', async (c) => {
+    const ctx = await requireAdmin(c)
+    if (!ctx || !canViewEvents(ctx)) return redirect(c, '/admin/login')
+    const event = await getEventById(c.env.DB, c.req.param('id'))
+    if (!event || !canEditEvent(ctx, event)) return c.text('Forbidden', 403)
+    await uncancelEventSeries(c.env.DB, c.req.param('id'))
+    return redirect(c, `/admin/events/${c.req.param('id')}/edit`)
+  })
+
   app.post('/admin/events/:id/cancel-occurrence', async (c) => {
     const ctx = await requireAdmin(c)
     if (!ctx || !canViewEvents(ctx)) return redirect(c, '/admin/login')
@@ -647,6 +677,19 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>) {
     return redirect(c, `/admin/events/${c.req.param('id')}/registrations`)
   })
 
+  app.post('/admin/events/:id/uncancel-occurrence', async (c) => {
+    const ctx = await requireAdmin(c)
+    if (!ctx || !canViewEvents(ctx)) return redirect(c, '/admin/login')
+    const event = await getEventById(c.env.DB, c.req.param('id'))
+    if (!event || !canEditEvent(ctx, event)) return c.text('Forbidden', 403)
+    const body = await c.req.parseBody()
+    const occurrenceDate = String(body.occurrence_date ?? '').trim()
+    if (occurrenceDate) {
+      await uncancelEventOccurrence(c.env.DB, c.req.param('id'), occurrenceDate)
+    }
+    return redirect(c, `/admin/events/${c.req.param('id')}/registrations`)
+  })
+
   app.get('/admin/events/:id/registrations', async (c) => {
     const ctx = await requireAdmin(c)
     if (!ctx || !canViewEvents(ctx)) return redirect(c, '/admin/login')
@@ -655,9 +698,46 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>) {
     if (!canEditEvent(ctx, event)) return c.text('Forbidden', 403)
     const page = parsePageParam(c.req.query('page'))
     const result = await listRegistrationsPaginated(c.env.DB, event.id, page)
+    const cancelledOccurrences = await listCancelledOccurrences(c.env.DB, event.id)
     const basePath = `/admin/events/${event.id}/registrations`
     return c.html(
       <AdminShell ctx={ctx} title={`Registrations — ${event.title}`} activePath="/admin/events" publicSiteOrigin={c.env.PUBLIC_SITE_ORIGIN}>
+        {event.cancelled_at ? (
+          <p class="muted">
+            This entire series is cancelled.{' '}
+            <a href={`/admin/events/${event.id}/edit`}>Uncancel the series</a> to restore it on the public calendar.
+          </p>
+        ) : null}
+        {cancelledOccurrences.length ? (
+          <>
+            <h3>Cancelled occurrences</h3>
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Message</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {cancelledOccurrences.map((occ) => (
+                  <tr>
+                    <td>{escapeHtml(occ.occurrence_date)}</td>
+                    <td>{escapeHtml(occ.cancellation_message ?? '—')}</td>
+                    <td>
+                      <form method="post" action={`/admin/events/${event.id}/uncancel-occurrence`} class="admin-form-inline">
+                        <input type="hidden" name="occurrence_date" value={occ.occurrence_date} />
+                        <button class="btn btn-secondary" type="submit">
+                          Uncancel
+                        </button>
+                      </form>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </>
+        ) : null}
         <form method="post" action={`/admin/events/${event.id}/cancel-occurrence`} class="admin-form">
           <h3>Cancel one occurrence</h3>
           <label>Occurrence date</label>
@@ -722,7 +802,7 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>) {
           { href: '/admin/content/archive', title: 'Archive', desc: 'Minutes and documents for your committees' },
         ]
       : [
-          { href: '/admin/content/settings', title: 'Site settings', desc: 'Logo, theme, contact, footer, breaking news' },
+          { href: '/admin/content/settings', title: 'Site settings', desc: 'Theme, contact, footer, breaking news' },
           { href: '/admin/content/carousel', title: 'Home carousel', desc: 'Front page slides' },
           { href: '/admin/content/programs', title: 'Programs', desc: 'Program cards' },
           { href: '/admin/content/archive', title: 'Archive', desc: 'Minutes and newsletters' },
@@ -751,11 +831,10 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>) {
   app.all('/admin/content/settings', async (c) => {
     const ctx = await requireAdmin(c)
     if (!ctx || ctx.user.role !== 'admin') return redirect(c, '/admin/login')
-    const [contact, footer, breaking, logoUrl, theme] = await Promise.all([
+    const [contact, footer, breaking, theme] = await Promise.all([
       getContactInfo(c.env.DB),
       getFooterInfo(c.env.DB),
       getBreakingNews(c.env.DB),
-      getSiteLogoUrl(c.env.DB),
       getThemeSettings(c.env.DB),
     ])
     if (c.req.method === 'POST') {
@@ -781,13 +860,6 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>) {
         storage_key: body.breaking_storage_key || 'nrcga_breaking_news_dismissed',
         expires_at: body.breaking_expires_at || null,
       })
-      await setSetting(
-        c.env.DB,
-        'site_logo_url',
-        typeof body.site_logo_url === 'string' && body.site_logo_url.trim()
-          ? body.site_logo_url.trim()
-          : null,
-      )
       await setSetting(c.env.DB, 'theme', {
         primary: body.theme_primary || '#0066cc',
         primary_dark: body.theme_primary_dark || '#0052a3',
@@ -799,9 +871,6 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>) {
     return c.html(
       <AdminShell ctx={ctx} title="Site settings" activePath="/admin/content" publicSiteOrigin={c.env.PUBLIC_SITE_ORIGIN}>
         <form method="post" class="admin-form">
-          <h3>Brand</h3>
-          <label>Logo URL</label>
-          <input name="site_logo_url" value={logoUrl ?? ''} placeholder="https://… or /api/v1/media/…" />
           <h3>Theme colors</h3>
           <label>Primary</label>
           <input name="theme_primary" type="color" value={theme.primary} />
@@ -1123,6 +1192,7 @@ function EventForm({
 
       <fieldset class="admin-fieldset">
         <legend>Start date & time</legend>
+        <p class="muted">Times are Pacific Time (Nevada). Daylight saving (PDT/PST) is applied automatically.</p>
         <div class="admin-datetime-row">
           <label>
             Date

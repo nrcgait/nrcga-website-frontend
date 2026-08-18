@@ -27,8 +27,15 @@ let leafletLoadPromise = null;
 
 function formatEventDate(isoString) {
   try {
+    if (window.NRCGATime) return window.NRCGATime.formatDate(isoString);
     const d = new Date(isoString);
-    return d.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    return d.toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      timeZone: 'America/Los_Angeles',
+    });
   } catch {
     return isoString;
   }
@@ -36,8 +43,14 @@ function formatEventDate(isoString) {
 
 function formatEventTime(isoString) {
   try {
+    if (window.NRCGATime) return window.NRCGATime.formatTime(isoString);
     const d = new Date(isoString);
-    return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+    return d.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      timeZone: 'America/Los_Angeles',
+      timeZoneName: 'short',
+    });
   } catch {
     return '';
   }
@@ -45,11 +58,17 @@ function formatEventTime(isoString) {
 
 function formatEventDateParts(isoString) {
   try {
+    if (window.NRCGATime) return window.NRCGATime.formatDateParts(isoString);
     const d = new Date(isoString);
     return {
-      month: d.toLocaleDateString('en-US', { month: 'short' }).toUpperCase(),
-      day: d.getDate(),
-      weekdayDate: d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }),
+      month: d.toLocaleDateString('en-US', { month: 'short', timeZone: 'America/Los_Angeles' }).toUpperCase(),
+      day: Number(d.toLocaleDateString('en-US', { day: 'numeric', timeZone: 'America/Los_Angeles' })),
+      weekdayDate: d.toLocaleDateString('en-US', {
+        weekday: 'long',
+        month: 'long',
+        day: 'numeric',
+        timeZone: 'America/Los_Angeles',
+      }),
     };
   } catch {
     return { month: '', day: '', weekdayDate: isoString };
@@ -224,13 +243,25 @@ function getCalendarState(container) {
       events: [],
       view: 'list',
       categoryFilter: scope === 'training' ? 'training' : 'all',
+      searchQuery: '',
+      appliedSearchQuery: '',
+      searchTimer: null,
+      searchSelection: null,
+      renderGen: 0,
       listPage: 1,
-      monthDate: startOfMonth(new Date()),
+      monthDate: startOfNevadaMonth(),
       loading: false,
       activeContainer: container,
     });
   }
   return calendarStates.get(container);
+}
+
+function startOfNevadaMonth(date) {
+  if (date) return startOfMonth(date);
+  const parts = window.NRCGATime ? window.NRCGATime.nowParts() : null;
+  if (parts) return new Date(parts.year, parts.month - 1, 1);
+  return startOfMonth(new Date());
 }
 
 function startOfMonth(date) {
@@ -246,8 +277,15 @@ function toDateParam(date) {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 }
 
-function isSameDay(a, b) {
-  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+function eventDateKey(event) {
+  if (event.occurrence_date) return event.occurrence_date;
+  if (window.NRCGATime) return window.NRCGATime.dateParam(event.starts_at);
+  return toDateParam(new Date(event.starts_at));
+}
+
+function nevadaTodayKey() {
+  if (window.NRCGATime) return window.NRCGATime.dateParam(new Date());
+  return toDateParam(new Date());
 }
 
 async function fetchEvents(category) {
@@ -272,6 +310,38 @@ function filterEventsByCategory(events, categoryFilter) {
     return events.filter((event) => event.category === 'training');
   }
   return events;
+}
+
+function normalizeSearchText(value) {
+  return String(value || '')
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function eventSearchHaystack(event) {
+  return normalizeSearchText(
+    [
+      event.title,
+      event.location,
+      event.description,
+      event.category,
+      event.occurrence_date,
+      formatEventDate(event.starts_at),
+      formatEventTime(event.starts_at),
+      formatEventTimeRange(event.starts_at, event.ends_at),
+    ].join(' '),
+  );
+}
+
+function filterEventsBySearch(events, searchQuery) {
+  const query = normalizeSearchText(searchQuery);
+  if (!query) return events;
+  const terms = query.split(' ').filter(Boolean);
+  return events.filter((event) => {
+    const haystack = eventSearchHaystack(event);
+    return terms.every((term) => haystack.includes(term));
+  });
 }
 
 function ensureRegistrationModal() {
@@ -579,6 +649,8 @@ function bindRegisterButtons(root, container) {
 function renderToolbar(container, state) {
   const scope = container.dataset.eventsScope || 'all';
   const showCategoryFilter = scope === 'all';
+  const searchValue = escapeHtml(state.searchQuery || '');
+  const searchPlaceholder = scope === 'training' ? 'Search training…' : 'Search events…';
 
   const filterButtons = showCategoryFilter
     ? `
@@ -590,7 +662,12 @@ function renderToolbar(container, state) {
 
   return `
     <div class="events-calendar-toolbar">
-      ${filterButtons}
+      <div class="events-calendar-toolbar-start">
+        ${filterButtons}
+        <div class="events-calendar-search">
+          <input type="search" class="events-calendar-search-input" value="${searchValue}" placeholder="${escapeHtml(searchPlaceholder)}" aria-label="${escapeHtml(searchPlaceholder)}" autocomplete="off" spellcheck="false">
+        </div>
+      </div>
       <div class="events-calendar-views" role="group" aria-label="Calendar view">
         <button type="button" class="btn btn-secondary calendar-view-btn events-calendar-view-btn${state.view === 'list' ? ' active' : ''}" data-view="list">List</button>
         <button type="button" class="btn btn-secondary calendar-view-btn events-calendar-view-btn${state.view === 'month' ? ' active' : ''}" data-view="month">Month</button>
@@ -609,7 +686,10 @@ function renderPagination(currentPage, totalPages) {
 }
 
 function getFilteredEvents(state) {
-  return filterEventsByCategory(state.events, state.categoryFilter);
+  return filterEventsBySearch(
+    filterEventsByCategory(state.events, state.categoryFilter),
+    state.searchQuery,
+  );
 }
 
 function getEventsForMonth(events, monthDate) {
@@ -619,11 +699,12 @@ function getEventsForMonth(events, monthDate) {
   gridStart.setDate(gridStart.getDate() - gridStart.getDay());
   const gridEnd = new Date(gridStart);
   gridEnd.setDate(gridEnd.getDate() + 41);
-  gridEnd.setHours(23, 59, 59, 999);
+  const startKey = toDateParam(gridStart);
+  const endKey = toDateParam(gridEnd);
 
   return events.filter((event) => {
-    const eventDate = new Date(event.starts_at);
-    return eventDate >= gridStart && eventDate <= gridEnd;
+    const key = eventDateKey(event);
+    return key >= startKey && key <= endKey;
   });
 }
 
@@ -653,7 +734,7 @@ function renderMonthDayEvents(dayEvents) {
 }
 
 function renderMonthView(events, monthDate) {
-  const today = new Date();
+  const todayKey = nevadaTodayKey();
   const year = monthDate.getFullYear();
   const month = monthDate.getMonth();
   const firstWeekday = new Date(year, month, 1).getDay();
@@ -662,7 +743,7 @@ function renderMonthView(events, monthDate) {
 
   const eventsByDate = new Map();
   for (const event of events) {
-    const key = event.occurrence_date || toDateParam(new Date(event.starts_at));
+    const key = eventDateKey(event);
     if (!eventsByDate.has(key)) eventsByDate.set(key, []);
     eventsByDate.get(key).push(event);
   }
@@ -692,7 +773,7 @@ function renderMonthView(events, monthDate) {
 
     const dateKey = toDateParam(cellDate);
     const dayEvents = eventsByDate.get(dateKey) || [];
-    const todayClass = isSameDay(cellDate, today) ? ' events-calendar-day--today' : '';
+    const todayClass = dateKey === todayKey ? ' events-calendar-day--today' : '';
     const outsideClass = outside ? ' events-calendar-day--outside' : '';
 
     cells += `
@@ -723,7 +804,10 @@ async function renderListView(container, state) {
   const pageEvents = events.slice(start, start + EVENTS_PAGE_SIZE);
 
   if (!pageEvents.length) {
-    return '<p class="events-calendar-empty">No upcoming events scheduled.</p>';
+    const emptyMessage = normalizeSearchText(state.searchQuery)
+      ? 'No events match your search.'
+      : 'No upcoming events scheduled.';
+    return `<p class="events-calendar-empty">${emptyMessage}</p>`;
   }
 
   const cards = await Promise.all(pageEvents.map((event) => buildEventCard(event)));
@@ -734,7 +818,59 @@ async function renderListView(container, state) {
     </div>`;
 }
 
+function restoreSearchFocus(container, state) {
+  const input = container.querySelector('.events-calendar-search-input');
+  if (!input) return;
+  input.focus({ preventScroll: true });
+  const selection = state.searchSelection;
+  const fallback = input.value.length;
+  const start = Number.isInteger(selection?.[0]) ? selection[0] : fallback;
+  const end = Number.isInteger(selection?.[1]) ? selection[1] : fallback;
+  try {
+    input.setSelectionRange(start, end);
+  } catch {
+    /* some browsers reject setSelectionRange on type=search */
+  }
+}
+
+function bindSearchInput(container, state) {
+  const input = container.querySelector('.events-calendar-search-input');
+  if (!input) return;
+
+  const applySearch = () => {
+    const liveInput = container.querySelector('.events-calendar-search-input') || input;
+    const nextQuery = liveInput.value;
+    state.searchQuery = nextQuery;
+    state.searchSelection = [liveInput.selectionStart, liveInput.selectionEnd];
+    if (nextQuery === state.appliedSearchQuery) return;
+    state.listPage = 1;
+    renderEventsCalendar(container, { preserveView: true, restoreSearchFocus: true });
+  };
+
+  input.addEventListener('input', () => {
+    state.searchQuery = input.value;
+    state.searchSelection = [input.selectionStart, input.selectionEnd];
+    clearTimeout(state.searchTimer);
+    state.searchTimer = setTimeout(applySearch, 200);
+  });
+
+  input.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      clearTimeout(state.searchTimer);
+      applySearch();
+    }
+  });
+
+  input.addEventListener('search', () => {
+    clearTimeout(state.searchTimer);
+    applySearch();
+  });
+}
+
 function bindCalendarControls(container, state) {
+  bindSearchInput(container, state);
+
   container.querySelectorAll('.events-calendar-filter-btn').forEach((btn) => {
     btn.addEventListener('click', async () => {
       state.categoryFilter = btn.dataset.filter;
@@ -783,17 +919,22 @@ async function renderEventsCalendar(container, options = {}) {
     state.listPage = 1;
   }
 
-  container.innerHTML = '<p class="events-calendar-loading">Loading events…</p>';
+  const renderGen = (state.renderGen || 0) + 1;
+  state.renderGen = renderGen;
+
+  const needsFetch = !state.events.length || options.reload;
+  if (needsFetch) {
+    container.innerHTML = '<p class="events-calendar-loading">Loading events…</p>';
+  }
 
   try {
     const scope = container.dataset.eventsScope || 'all';
-    if (!state.events.length || options.reload) {
+    if (needsFetch) {
       state.events = await fetchEvents(scope === 'training' ? 'training' : undefined);
     }
 
-    const toolbar = renderToolbar(container, state);
     let content = '';
-
+    const queryUsed = state.searchQuery;
     if (state.view === 'month') {
       const monthEvents = getEventsForMonth(getFilteredEvents(state), state.monthDate);
       content = renderMonthView(monthEvents, state.monthDate);
@@ -801,17 +942,24 @@ async function renderEventsCalendar(container, options = {}) {
       content = await renderListView(container, state);
     }
 
+    if (state.renderGen !== renderGen) return;
+
+    const toolbar = renderToolbar(container, state);
     container.innerHTML = `<div class="events-calendar-widget">${toolbar}${content}</div>`;
+    state.appliedSearchQuery = queryUsed;
     bindCalendarControls(container, state);
+    if (options.restoreSearchFocus) restoreSearchFocus(container, state);
     if (state.view === 'list') {
       try {
         await ensureEventMapThumbs();
+        if (state.renderGen !== renderGen) return;
         if (window.initEventMapThumbs) window.initEventMapThumbs(container);
       } catch (err) {
         console.warn('Event map thumbnails unavailable', err);
       }
     }
   } catch (err) {
+    if (state.renderGen !== renderGen) return;
     console.error(err);
     container.innerHTML =
       '<p class="events-calendar-empty">Unable to load events. Please try again later.</p>';

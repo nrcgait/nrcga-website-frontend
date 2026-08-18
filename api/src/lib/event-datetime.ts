@@ -1,8 +1,15 @@
+import {
+  formatInNevada,
+  nevadaDateParam,
+  parseToInstant,
+  toNevadaParts,
+} from './nevada-time'
+
 function pad(n: number): string {
   return String(n).padStart(2, '0')
 }
 
-/** Split an ISO datetime (or date-only string) into HTML date/time input values. */
+/** Split a stored datetime into HTML date/time input values in Pacific Time. */
 export function splitDateTime(value: string | null | undefined): { date: string; time: string } {
   if (!value) return { date: '', time: '09:00' }
 
@@ -10,16 +17,21 @@ export function splitDateTime(value: string | null | undefined): { date: string;
     return { date: value, time: '09:00' }
   }
 
-  const d = new Date(value)
-  if (Number.isNaN(d.getTime())) return { date: '', time: '09:00' }
+  const naive = value.match(/^(\d{4}-\d{2}-\d{2})[T ](\d{2}:\d{2})/)
+  if (naive && !/(?:Z|[+-]\d{2}:?\d{2})$/i.test(value)) {
+    return { date: naive[1], time: naive[2] }
+  }
 
+  const instant = parseToInstant(value)
+  if (!instant) return { date: '', time: '09:00' }
+  const parts = toNevadaParts(instant)
   return {
-    date: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`,
-    time: `${pad(d.getHours())}:${pad(d.getMinutes())}`,
+    date: `${parts.year}-${pad(parts.month)}-${pad(parts.day)}`,
+    time: `${pad(parts.hour)}:${pad(parts.minute)}`,
   }
 }
 
-/** Combine HTML date + time inputs into an ISO datetime string for storage. */
+/** Combine HTML date + time inputs into a naive Pacific wall-clock datetime for storage. */
 export function combineDateTime(date: string, time: string): string {
   if (!date) return ''
   const t = time || '09:00'
@@ -27,25 +39,25 @@ export function combineDateTime(date: string, time: string): string {
   return `${date}T${normalized}`
 }
 
-/** Format a stored datetime for display in admin lists. */
+/** Format a stored datetime for display in admin lists (Pacific Time). */
 export function formatEventDateTime(value: string | null | undefined): string {
   if (!value) return ''
-  const d = new Date(value.includes('T') ? value : `${value}T09:00:00`)
-  if (Number.isNaN(d.getTime())) return value
-  return new Intl.DateTimeFormat('en-US', {
+  const formatted = formatInNevada(value.includes('T') ? value : `${value}T09:00:00`, {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
     hour: 'numeric',
     minute: '2-digit',
-  }).format(d)
+    timeZoneName: 'short',
+  })
+  return formatted || value
 }
 
-/** Normalize repeat_until / occurrence_date to YYYY-MM-DD. */
+/** Normalize repeat_until / occurrence_date to YYYY-MM-DD in Pacific Time. */
 export function toDateInputValue(value: string | null | undefined): string {
   if (!value) return ''
   if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value
-  const d = new Date(value)
-  if (Number.isNaN(d.getTime())) return ''
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+  const instant = parseToInstant(value)
+  if (!instant) return ''
+  return nevadaDateParam(instant)
 }

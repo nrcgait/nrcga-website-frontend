@@ -209,6 +209,50 @@ export async function cancelEventOccurrence(
     .run()
 }
 
+export async function uncancelEventSeries(db: D1Database, eventId: string): Promise<void> {
+  await db
+    .prepare(
+      `UPDATE events SET cancelled_at = NULL, cancellation_message = NULL, updated_at = datetime('now')
+       WHERE id = ?`,
+    )
+    .bind(eventId)
+    .run()
+}
+
+export async function uncancelEventOccurrence(
+  db: D1Database,
+  eventId: string,
+  occurrenceDate: string,
+): Promise<void> {
+  await db
+    .prepare('DELETE FROM event_occurrence_cancellations WHERE event_id = ? AND occurrence_date = ?')
+    .bind(eventId, occurrenceDate)
+    .run()
+}
+
+export type OccurrenceCancellation = {
+  event_id: string
+  occurrence_date: string
+  cancelled_at: string
+  cancellation_message: string | null
+}
+
+export async function listCancelledOccurrences(
+  db: D1Database,
+  eventId: string,
+): Promise<OccurrenceCancellation[]> {
+  const { results } = await db
+    .prepare(
+      `SELECT event_id, occurrence_date, cancelled_at, cancellation_message
+       FROM event_occurrence_cancellations
+       WHERE event_id = ?
+       ORDER BY occurrence_date ASC`,
+    )
+    .bind(eventId)
+    .all<OccurrenceCancellation>()
+  return results ?? []
+}
+
 export async function markOccurrenceGuestsNotified(
   db: D1Database,
   eventId: string,

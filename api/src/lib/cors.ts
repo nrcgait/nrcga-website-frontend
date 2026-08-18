@@ -7,10 +7,16 @@ export function corsHeaders(origin: string, env: Env): HeadersInit {
     'http://localhost:8000',
     'http://127.0.0.1:8000',
     'https://nrcga-website-staging.pages.dev',
+    'https://nrcga.ayowerks.com',
+    'https://ayowerks.com',
+    'https://www.ayowerks.com',
   ])
   const isPagesPreview = /^https:\/\/[a-z0-9-]+\.nrcga-website-staging\.pages\.dev$/i.test(origin)
+  const isAyowerks = /^https:\/\/([a-z0-9-]+\.)?ayowerks\.com$/i.test(origin)
   const requestOrigin =
-    origin && (allowed.has(origin) || isPagesPreview || origin.endsWith('.pages.dev')) ? origin : env.PUBLIC_SITE_ORIGIN
+    origin && (allowed.has(origin) || isPagesPreview || isAyowerks || origin.endsWith('.pages.dev'))
+      ? origin
+      : env.PUBLIC_SITE_ORIGIN
   return {
     'Access-Control-Allow-Origin': requestOrigin,
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',

@@ -2,6 +2,7 @@ import type { Env } from '../env'
 import type { EventRecord } from './event-repeat'
 import { expandEventOccurrences } from './event-repeat'
 import { getCancelledOccurrenceMap } from './events-db'
+import { instantOnNevadaDate, parseToInstant } from './nevada-time'
 import { sendRegistrationConfirmation } from './site-settings'
 
 export type RegistrationInput = {
@@ -74,13 +75,18 @@ export async function getAvailability(
   }
 }
 
+function occurrenceStartInstant(event: EventRecord, occurrenceDate: string): Date | null {
+  const start = parseToInstant(event.starts_at)
+  if (!start) return null
+  return instantOnNevadaDate(start, occurrenceDate)
+}
+
 function isPastCutoff(event: EventRecord, occurrenceDate: string): boolean {
   const hours = event.registration_cutoff_hours ?? 0
-  const [y, m, d] = occurrenceDate.split('-').map(Number)
-  const start = new Date(event.starts_at)
-  const occurrenceStart = new Date(y, m - 1, d, start.getHours(), start.getMinutes(), 0, 0)
+  const occurrenceStart = occurrenceStartInstant(event, occurrenceDate)
+  if (!occurrenceStart) return false
   const cutoff = new Date(occurrenceStart.getTime() - hours * 60 * 60 * 1000)
-  return new Date() > cutoff
+  return Date.now() > cutoff.getTime()
 }
 
 export async function registerGuest(
@@ -162,7 +168,7 @@ export async function registerGuest(
     to: email,
     eventTitle: event.title,
     occurrenceDate,
-    startsAt: event.starts_at,
+    startsAt: occurrenceStartInstant(event, occurrenceDate)?.toISOString() ?? event.starts_at,
     location: event.location ?? '',
     guestName: input.guest_name.trim(),
     spotCount,

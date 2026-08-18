@@ -40,7 +40,7 @@
       "name": "nrcga-api-staging",
       "vars": {
         "ADMIN_EMAIL": "info@nrcga.org",
-        "PUBLIC_SITE_ORIGIN": "https://nrcga-website-staging.pages.dev"
+        "PUBLIC_SITE_ORIGIN": "https://nrcga.ayowerks.com"
       },
       "d1_databases": [
         {

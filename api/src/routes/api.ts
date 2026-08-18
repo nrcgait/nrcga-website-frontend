@@ -5,7 +5,6 @@ import {
   getContactInfo,
   getFooterInfo,
   getNavigation,
-  getSiteLogoUrl,
   getThemeSettings,
   sendCancellationNotifications,
 } from '../lib/site-settings'
@@ -46,8 +45,11 @@ import {
   getEventById,
   listExpandedPublishedEvents,
   markOccurrenceGuestsNotified,
+  uncancelEventOccurrence,
+  uncancelEventSeries,
 } from '../lib/events-db'
 import { getAvailability, listRegistrations, registerGuest } from '../lib/event-registrations'
+import { instantOnNevadaDate, parseToInstant } from '../lib/nevada-time'
 import { withCors, corsHeaders, PUBLIC_JSON_CACHE } from '../lib/cors'
 
 function cachedJson(c: Parameters<typeof withCors>[0], body: unknown, status = 200) {
@@ -107,7 +109,6 @@ export function registerPublicApiRoutes(app: Hono<{ Bindings: Env }>) {
     cachedJson(c, {
       contact: await getContactInfo(c.env.DB),
       footer: await getFooterInfo(c.env.DB),
-      logo_url: await getSiteLogoUrl(c.env.DB),
       theme: await getThemeSettings(c.env.DB),
     }),
   )
@@ -264,6 +265,9 @@ export async function notifyCancelledGuests(
 ) {
   const event = await getEventById(env.DB, eventId)
   if (!event) return
+  const start = parseToInstant(event.starts_at)
+  const occurrenceStart =
+    occurrenceDate && start ? instantOnNevadaDate(start, occurrenceDate) : start
   const regs = await listRegistrations(env.DB, eventId, occurrenceDate ?? undefined)
   await sendCancellationNotifications(
     env,
@@ -271,7 +275,7 @@ export async function notifyCancelledGuests(
     {
       eventTitle: event.title,
       occurrenceDate: occurrenceDate ?? 'Series',
-      startsAt: event.starts_at,
+      startsAt: occurrenceStart?.toISOString() ?? event.starts_at,
       location: event.location ?? '',
       message,
     },
@@ -279,4 +283,4 @@ export async function notifyCancelledGuests(
   if (occurrenceDate) await markOccurrenceGuestsNotified(env.DB, eventId, occurrenceDate)
 }
 
-export { cancelEventOccurrence, cancelEventSeries }
+export { cancelEventOccurrence, cancelEventSeries, uncancelEventOccurrence, uncancelEventSeries }

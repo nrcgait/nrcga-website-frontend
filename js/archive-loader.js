@@ -28,6 +28,10 @@ function parseLocalDate(dateString) {
 
 function formatDate(dateString) {
   try {
+    const raw = String(dateString || '');
+    if (/T|\d{2}:\d{2}/.test(raw) && window.NRCGATime) {
+      return window.NRCGATime.formatShortDate(raw);
+    }
     const date = parseLocalDate(dateString);
     if (isNaN(date.getTime())) return dateString || '';
     return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });

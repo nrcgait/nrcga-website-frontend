@@ -624,19 +624,31 @@ export function registerAdminParityRoutes(app: Hono<{ Bindings: Env }>, requireA
       }
       return redirect(c, `/admin/inbox/submission/${row.id}`)
     }
-    let pretty = String(row.payload_json ?? '')
-    try {
-      pretty = JSON.stringify(JSON.parse(pretty), null, 2)
-    } catch {
-      /* keep raw */
-    }
+    const formType = String(row.form_type ?? '')
+    const payload = parseSubmissionPayload(row.payload_json)
+    const labelMap = await submissionFieldLabels(c.env.DB, formType)
     return c.html(
       <AdminShell ctx={ctx} title="Submission" activePath="/admin/inbox" publicSiteOrigin={c.env.PUBLIC_SITE_ORIGIN}>
         <p>
-          <strong>Type:</strong> {escapeHtml(String(row.form_type))} · <strong>Status:</strong>{' '}
-          {escapeHtml(String(row.status))} · <strong>Date:</strong> {escapeHtml(String(row.created_at))}
+          <a class="btn btn-secondary" href="/admin/inbox">
+            All inboxes
+          </a>
         </p>
-        <pre class="admin-code">{escapeHtml(pretty)}</pre>
+        <div class="submission-meta">
+          <div>
+            <span class="submission-meta-label">Form</span>
+            <strong>{escapeHtml(humanizeFormType(formType))}</strong>
+          </div>
+          <div>
+            <span class="submission-meta-label">Status</span>
+            <strong>{escapeHtml(String(row.status ?? ''))}</strong>
+          </div>
+          <div>
+            <span class="submission-meta-label">Received</span>
+            <strong>{escapeHtml(String(row.created_at ?? ''))}</strong>
+          </div>
+        </div>
+        <SubmissionFields payload={payload} labels={labelMap} />
         <form method="post" class="admin-form">
           <label>Status</label>
           <select name="status">
@@ -1074,6 +1086,122 @@ function submissionSummary(payloadJson: unknown): string {
   }
 }
 
+const BUILTIN_FIELD_LABELS: Record<string, string> = {
+  name: 'Name',
+  email: 'Email',
+  phone: 'Phone',
+  subject: 'Subject',
+  message: 'Message',
+  organization: 'Organization',
+  company: 'Company',
+  company_name: 'Company',
+  contact_name: 'Contact name',
+  website: 'Website',
+  membership_type: 'Membership type',
+  stakeholder_group: 'Stakeholder group',
+  notes: 'Notes',
+  nominee_name: 'Nominee',
+  nominator_name: 'Nominator',
+  award: 'Award',
+  statement: 'Statement',
+  training_date: 'Training date',
+  title: 'Title',
+}
+
+function humanizeFormType(formType: string): string {
+  const known: Record<string, string> = {
+    contact: 'Contact',
+    member_application: 'Membership application',
+    award_application: 'Award nomination',
+    training_registration: 'Training registration',
+    training_signin: 'Training sign-in',
+    newsletter: 'Newsletter',
+  }
+  if (known[formType]) return known[formType]
+  return formType
+    .replace(/[_-]+/g, ' ')
+    .replace(/\b\w/g, (c) => c.toUpperCase())
+}
+
+function humanizeFieldKey(key: string): string {
+  if (BUILTIN_FIELD_LABELS[key]) return BUILTIN_FIELD_LABELS[key]
+  return key
+    .replace(/[_-]+/g, ' ')
+    .replace(/\b\w/g, (c) => c.toUpperCase())
+}
+
+function parseSubmissionPayload(payloadJson: unknown): Record<string, unknown> {
+  try {
+    const parsed = JSON.parse(String(payloadJson ?? '{}')) as unknown
+    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+      return parsed as Record<string, unknown>
+    }
+  } catch {
+    /* ignore */
+  }
+  return {}
+}
+
+async function submissionFieldLabels(db: D1Database, formType: string): Promise<Record<string, string>> {
+  const labels: Record<string, string> = { ...BUILTIN_FIELD_LABELS }
+  try {
+    const inbox = await getFormInboxBySlug(db, formType)
+    if (inbox?.fields_json) {
+      for (const field of parseFormFields(inbox.fields_json)) {
+        if (field.name && field.label) labels[field.name] = field.label
+      }
+    }
+  } catch {
+    /* built-ins have no inbox row */
+  }
+  return labels
+}
+
+function formatSubmissionValue(value: unknown): string {
+  if (typeof value === 'boolean') return value ? 'Yes' : 'No'
+  if (value == null) return '—'
+  if (typeof value === 'number') return String(value)
+  if (typeof value === 'string') {
+    const trimmed = value.trim()
+    return trimmed ? trimmed : '—'
+  }
+  if (Array.isArray(value)) {
+    return value.length ? value.map((v) => formatSubmissionValue(v)).join(', ') : '—'
+  }
+  try {
+    return JSON.stringify(value)
+  } catch {
+    return String(value)
+  }
+}
+
+function SubmissionFields({
+  payload,
+  labels,
+}: {
+  payload: Record<string, unknown>
+  labels: Record<string, string>
+}) {
+  const entries = Object.entries(payload)
+  if (!entries.length) {
+    return <p class="muted">No form fields were saved with this submission.</p>
+  }
+  return (
+    <dl class="submission-fields">
+      {entries.map(([key, value]) => {
+        const display = formatSubmissionValue(value)
+        const isLong = display.length > 120 || display.includes('\n')
+        return (
+          <>
+            <dt>{escapeHtml(labels[key] || humanizeFieldKey(key))}</dt>
+            <dd class={isLong ? 'submission-field-long' : undefined}>{escapeHtml(display)}</dd>
+          </>
+        )
+      })}
+    </dl>
+  )
+}
+
 function InboxHubCard({
   href,
   title,
@@ -1120,7 +1248,7 @@ function SubmissionTable({ items }: { items: Array<Record<string, unknown>> }) {
         {items.map((row) => (
           <tr>
             <td>{escapeHtml(String(row.created_at ?? ''))}</td>
-            <td>{escapeHtml(String(row.form_type ?? ''))}</td>
+            <td>{escapeHtml(humanizeFormType(String(row.form_type ?? '')))}</td>
             <td>{escapeHtml(String(row.status ?? ''))}</td>
             <td>{escapeHtml(submissionSummary(row.payload_json))}</td>
             <td>

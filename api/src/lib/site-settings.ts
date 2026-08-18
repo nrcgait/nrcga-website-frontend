@@ -1,4 +1,5 @@
 import type { Env } from '../env'
+import { formatInNevada, formatNevadaDateParam } from './nevada-time'
 
 export type ContactInfo = {
   organization_name: string
@@ -117,12 +118,20 @@ export async function getNavigation(db: D1Database): Promise<NavigationConfig | 
   return getSetting<NavigationConfig | null>(db, 'navigation', null)
 }
 
-export async function getSiteLogoUrl(db: D1Database): Promise<string | null> {
-  return getSetting<string | null>(db, 'site_logo_url', null)
-}
-
 export async function getThemeSettings(db: D1Database): Promise<ThemeSettings> {
   return getSetting(db, 'theme', DEFAULT_THEME)
+}
+
+function formatEventEmailWhen(occurrenceDate: string, startsAt: string): { dateLabel: string; timeLabel: string } {
+  const dateLabel = /^\d{4}-\d{2}-\d{2}$/.test(occurrenceDate)
+    ? formatNevadaDateParam(occurrenceDate)
+    : occurrenceDate
+  const timeLabel = formatInNevada(startsAt, {
+    hour: 'numeric',
+    minute: '2-digit',
+    timeZoneName: 'short',
+  })
+  return { dateLabel, timeLabel: timeLabel || startsAt }
 }
 
 export async function sendRegistrationConfirmation(
@@ -139,6 +148,7 @@ export async function sendRegistrationConfirmation(
 ): Promise<boolean> {
   if (!env.EMAIL) return false
   const contact = await getContactInfo(env.DB)
+  const { dateLabel, timeLabel } = formatEventEmailWhen(data.occurrenceDate, data.startsAt)
   try {
     await env.EMAIL.send({
       to: data.to,
@@ -148,8 +158,8 @@ export async function sendRegistrationConfirmation(
         `Hello ${data.guestName},`,
         '',
         `You are registered for ${data.eventTitle}.`,
-        `Date: ${data.occurrenceDate}`,
-        `Time: ${data.startsAt}`,
+        `Date: ${dateLabel}`,
+        `Time: ${timeLabel}`,
         data.location ? `Location: ${data.location}` : '',
         `Spots booked: ${data.spotCount}`,
         '',
@@ -177,6 +187,7 @@ export async function sendCancellationNotifications(
 ): Promise<void> {
   if (!env.EMAIL) return
   const contact = await getContactInfo(env.DB)
+  const { dateLabel, timeLabel } = formatEventEmailWhen(data.occurrenceDate, data.startsAt)
   const seen = new Set<string>()
   for (const guest of guests) {
     const key = guest.email.toLowerCase()
@@ -192,8 +203,8 @@ export async function sendCancellationNotifications(
           '',
           `The following event has been cancelled:`,
           data.eventTitle,
-          `Date: ${data.occurrenceDate}`,
-          `Time: ${data.startsAt}`,
+          `Date: ${dateLabel}`,
+          `Time: ${timeLabel}`,
           data.location ? `Location: ${data.location}` : '',
           `Spots you had booked: ${guest.spotCount}`,
           data.message ? `\n${data.message}` : '',

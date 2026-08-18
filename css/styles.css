@@ -1586,11 +1586,46 @@ body {
     margin-bottom: 1.5rem;
 }
 
+.events-calendar-toolbar-start {
+    display: flex;
+    flex: 1 1 16rem;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    align-items: center;
+    min-width: 0;
+}
+
 .events-calendar-filters,
 .events-calendar-views {
     display: flex;
     gap: 0.5rem;
     flex-wrap: wrap;
+}
+
+.events-calendar-search {
+    flex: 1 1 14rem;
+    min-width: 12rem;
+}
+
+.events-calendar-search-input {
+    width: 100%;
+    padding: 0.6rem 0.85rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font: inherit;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+.events-calendar-search-input:focus {
+    outline: 2px solid var(--primary);
+    outline-offset: 1px;
+    border-color: var(--primary);
+}
+
+[data-theme="dark"] .events-calendar-search-input {
+    background: #ffffff;
+    color: #1a1a1a;
 }
 
 .events-calendar-loading,
@@ -1844,9 +1879,14 @@ body {
         align-items: stretch;
     }
 
+    .events-calendar-toolbar-start,
     .events-calendar-filters,
     .events-calendar-views {
         justify-content: center;
+    }
+
+    .events-calendar-search {
+        flex-basis: 100%;
     }
 
     .events-calendar-day {

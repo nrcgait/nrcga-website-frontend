@@ -8,6 +8,34 @@
       .replace(/"/g, '&quot;')
   }
 
+  function apiOrigin() {
+    if (global.NRCGA_API && global.NRCGA_API.baseUrl) {
+      return String(global.NRCGA_API.baseUrl).replace(/\/$/, '')
+    }
+    if (typeof location !== 'undefined' && location.origin && location.origin !== 'null') {
+      return location.origin
+    }
+    return ''
+  }
+
+  function resolveMediaUrl(url) {
+    const raw = String(url || '').trim()
+    if (!raw.startsWith('/api/v1/')) return raw
+    const origin = apiOrigin()
+    return origin ? `${origin}${raw}` : raw
+  }
+
+  function resolveMediaUrlsInHtml(html) {
+    const raw = String(html || '')
+    if (!raw.includes('/api/v1/')) return raw
+    const origin = apiOrigin()
+    if (!origin) return raw
+    return raw
+      .replace(/(["'])(\/api\/v1\/)/g, `$1${origin}$2`)
+      .replace(/(url\(\s*)(\/api\/v1\/)/gi, `$1${origin}$2`)
+      .replace(/(\s(?:src|href)=)(\/api\/v1\/)/gi, `$1${origin}$2`)
+  }
+
   function styleClasses(style) {
     if (!style || typeof style !== 'object') return ''
     const classes = []
@@ -54,7 +82,7 @@
   function renderBlockInner(block, pathPrefix) {
     switch (block.type) {
       case 'html':
-        return String(block.content || '')
+        return resolveMediaUrlsInHtml(String(block.content || ''))
       case 'section':
         return `<section class="${sectionClasses(block)}"><div class="container">${renderBlocks(block.children || [], pathPrefix)}</div></section>`
       case 'spacer': {
@@ -102,14 +130,14 @@
       case 'image': {
         const widthCls = imageWidthClass(block.width)
         const alignCls = imageAlignClass(block.align)
-        return `<figure class="page-block-image ${widthCls} ${alignCls}"><img src="${escapeHtml(block.url)}" alt="${escapeHtml(block.alt || '')}" />${block.caption ? `<figcaption>${escapeHtml(block.caption)}</figcaption>` : ''}</figure>`
+        return `<figure class="page-block-image ${widthCls} ${alignCls}"><img src="${escapeHtml(resolveMediaUrl(block.url))}" alt="${escapeHtml(block.alt || '')}" />${block.caption ? `<figcaption>${escapeHtml(block.caption)}</figcaption>` : ''}</figure>`
       }
       case 'callout':
         return `<div class="page-block-callout"><strong>${escapeHtml(block.title || '')}</strong><p>${escapeHtml(block.body)}</p></div>`
       case 'cta_button':
-        return `<p class="pb-cta-wrap ${styleClasses(block.style)}"><a href="${escapeHtml(block.url)}" class="btn btn-primary">${escapeHtml(block.label)}</a></p>`
+        return `<p class="pb-cta-wrap ${styleClasses(block.style)}"><a href="${escapeHtml(resolveMediaUrl(block.url))}" class="btn btn-primary">${escapeHtml(block.label)}</a></p>`
       case 'winner_card':
-        return `<div class="page-block-winner">${block.image_url ? `<img src="${escapeHtml(block.image_url)}" alt="" />` : ''}<h3>${escapeHtml(block.winner_name)}</h3><p>${escapeHtml(block.year_label || '')}</p>${block.celebration_date ? `<p>${escapeHtml(block.celebration_date)}</p>` : ''}</div>`
+        return `<div class="page-block-winner">${block.image_url ? `<img src="${escapeHtml(resolveMediaUrl(block.image_url))}" alt="" />` : ''}<h3>${escapeHtml(block.winner_name)}</h3><p>${escapeHtml(block.year_label || '')}</p>${block.celebration_date ? `<p>${escapeHtml(block.celebration_date)}</p>` : ''}</div>`
       case 'hall_of_fame_grid': {
         const items = (block.items || [])
           .map(
@@ -121,12 +149,12 @@
       }
       case 'embed':
         if (block.embed_type === 'youtube') {
-          return `<div class="page-block-embed"><iframe src="${escapeHtml(block.url)}" allowfullscreen></iframe></div>`
+          return `<div class="page-block-embed"><iframe src="${escapeHtml(resolveMediaUrl(block.url))}" allowfullscreen></iframe></div>`
         }
         if (block.embed_type === 'pdf') {
-          return `<div class="page-block-embed pb-embed-pdf"><iframe src="${escapeHtml(block.url)}"></iframe></div>`
+          return `<div class="page-block-embed pb-embed-pdf"><iframe src="${escapeHtml(resolveMediaUrl(block.url))}"></iframe></div>`
         }
-        return `<div class="page-block-embed pb-embed-form"><iframe src="${escapeHtml(block.url)}"></iframe></div>`
+        return `<div class="page-block-embed pb-embed-form"><iframe src="${escapeHtml(resolveMediaUrl(block.url))}"></iframe></div>`
       default:
         return ''
     }
@@ -149,7 +177,7 @@
 
   function renderPageBody(page) {
     if (page.body_html) {
-      return String(page.body_html)
+      return resolveMediaUrlsInHtml(String(page.body_html))
     }
     if (page.body_json) {
       try {
@@ -334,6 +362,7 @@ body { margin: 0; }
 
   global.NRCGA_pageBlocks = {
     escapeHtml,
+    resolveMediaUrl,
     styleClasses,
     renderBlocks,
     renderBlockInner,
