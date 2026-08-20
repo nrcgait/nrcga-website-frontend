@@ -31,6 +31,27 @@ function fillRegion(id, html) {
   if (el) el.innerHTML = html;
 }
 
+async function ensureNativeFormsScript() {
+  if (window.NRCGA_mountForms) return;
+  await new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = 'js/native-forms.js';
+    script.onload = resolve;
+    script.onerror = () => reject(new Error('Could not load native-forms.js'));
+    document.body.appendChild(script);
+  });
+}
+
+async function mountPageForms(container) {
+  if (!container) return;
+  const needsForms = container.querySelector('[data-nrcga-form-mount], form[data-nrcga-form]');
+  if (!needsForms) return;
+  await ensureNativeFormsScript();
+  if (window.NRCGA_mountForms) {
+    await window.NRCGA_mountForms(container);
+  }
+}
+
 async function loadPageContent() {
   let slug = document.body.dataset.pageSlug;
   if (!slug) {
@@ -58,6 +79,10 @@ async function loadPageContent() {
       fillRegion('page-hero', regions.hero_html);
       fillRegion('page-contact', regions.contact_html);
     }
+
+    await mountPageForms(bodyContainer);
+    await mountPageForms(document.getElementById('page-hero'));
+    await mountPageForms(document.getElementById('page-contact'));
 
     if (page.title && slug !== 'home') {
       const suffix = document.title.includes(' - ') ? document.title.split(' - ').pop() : 'NRCGA';

@@ -21,6 +21,7 @@
     'pb-cta-wrap--selected',
     'page-block-callout--selected',
     'page-block-embed--selected',
+    'page-block-form--selected',
     'pb-grid--selected',
   ]
   const FONT_CLASSES = ['pb-font-default', 'pb-font-sans', 'pb-font-serif', 'pb-font-display', 'pb-font-mono']
@@ -91,8 +92,9 @@
   let activeCta = null
   let activeCallout = null
   let activeEmbed = null
+  let activeForm = null
   let activeGrid = null
-  let activeKind = null // 'image' | 'button' | 'callout' | 'embed' | 'grid'
+  let activeKind = null // 'image' | 'button' | 'callout' | 'embed' | 'form' | 'grid'
   let activeEditor = null
   let activeSync = null
   let menuEl = null
@@ -194,6 +196,7 @@
           '<button type="button" data-insert="button">Button</button>',
           '<button type="button" data-insert="callout">Callout</button>',
           '<button type="button" data-insert="embed">Embed</button>',
+          '<button type="button" data-insert="form">Form</button>',
           '<button type="button" data-insert="grid">Grid</button>',
           '<button type="button" data-insert="spacer">Spacer</button>',
         ]
@@ -717,6 +720,7 @@
     activeCta = null
     activeCallout = null
     activeEmbed = null
+    activeForm = null
     activeGrid = null
     activeKind = null
   }
@@ -747,6 +751,8 @@
         runCalloutAction(action, value)
       } else if (activeKind === 'embed' && activeEmbed) {
         runEmbedAction(action, value)
+      } else if (activeKind === 'form' && activeForm) {
+        runFormAction(action, value)
       } else if (activeKind === 'grid' && activeGrid) {
         runGridAction(action, value)
       }
@@ -886,6 +892,58 @@
     ].join('')
 
     positionMenu(menu, x, y)
+  }
+
+  function parseFormInboxes(host) {
+    const raw = host?.getAttribute('data-form-inboxes')
+    if (!raw) return []
+    try {
+      const parsed = JSON.parse(raw)
+      return Array.isArray(parsed)
+        ? parsed
+            .map((item) => ({
+              slug: String(item.slug || '').trim(),
+              title: String(item.title || item.slug || '').trim(),
+            }))
+            .filter((item) => item.slug)
+        : []
+    } catch {
+      return []
+    }
+  }
+
+  function createFormBlockHtml(slug, title) {
+    const safeSlug = escapeHtml(slug)
+    const safeTitle = escapeHtml(title || slug)
+    return `<div class="page-block-form" data-nrcga-form-mount="${safeSlug}" data-form-title="${safeTitle}"><p class="page-block-form-label">Form: ${safeTitle}</p></div>`
+  }
+
+  function showFormPicker(inboxes, callback) {
+    const list = Array.isArray(inboxes) ? inboxes.filter((item) => item.slug) : []
+    if (!list.length) {
+      window.alert('No form inboxes yet. Create one under Admin → Inboxes, then try again.')
+      return
+    }
+    if (list.length === 1) {
+      callback(list[0])
+      return
+    }
+    const options = list.map((item, index) => `${index + 1}. ${item.title} (${item.slug})`).join('\n')
+    const answer = window.prompt(`Choose a form inbox:\n\n${options}\n\nEnter number or slug:`)
+    if (answer == null) return
+    const trimmed = answer.trim()
+    if (!trimmed) return
+    const byIndex = Number(trimmed)
+    if (Number.isInteger(byIndex) && byIndex >= 1 && byIndex <= list.length) {
+      callback(list[byIndex - 1])
+      return
+    }
+    const match = list.find((item) => item.slug === trimmed)
+    if (match) {
+      callback(match)
+      return
+    }
+    window.alert('Could not find that inbox. Enter a list number or exact slug.')
   }
 
   function showAssetPicker(callback, options) {
@@ -1239,6 +1297,58 @@
     }
   }
 
+  function findFormBlock(target) {
+    return target?.closest?.('.page-block-form[data-nrcga-form-mount]') || null
+  }
+
+  function getFormSlug(el) {
+    return el?.getAttribute('data-nrcga-form-mount') || ''
+  }
+
+  function getFormTitle(el) {
+    return el?.getAttribute('data-form-title') || getFormSlug(el)
+  }
+
+  function setFormInbox(el, slug, title) {
+    el.setAttribute('data-nrcga-form-mount', slug)
+    el.setAttribute('data-form-title', title || slug)
+    el.innerHTML = `<p class="page-block-form-label">Form: ${escapeHtml(title || slug)}</p>`
+  }
+
+  function showFormMenu(x, y, el) {
+    const menu = ensureMenu()
+    const title = getFormTitle(el)
+    menu.innerHTML = [
+      `<div class="pb-img-menu-label">Form: ${escapeHtml(title)}</div>`,
+      '<button type="button" role="menuitem" data-action="change">Change inbox…</button>',
+      '<div class="pb-img-menu-sep"></div>',
+      '<button type="button" role="menuitem" data-action="delete" class="is-danger">Delete</button>',
+    ].join('')
+    positionMenu(menu, x, y)
+  }
+
+  function runFormAction(action) {
+    if (!activeForm) return
+    const el = activeForm
+    hideMenu()
+
+    if (action === 'change') {
+      const inboxes = parseFormInboxes(activeEditor?.closest('[data-rich-editor]'))
+      showFormPicker(inboxes, (picked) => {
+        setFormInbox(el, picked.slug, picked.title)
+        notifyChange()
+      })
+      return
+    }
+    if (action === 'delete') {
+      if (!window.confirm('Delete this form block?')) return
+      el.remove()
+      clearActiveBlock()
+      clearSelectionOutline()
+      notifyChange()
+    }
+  }
+
   function runGridAction(action, value) {
     if (!activeGrid) return
     const grid = activeGrid
@@ -1335,6 +1445,16 @@
     activeSync = sync
   }
 
+  function selectForm(el, editor, sync) {
+    clearSelectionOutline()
+    el.classList.add('page-block-form--selected')
+    clearActiveBlock()
+    activeForm = el
+    activeKind = 'form'
+    activeEditor = editor
+    activeSync = sync
+  }
+
   function selectGrid(el, editor, sync) {
     ensureGridAttrs(el)
     clearSelectionOutline()
@@ -1356,6 +1476,8 @@
     if (callout && editor.contains(callout)) return { kind: 'callout', el: callout }
     const embed = findEmbed(target)
     if (embed && editor.contains(embed)) return { kind: 'embed', el: embed }
+    const form = findFormBlock(target)
+    if (form && editor.contains(form)) return { kind: 'form', el: form }
     const grid = findGrid(target)
     if (grid && editor.contains(grid)) return { kind: 'grid', el: grid }
     return null
@@ -1366,6 +1488,7 @@
     else if (kind === 'button') selectCta(el, editor, sync)
     else if (kind === 'callout') selectCallout(el, editor, sync)
     else if (kind === 'embed') selectEmbed(el, editor, sync)
+    else if (kind === 'form') selectForm(el, editor, sync)
     else if (kind === 'grid') selectGrid(el, editor, sync)
   }
 
@@ -1374,6 +1497,7 @@
     else if (kind === 'button') showButtonMenu(x, y, el)
     else if (kind === 'callout') showCalloutMenu(x, y)
     else if (kind === 'embed') showEmbedMenu(x, y)
+    else if (kind === 'form') showFormMenu(x, y, el)
     else if (kind === 'grid') showGridMenu(x, y, el)
   }
 
@@ -1388,7 +1512,7 @@
 
     editor.addEventListener('click', (e) => {
       const hit = resolveEditableBlock(e.target, editor)
-      if (hit && (hit.kind === 'button' || hit.kind === 'embed')) {
+      if (hit && (hit.kind === 'button' || hit.kind === 'embed' || hit.kind === 'form')) {
         e.preventDefault()
       }
       clearSelectionOutline()
@@ -1444,6 +1568,15 @@
       insertHtmlAtCursor(editor, buildEmbedBlockHtml(parsed))
       return
     }
+    if (kind === 'form') {
+      const host = editor.closest('[data-rich-editor]')
+      const inboxes = parseFormInboxes(host)
+      showFormPicker(inboxes, (picked) => {
+        insertHtmlAtCursor(editor, createFormBlockHtml(picked.slug, picked.title))
+        editor.dispatchEvent(new Event('input', { bubbles: true }))
+      })
+      return
+    }
     if (kind === 'grid') {
       const items = [
         { icon: '✓', title: 'Item one', body: 'Description here.' },
@@ -1468,6 +1601,10 @@
     if (!field) return
 
     const includeBlocks = host.getAttribute('data-blocks') !== '0'
+    const formInboxes = parseFormInboxes(host)
+    if (formInboxes.length) {
+      host.setAttribute('data-form-inboxes', JSON.stringify(formInboxes))
+    }
     let initial = host.getAttribute('data-initial')
     if (initial == null || initial === '') {
       initial = field.value || ''

@@ -1704,6 +1704,7 @@
 .tiptap-surface .pb-cta-wrap,
 .tiptap-surface .page-block-callout,
 .tiptap-surface .page-block-embed,
+.tiptap-surface .page-block-form,
 .tiptap-surface .pb-grid,
 .tiptap-surface .pb-spacer {
   position: relative;
@@ -1714,6 +1715,7 @@
 .tiptap-surface .pb-cta-wrap:hover,
 .tiptap-surface .page-block-callout:hover,
 .tiptap-surface .page-block-embed:hover,
+.tiptap-surface .page-block-form:hover,
 .tiptap-surface .pb-grid:hover,
 .tiptap-surface .pb-spacer:hover {
   outline: 2px dashed rgba(43, 108, 176, 0.5);
@@ -1725,9 +1727,25 @@
 .tiptap-surface .pb-cta-wrap--selected,
 .tiptap-surface .page-block-callout--selected,
 .tiptap-surface .page-block-embed--selected,
+.tiptap-surface .page-block-form--selected,
 .tiptap-surface .pb-grid--selected {
   outline: 2px solid #2b6cb0 !important;
   outline-offset: 3px;
+}
+
+.tiptap-surface .page-block-form {
+  margin: 1.25rem 0;
+  padding: 1rem 1.25rem;
+  border: 2px dashed rgba(43, 108, 176, 0.45);
+  border-radius: 10px;
+  background: #f7fafc;
+  cursor: context-menu;
+}
+
+.tiptap-surface .page-block-form-label {
+  margin: 0;
+  color: #2b6cb0;
+  font-weight: 600;
 }
 
 .tiptap-surface .pb-cta-wrap {

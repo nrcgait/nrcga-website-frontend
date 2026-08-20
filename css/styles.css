@@ -4192,6 +4192,10 @@ body {
 }
 
 /* Schema-mounted native forms (data-nrcga-form-mount) */
+.page-block-form {
+  margin: 2rem 0;
+}
+
 .nrcga-form .honeypot {
   position: absolute;
   left: -9999px;

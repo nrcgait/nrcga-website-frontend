@@ -114,19 +114,31 @@
           <p class="form-status" data-form-status></p>
         </form>
       `;
-      const form = el.querySelector('form[data-nrcga-form]');
-      if (form) form.addEventListener('submit', onSubmit);
     } catch (err) {
       el.innerHTML = `<p class="form-status form-status-error">${escapeHtml(err.message || 'Could not load form.')}</p>`;
     }
   }
 
+  function bindFormSubmit(form) {
+    if (!(form instanceof HTMLFormElement)) return;
+    if (form.dataset.nrcgaBound === '1') return;
+    form.dataset.nrcgaBound = '1';
+    form.addEventListener('submit', onSubmit);
+  }
+
+  async function mountDynamicForms(root) {
+    const scope = root && root.querySelectorAll ? root : document;
+    const mounts = scope.querySelectorAll('[data-nrcga-form-mount]:not([data-nrcga-form-mounted])');
+    for (const el of mounts) {
+      el.setAttribute('data-nrcga-form-mounted', '1');
+      await mountSchemaForm(el);
+    }
+    scope.querySelectorAll('form[data-nrcga-form]').forEach(bindFormSubmit);
+  }
+
+  window.NRCGA_mountForms = mountDynamicForms;
+
   document.addEventListener('DOMContentLoaded', () => {
-    document.querySelectorAll('form[data-nrcga-form]').forEach((form) => {
-      form.addEventListener('submit', onSubmit);
-    });
-    document.querySelectorAll('[data-nrcga-form-mount]').forEach((el) => {
-      mountSchemaForm(el);
-    });
+    mountDynamicForms(document);
   });
 })();
