@@ -4,6 +4,7 @@ import {
   canAccessAssets,
   canAccessContentSection,
   canAccessEventsSection,
+  canAccessInboxesSection,
   canEditOwnMember,
   canManageMembers,
   canManageNavigation,
@@ -48,7 +49,7 @@ function navItems(ctx: AdminContext): NavItem[] {
     items.push({ href: '/admin/navigation', label: 'Navigation' })
   }
 
-  if (canManageUsers(user.role)) {
+  if (canAccessInboxesSection(user.role, ctx.assignedInboxKeys)) {
     items.push({
       href: '/admin/inbox',
       label: 'Inboxes',

@@ -56,3 +56,13 @@ export function canAccessContentSection(role: UserRole, chairCommittees: string[
 export function canAccessAssets(role: UserRole): boolean {
   return role === 'admin' || role === 'chair' || role === 'trainer'
 }
+
+export function canManageInboxes(role: UserRole): boolean {
+  return role === 'admin'
+}
+
+/** Can open the Inboxes section at all (individual inbox access is checked separately). */
+export function canAccessInboxesSection(role: UserRole, assignedInboxKeys: string[]): boolean {
+  if (role === 'admin' || role === 'trainer') return true
+  return assignedInboxKeys.length > 0
+}

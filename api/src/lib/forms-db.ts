@@ -297,6 +297,10 @@ export async function upsertFormInbox(db: D1Database, data: FormInboxInput, id?:
 }
 
 export async function deleteFormInbox(db: D1Database, id: string) {
+  const row = await getFormInboxById(db, id)
+  if (row?.slug) {
+    await db.prepare('DELETE FROM inbox_user_assignments WHERE inbox_key = ?').bind(String(row.slug)).run()
+  }
   await db.prepare('DELETE FROM form_inboxes WHERE id = ?').bind(id).run()
 }
 

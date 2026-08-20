@@ -1,7 +1,14 @@
 import type { Hono } from 'hono'
 import type { Env } from '../env'
-import { canManageAllContent } from '../config/roles'
+import { canAccessInboxesSection, canManageAllContent, canManageInboxes, ROLE_LABELS, type UserRole } from '../config/roles'
 import { escapeHtml, type AdminContext } from '../lib/admin-context'
+import {
+  accessibleInboxKeys,
+  listInboxAssigneeIds,
+  setInboxAssignees,
+} from '../lib/inbox-access'
+import { canViewInbox, canViewSubmission } from '../lib/permissions'
+import { listUsers } from '../lib/auth'
 import { parsePageParam, parseSearchParam } from '../lib/pagination'
 import {
   deleteCommittee,
@@ -55,6 +62,46 @@ import { AssetUrlField, ListSearch, Pagination } from '../views/AdminComponents'
 
 type RequireAdmin = (c: { env: Env; req: { header: (name: string) => string | undefined } }) => Promise<AdminContext | null>
 type Redirect = (c: { redirect: (url: string, status?: 303) => Response }, url: string) => Response
+type InboxRouteContext = { env: Env; req: { header: (name: string) => string | undefined }; redirect: (url: string, status?: 303) => Response }
+
+type GuardResult = { ctx: AdminContext; denied: null } | { ctx: null; denied: Response }
+
+async function guardInboxSection(c: InboxRouteContext, requireAdmin: RequireAdmin, redirect: Redirect): Promise<GuardResult> {
+  const ctx = await requireAdmin(c)
+  if (!ctx || !canAccessInboxesSection(ctx.user.role, ctx.assignedInboxKeys)) {
+    return { ctx: null, denied: redirect(c, '/admin/login') }
+  }
+  return { ctx, denied: null }
+}
+
+async function guardInboxView(
+  c: InboxRouteContext,
+  requireAdmin: RequireAdmin,
+  redirect: Redirect,
+  inboxKey: string,
+): Promise<GuardResult> {
+  const section = await guardInboxSection(c, requireAdmin, redirect)
+  if (section.denied) return section
+  if (!canViewInbox(section.ctx, inboxKey)) {
+    return { ctx: null, denied: redirect(c, '/admin/inbox') }
+  }
+  return section
+}
+
+function parseAssignedUserIds(body: Record<string, string | File>): string[] {
+  const raw = body.user_ids
+  if (!raw) return []
+  return (Array.isArray(raw) ? raw : [raw]).map(String).filter(Boolean)
+}
+
+async function saveInboxAccess(
+  env: Env,
+  inboxKey: string,
+  body: Record<string, string | File>,
+): Promise<void> {
+  if (body._action !== 'assign_users') return
+  await setInboxAssignees(env.DB, inboxKey, parseAssignedUserIds(body))
+}
 
 function formActions(saveLabel = 'Save') {
   return (
@@ -474,73 +521,89 @@ export function registerAdminParityRoutes(app: Hono<{ Bindings: Env }>, requireA
   })
 
   /* Inboxes */
+  const builtInInboxes = [
+    {
+      key: 'contact',
+      href: '/admin/inbox/contact',
+      title: 'Contact',
+      description: 'Contact form submissions',
+      types: ['contact'],
+    },
+    {
+      key: 'applications',
+      href: '/admin/inbox/applications',
+      title: 'Applications',
+      description: 'Member and award applications',
+      types: ['member_application', 'award_application'],
+    },
+    {
+      key: 'training',
+      href: '/admin/inbox/training',
+      title: 'Training',
+      description: 'Training registration and sign-in',
+      types: ['training_registration', 'training_signin'],
+    },
+    {
+      key: 'newsletter',
+      href: '/admin/inbox/newsletter',
+      title: 'Newsletter',
+      description: 'Subscribers and CSV export',
+      types: ['newsletter'],
+    },
+  ] as const
+
   app.get('/admin/inbox', async (c) => {
-    const ctx = await requireAdmin(c)
-    if (!ctx || !canManageAllContent(ctx.user.role)) return redirect(c, '/admin/login')
+    const { ctx, denied } = await guardInboxSection(c, requireAdmin, redirect)
+    if (denied) return denied
     const customInboxes = await listFormInboxes(c.env.DB)
+    const customSlugs = customInboxes.map((row) => String(row.slug))
+    const visibleKeys = new Set(accessibleInboxKeys(ctx.user, ctx.assignedInboxKeys, customSlugs))
     const newCounts = await countNewFormSubmissionsByType(c.env.DB)
-    const builtIn = [
-      {
-        href: '/admin/inbox/contact',
-        title: 'Contact',
-        description: 'Contact form submissions',
-        types: ['contact'],
-      },
-      {
-        href: '/admin/inbox/applications',
-        title: 'Applications',
-        description: 'Member and award applications',
-        types: ['member_application', 'award_application'],
-      },
-      {
-        href: '/admin/inbox/training',
-        title: 'Training',
-        description: 'Training registration and sign-in',
-        types: ['training_registration', 'training_signin'],
-      },
-      {
-        href: '/admin/inbox/newsletter',
-        title: 'Newsletter',
-        description: 'Subscribers and CSV export',
-        types: ['newsletter'],
-      },
-    ] as const
+    const visibleBuiltIn = builtInInboxes.filter((box) => visibleKeys.has(box.key))
+    const visibleCustom = customInboxes.filter((row) => visibleKeys.has(String(row.slug)))
     return c.html(
       <AdminShell ctx={ctx} title="Inboxes" activePath="/admin/inbox" publicSiteOrigin={c.env.PUBLIC_SITE_ORIGIN}>
-        <p>
-          <a class="btn btn-primary" href="/admin/inbox/new">
-            Create inbox
-          </a>
-        </p>
+        {canManageInboxes(ctx.user.role) ? (
+          <p>
+            <a class="btn btn-primary" href="/admin/inbox/new">
+              Create inbox
+            </a>
+          </p>
+        ) : null}
         <p class="muted">
-          Built-in inboxes collect site forms. Create an additional inbox to define a custom form schema you can mount
-          on any page.
+          {canManageInboxes(ctx.user.role)
+            ? 'Built-in inboxes collect site forms. Create an additional inbox to define a custom form schema you can mount on any page.'
+            : 'Form submissions for inboxes you have access to.'}
         </p>
-        <div class="admin-card-grid">
-          {builtIn.map((box) => (
-            <InboxHubCard
-              href={box.href}
-              title={box.title}
-              description={box.description}
-              newCount={sumNewSubmissionCounts(newCounts, [...box.types])}
-            />
-          ))}
-          {customInboxes.map((row) => (
-            <InboxHubCard
-              href={`/admin/inbox/${encodeURIComponent(String(row.slug))}`}
-              title={String(row.title ?? '')}
-              description={`${String(row.description || `Custom form · ${row.slug}`)}${!row.active ? ' (inactive)' : ''}`}
-              newCount={newCounts[String(row.slug)] ?? 0}
-            />
-          ))}
-        </div>
+        {visibleBuiltIn.length === 0 && visibleCustom.length === 0 ? (
+          <p class="muted">No inboxes are assigned to your account.</p>
+        ) : (
+          <div class="admin-card-grid">
+            {visibleBuiltIn.map((box) => (
+              <InboxHubCard
+                href={box.href}
+                title={box.title}
+                description={box.description}
+                newCount={sumNewSubmissionCounts(newCounts, [...box.types])}
+              />
+            ))}
+            {visibleCustom.map((row) => (
+              <InboxHubCard
+                href={`/admin/inbox/${encodeURIComponent(String(row.slug))}`}
+                title={String(row.title ?? '')}
+                description={`${String(row.description || `Custom form · ${row.slug}`)}${!row.active ? ' (inactive)' : ''}`}
+                newCount={newCounts[String(row.slug)] ?? 0}
+              />
+            ))}
+          </div>
+        )}
       </AdminShell>,
     )
   })
 
   app.all('/admin/inbox/new', async (c) => {
     const ctx = await requireAdmin(c)
-    if (!ctx || !canManageAllContent(ctx.user.role)) return redirect(c, '/admin/login')
+    if (!ctx || !canManageInboxes(ctx.user.role)) return redirect(c, '/admin/login')
     let error = ''
     if (c.req.method === 'POST') {
       const body = await c.req.parseBody()
@@ -565,14 +628,18 @@ export function registerAdminParityRoutes(app: Hono<{ Bindings: Env }>, requireA
     )
   })
 
-  for (const box of [
-    { path: 'contact', types: ['contact'], title: 'Contact inbox' },
-    { path: 'applications', types: ['member_application', 'award_application'], title: 'Applications inbox' },
-    { path: 'training', types: ['training_registration', 'training_signin'], title: 'Training inbox' },
-  ] as const) {
-    app.get(`/admin/inbox/${box.path}`, async (c) => {
-      const ctx = await requireAdmin(c)
-      if (!ctx || !canManageAllContent(ctx.user.role)) return redirect(c, '/admin/login')
+  for (const box of builtInInboxes.filter((b) => b.key !== 'newsletter')) {
+    app.all(`/admin/inbox/${box.key}`, async (c) => {
+      const inboxKey = box.key
+      if (c.req.method === 'POST') {
+        const ctx = await requireAdmin(c)
+        if (!ctx || !canManageInboxes(ctx.user.role)) return redirect(c, '/admin/login')
+        const body = (await c.req.parseBody()) as Record<string, string | File>
+        await saveInboxAccess(c.env, inboxKey, body)
+        return redirect(c, `/admin/inbox/${box.key}`)
+      }
+      const { ctx, denied } = await guardInboxView(c, requireAdmin, redirect, inboxKey)
+      if (denied) return denied
       const page = parsePageParam(c.req.query('page'))
       const typeFilter = c.req.query('type') || undefined
       const status = c.req.query('status') || undefined
@@ -589,8 +656,10 @@ export function registerAdminParityRoutes(app: Hono<{ Bindings: Env }>, requireA
           items: result.items.filter((row) => box.types.includes(String(row.form_type) as never)),
         }
       }
+      const accessUsers = canManageInboxes(ctx.user.role) ? await listUsers(c.env.DB) : []
+      const assignedUserIds = canManageInboxes(ctx.user.role) ? await listInboxAssigneeIds(c.env.DB, inboxKey) : []
       return c.html(
-        <AdminShell ctx={ctx} title={box.title} activePath="/admin/inbox" publicSiteOrigin={c.env.PUBLIC_SITE_ORIGIN}>
+        <AdminShell ctx={ctx} title={`${box.title} inbox`} activePath="/admin/inbox" publicSiteOrigin={c.env.PUBLIC_SITE_ORIGIN}>
           <p>
             <a class="btn btn-secondary" href="/admin/inbox">
               All inboxes
@@ -601,21 +670,32 @@ export function registerAdminParityRoutes(app: Hono<{ Bindings: Env }>, requireA
             page={result.page}
             totalPages={result.totalPages}
             total={result.total}
-            basePath={`/admin/inbox/${box.path}`}
+            basePath={`/admin/inbox/${box.key}`}
           />
+          {canManageInboxes(ctx.user.role) ? (
+            <InboxAccessForm
+              inboxKey={inboxKey}
+              users={accessUsers}
+              assignedUserIds={assignedUserIds}
+              showTrainerNote={inboxKey === 'training'}
+            />
+          ) : null}
         </AdminShell>,
       )
     })
   }
 
   app.all('/admin/inbox/submission/:id', async (c) => {
-    const ctx = await requireAdmin(c)
-    if (!ctx || !canManageAllContent(ctx.user.role)) return redirect(c, '/admin/login')
+    const { ctx, denied } = await guardInboxSection(c, requireAdmin, redirect)
+    if (denied) return denied
     const row = await getFormSubmissionById(c.env.DB, c.req.param('id'))
     if (!row) return c.text('Not found', 404)
+    const formType = String(row.form_type ?? '')
+    if (!canViewSubmission(ctx, formType)) return redirect(c, '/admin/inbox')
     if (c.req.method === 'POST') {
       const body = await c.req.parseBody()
       if (body._action === 'delete') {
+        if (!canManageInboxes(ctx.user.role)) return redirect(c, `/admin/inbox/submission/${row.id}`)
         await deleteFormSubmission(c.env.DB, row.id as string)
         return redirect(c, '/admin/inbox')
       }
@@ -624,7 +704,6 @@ export function registerAdminParityRoutes(app: Hono<{ Bindings: Env }>, requireA
       }
       return redirect(c, `/admin/inbox/submission/${row.id}`)
     }
-    const formType = String(row.form_type ?? '')
     const payload = parseSubmissionPayload(row.payload_json)
     const labelMap = await submissionFieldLabels(c.env.DB, formType)
     return c.html(
@@ -660,31 +739,44 @@ export function registerAdminParityRoutes(app: Hono<{ Bindings: Env }>, requireA
           </select>
           {formActions('Update status')}
         </form>
-        <form method="post" class="admin-form">
-          <input type="hidden" name="_action" value="delete" />
-          <button class="btn btn-danger" type="submit">
-            Delete
-          </button>
-        </form>
+        {canManageInboxes(ctx.user.role) ? (
+          <form method="post" class="admin-form">
+            <input type="hidden" name="_action" value="delete" />
+            <button class="btn btn-danger" type="submit">
+              Delete
+            </button>
+          </form>
+        ) : null}
       </AdminShell>,
     )
   })
 
-  app.get('/admin/inbox/newsletter', async (c) => {
-    const ctx = await requireAdmin(c)
-    if (!ctx || !canManageAllContent(ctx.user.role)) return redirect(c, '/admin/login')
+  app.all('/admin/inbox/newsletter', async (c) => {
+    if (c.req.method === 'POST') {
+      const ctx = await requireAdmin(c)
+      if (!ctx || !canManageInboxes(ctx.user.role)) return redirect(c, '/admin/login')
+      const body = (await c.req.parseBody()) as Record<string, string | File>
+      await saveInboxAccess(c.env, 'newsletter', body)
+      return redirect(c, '/admin/inbox/newsletter')
+    }
+    const { ctx, denied } = await guardInboxView(c, requireAdmin, redirect, 'newsletter')
+    if (denied) return denied
     const page = parsePageParam(c.req.query('page'))
     const search = parseSearchParam(c.req.query('q'))
     const result = await listNewsletterPaginated(c.env.DB, page, search)
+    const accessUsers = canManageInboxes(ctx.user.role) ? await listUsers(c.env.DB) : []
+    const assignedUserIds = canManageInboxes(ctx.user.role) ? await listInboxAssigneeIds(c.env.DB, 'newsletter') : []
     return c.html(
       <AdminShell ctx={ctx} title="Newsletter subscribers" activePath="/admin/inbox" publicSiteOrigin={c.env.PUBLIC_SITE_ORIGIN}>
         <p>
           <a class="btn btn-secondary" href="/admin/inbox">
             All inboxes
           </a>{' '}
-          <a class="btn btn-primary" href="/admin/inbox/newsletter/export.csv">
-            Export CSV
-          </a>
+          {canManageInboxes(ctx.user.role) ? (
+            <a class="btn btn-primary" href="/admin/inbox/newsletter/export.csv">
+              Export CSV
+            </a>
+          ) : null}
         </p>
         <ListSearch action="/admin/inbox/newsletter" query={search} placeholder="Search email or name…" />
         <table class="admin-table">
@@ -722,13 +814,16 @@ export function registerAdminParityRoutes(app: Hono<{ Bindings: Env }>, requireA
           total={result.total}
           basePath="/admin/inbox/newsletter"
         />
+        {canManageInboxes(ctx.user.role) ? (
+          <InboxAccessForm inboxKey="newsletter" users={accessUsers} assignedUserIds={assignedUserIds} />
+        ) : null}
       </AdminShell>,
     )
   })
 
   app.get('/admin/inbox/newsletter/export.csv', async (c) => {
     const ctx = await requireAdmin(c)
-    if (!ctx || !canManageAllContent(ctx.user.role)) return redirect(c, '/admin/login')
+    if (!ctx || !canManageInboxes(ctx.user.role)) return redirect(c, '/admin/login')
     const rows = await listAllNewsletterSubscribers(c.env.DB)
     const lines = ['email,name,status,created_at']
     for (const row of rows) {
@@ -745,12 +840,12 @@ export function registerAdminParityRoutes(app: Hono<{ Bindings: Env }>, requireA
   })
 
   app.post('/admin/inbox/newsletter/:id', async (c) => {
-    const ctx = await requireAdmin(c)
-    if (!ctx || !canManageAllContent(ctx.user.role)) return redirect(c, '/admin/login')
+    const { ctx, denied } = await guardInboxView(c, requireAdmin, redirect, 'newsletter')
+    if (denied) return denied
     const body = await c.req.parseBody()
     if (body._action === 'unsubscribe') {
       await updateNewsletterStatus(c.env.DB, c.req.param('id'), 'unsubscribed')
-    } else if (body._action === 'delete') {
+    } else if (body._action === 'delete' && canManageInboxes(ctx.user.role)) {
       await deleteNewsletterSubscriber(c.env.DB, c.req.param('id'))
     }
     return redirect(c, '/admin/inbox/newsletter')
@@ -758,7 +853,7 @@ export function registerAdminParityRoutes(app: Hono<{ Bindings: Env }>, requireA
 
   app.all('/admin/inbox/:slug/edit', async (c) => {
     const ctx = await requireAdmin(c)
-    if (!ctx || !canManageAllContent(ctx.user.role)) return redirect(c, '/admin/login')
+    if (!ctx || !canManageInboxes(ctx.user.role)) return redirect(c, '/admin/login')
     const slug = c.req.param('slug')
     if (isReservedInboxSlug(slug)) return c.text('Not found', 404)
     const row = await getFormInboxBySlug(c.env.DB, slug)
@@ -766,6 +861,10 @@ export function registerAdminParityRoutes(app: Hono<{ Bindings: Env }>, requireA
     let error = ''
     if (c.req.method === 'POST') {
       const body = await c.req.parseBody()
+      if (body._action === 'assign_users') {
+        await saveInboxAccess(c.env, slug, body as Record<string, string | File>)
+        return redirect(c, `/admin/inbox/${encodeURIComponent(slug)}/edit`)
+      }
       if (body._action === 'delete') {
         await deleteFormInbox(c.env.DB, row.id as string)
         return redirect(c, '/admin/inbox')
@@ -780,6 +879,8 @@ export function registerAdminParityRoutes(app: Hono<{ Bindings: Env }>, requireA
     }
     const fresh = (await getFormInboxBySlug(c.env.DB, slug)) || row
     const schema = inboxToPublicSchema(fresh)
+    const accessUsers = await listUsers(c.env.DB)
+    const assignedUserIds = await listInboxAssigneeIds(c.env.DB, slug)
     return c.html(
       <AdminShell ctx={ctx} title={`Edit inbox · ${schema.title}`} activePath="/admin/inbox" publicSiteOrigin={c.env.PUBLIC_SITE_ORIGIN}>
         <p>
@@ -792,6 +893,7 @@ export function registerAdminParityRoutes(app: Hono<{ Bindings: Env }>, requireA
         </p>
         {error ? <p class="form-status form-status-error">{escapeHtml(error)}</p> : null}
         <InboxForm item={fresh} />
+        <InboxAccessForm inboxKey={slug} users={accessUsers} assignedUserIds={assignedUserIds} />
         <div class="admin-form" style="margin-top:1.5rem">
           <h3>Put this form on a page</h3>
           <p class="muted">
@@ -812,12 +914,12 @@ export function registerAdminParityRoutes(app: Hono<{ Bindings: Env }>, requireA
   })
 
   app.get('/admin/inbox/:slug', async (c) => {
-    const ctx = await requireAdmin(c)
-    if (!ctx || !canManageAllContent(ctx.user.role)) return redirect(c, '/admin/login')
     const slug = c.req.param('slug')
     if (isReservedInboxSlug(slug)) return c.text('Not found', 404)
     const inbox = await getFormInboxBySlug(c.env.DB, slug)
     if (!inbox) return c.text('Not found', 404)
+    const { ctx, denied } = await guardInboxView(c, requireAdmin, redirect, slug)
+    if (denied) return denied
     const page = parsePageParam(c.req.query('page'))
     const status = c.req.query('status') || undefined
     const result = await listFormSubmissionsPaginated(c.env.DB, page, String(inbox.slug), status)
@@ -832,9 +934,11 @@ export function registerAdminParityRoutes(app: Hono<{ Bindings: Env }>, requireA
           <a class="btn btn-secondary" href="/admin/inbox">
             All inboxes
           </a>{' '}
-          <a class="btn btn-primary" href={`/admin/inbox/${encodeURIComponent(String(inbox.slug))}/edit`}>
-            Edit form schema
-          </a>
+          {canManageInboxes(ctx.user.role) ? (
+            <a class="btn btn-primary" href={`/admin/inbox/${encodeURIComponent(String(inbox.slug))}/edit`}>
+              Edit form schema
+            </a>
+          ) : null}
         </p>
         <SubmissionTable items={result.items} />
         <Pagination
@@ -1201,6 +1305,48 @@ function SubmissionFields({
         )
       })}
     </dl>
+  )
+}
+
+function InboxAccessForm({
+  inboxKey,
+  users,
+  assignedUserIds,
+  showTrainerNote,
+}: {
+  inboxKey: string
+  users: Array<{ id: string; email: string; display_name: string | null; role: string }>
+  assignedUserIds: string[]
+  showTrainerNote?: boolean
+}) {
+  const assigned = new Set(assignedUserIds)
+  const eligible = users.filter((u) => u.role !== 'admin')
+  return (
+    <form method="post" class="admin-form" style="margin-top:2rem">
+      <input type="hidden" name="_action" value="assign_users" />
+      <h3>Inbox access</h3>
+      <p class="muted">
+        Choose staff who can view this inbox. Admins always have access.
+        {showTrainerNote ? ' Trainers also have access to the training inbox automatically.' : ''}
+      </p>
+      {eligible.length === 0 ? (
+        <p class="muted">No non-admin users to assign.</p>
+      ) : (
+        <div class="admin-checkbox-list">
+          {eligible.map((u) => (
+            <label>
+              <input type="checkbox" name="user_ids" value={u.id} checked={assigned.has(u.id)} />{' '}
+              {escapeHtml(u.display_name || u.email)} ({escapeHtml(ROLE_LABELS[u.role as UserRole] ?? u.role)})
+            </label>
+          ))}
+        </div>
+      )}
+      <div class="admin-actions">
+        <button type="submit" class="btn btn-secondary">
+          Save access
+        </button>
+      </div>
+    </form>
   )
 }
 

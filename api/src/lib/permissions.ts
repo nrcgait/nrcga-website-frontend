@@ -11,6 +11,7 @@ import {
   canManageAllEvents,
 } from '../config/roles'
 import type { AdminContext } from './admin-context'
+import { inboxKeyForFormType } from './inbox-access'
 
 type EventLike = {
   committee_slug?: string | null
@@ -109,4 +110,14 @@ export function committeeSlugOptions(ctx: AdminContext): string[] | null {
   const slugs = chairCommittees(ctx)
   if (ctx.user.role === 'trainer') return [EDUCATION_TRAINING_COMMITTEE]
   return slugs.length ? slugs : null
+}
+
+export function canViewInbox(ctx: AdminContext, inboxKey: string): boolean {
+  if (ctx.user.role === 'admin') return true
+  if (inboxKey === 'training' && ctx.user.role === 'trainer') return true
+  return ctx.assignedInboxKeys.includes(inboxKey)
+}
+
+export function canViewSubmission(ctx: AdminContext, formType: string): boolean {
+  return canViewInbox(ctx, inboxKeyForFormType(formType))
 }

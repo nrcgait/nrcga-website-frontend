@@ -5,6 +5,7 @@ import {
   canAccessContentSection,
   canAccessEventsSection,
   canAccessAssets,
+  canAccessInboxesSection,
   canEditOwnMember,
   canManageMembers,
   canManageNavigation,
@@ -410,7 +411,7 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>) {
               <p>Staff portal accounts</p>
             </a>
           ) : null}
-          {canManageUsers(ctx.user.role) ? (
+          {canAccessInboxesSection(ctx.user.role, ctx.assignedInboxKeys) ? (
             <a class="admin-card" href="/admin/inbox">
               <h3>
                 <span>Inboxes</span>
@@ -421,7 +422,7 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>) {
                 ) : null}
               </h3>
               <p>
-                Contact, applications, training, newsletter
+                Form submissions assigned to you
                 {ctx.inboxNewCount > 0
                   ? ` · ${ctx.inboxNewCount === 1 ? '1 new' : `${ctx.inboxNewCount} new`}`
                   : ''}
