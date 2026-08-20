@@ -140,11 +140,28 @@ export async function listFormSubmissionsPaginated(
   formType?: string,
   status?: string,
 ): Promise<PaginatedResult<Record<string, unknown>>> {
+  if (formType) {
+    return listFormSubmissionsPaginatedByTypes(db, page, [formType], status)
+  }
+  return listFormSubmissionsPaginatedByTypes(db, page, [], status, true)
+}
+
+export async function listFormSubmissionsPaginatedByTypes(
+  db: D1Database,
+  page: number,
+  formTypes: string[],
+  status?: string,
+  allTypes = false,
+): Promise<PaginatedResult<Record<string, unknown>>> {
   const clauses: string[] = []
   const binds: string[] = []
-  if (formType) {
-    clauses.push('form_type = ?')
-    binds.push(formType)
+  if (!allTypes) {
+    if (!formTypes.length) {
+      return { items: [], page: 1, totalPages: 1, total: 0 }
+    }
+    const placeholders = formTypes.map(() => '?').join(', ')
+    clauses.push(`form_type IN (${placeholders})`)
+    binds.push(...formTypes)
   }
   if (status) {
     clauses.push('status = ?')

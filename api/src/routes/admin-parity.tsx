@@ -48,6 +48,7 @@ import {
   listAllNewsletterSubscribers,
   listFormInboxes,
   listFormSubmissionsPaginated,
+  listFormSubmissionsPaginatedByTypes,
   listNewsletterPaginated,
   parseFormFields,
   parseInboxFieldsFromBody,
@@ -647,14 +648,8 @@ export function registerAdminParityRoutes(app: Hono<{ Bindings: Env }>, requireA
       let result
       if (formType) {
         result = await listFormSubmissionsPaginated(c.env.DB, page, formType, status)
-      } else if (box.types.length === 1) {
-        result = await listFormSubmissionsPaginated(c.env.DB, page, box.types[0], status)
       } else {
-        result = await listFormSubmissionsPaginated(c.env.DB, page, undefined, status)
-        result = {
-          ...result,
-          items: result.items.filter((row) => box.types.includes(String(row.form_type) as never)),
-        }
+        result = await listFormSubmissionsPaginatedByTypes(c.env.DB, page, [...box.types], status)
       }
       const accessUsers = canManageInboxes(ctx.user.role) ? await listUsers(c.env.DB) : []
       const assignedUserIds = canManageInboxes(ctx.user.role) ? await listInboxAssigneeIds(c.env.DB, inboxKey) : []
