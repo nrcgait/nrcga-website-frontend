@@ -155,6 +155,8 @@
           return `<div class="page-block-embed pb-embed-pdf"><iframe src="${escapeHtml(resolveMediaUrl(block.url))}"></iframe></div>`
         }
         return `<div class="page-block-embed pb-embed-form"><iframe src="${escapeHtml(resolveMediaUrl(block.url))}"></iframe></div>`
+      case 'form':
+        return `<div class="page-block-form" data-nrcga-form-mount="${escapeHtml(block.form_slug || '')}"></div>`
       default:
         return ''
     }
@@ -264,6 +266,7 @@ body { margin: 0; }
       ],
     }),
     embed: () => ({ type: 'embed', embed_type: 'youtube', url: 'https://www.youtube.com/embed/VIDEO_ID' }),
+    form: () => ({ type: 'form', form_slug: 'my-form' }),
     html: () => ({ type: 'html', content: '<p>Custom HTML content.</p>' }),
   }
 
@@ -280,6 +283,7 @@ body { margin: 0; }
     winner_card: 'Winner card',
     hall_of_fame_grid: 'Hall of fame',
     embed: 'Embed',
+    form: 'Form inbox',
     html: 'HTML (advanced)',
   }
 

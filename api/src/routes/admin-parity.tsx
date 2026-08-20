@@ -780,7 +780,6 @@ export function registerAdminParityRoutes(app: Hono<{ Bindings: Env }>, requireA
     }
     const fresh = (await getFormInboxBySlug(c.env.DB, slug)) || row
     const schema = inboxToPublicSchema(fresh)
-    const mountSnippet = `<div data-nrcga-form-mount="${schema.slug}"></div>\n<script src="js/api-client.js"></script>\n<script src="js/native-forms.js"></script>`
     return c.html(
       <AdminShell ctx={ctx} title={`Edit inbox · ${schema.title}`} activePath="/admin/inbox" publicSiteOrigin={c.env.PUBLIC_SITE_ORIGIN}>
         <p>
@@ -796,10 +795,13 @@ export function registerAdminParityRoutes(app: Hono<{ Bindings: Env }>, requireA
         <div class="admin-form" style="margin-top:1.5rem">
           <h3>Put this form on a page</h3>
           <p class="muted">
-            Paste the mount div where the form should appear (and include the scripts if the page does not already load
-            them).
+            In the page editor, place the cursor where the form should go and click <strong>Form</strong> in the
+            toolbar, then choose this inbox. You can also right-click an inserted form block to change or remove it.
           </p>
-          <pre class="admin-code">{escapeHtml(mountSnippet)}</pre>
+          <p class="muted">
+            Advanced: mount div for static HTML pages —{' '}
+            <code>{`<div data-nrcga-form-mount="${escapeHtml(schema.slug)}"></div>`}</code>
+          </p>
           <p class="muted">
             Public endpoint: <code>GET /api/v1/forms/{escapeHtml(schema.slug)}</code> · submissions post to{' '}
             <code>POST /api/v1/forms/{escapeHtml(schema.slug)}</code>

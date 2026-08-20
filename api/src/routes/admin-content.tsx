@@ -36,6 +36,7 @@ import {
   upsertQaItem,
   upsertZeroDamage,
 } from '../lib/content-db'
+import { listFormInboxes } from '../lib/forms-db'
 import { AdminShell } from '../views/AdminShell'
 import { AssetUrlField, Pagination, CommitteeSelect } from '../views/AdminComponents'
 
@@ -641,9 +642,10 @@ export function registerAdminContentRoutes(
       await upsertPage(c.env.DB, parsePageForm(body as Record<string, string | File>))
       return redirect(c, '/admin/content/pages')
     }
+    const formInboxes = await listFormInboxes(c.env.DB, true)
     return c.html(
       <AdminShell ctx={ctx} title="Add page" activePath="/admin/content" publicSiteOrigin={c.env.PUBLIC_SITE_ORIGIN}>
-        <PageForm publicSiteOrigin={c.env.PUBLIC_SITE_ORIGIN} />
+        <PageForm publicSiteOrigin={c.env.PUBLIC_SITE_ORIGIN} formInboxes={formInboxes} />
       </AdminShell>,
     )
   })
@@ -663,9 +665,10 @@ export function registerAdminContentRoutes(
       await upsertPage(c.env.DB, parsePageForm(body as Record<string, string | File>), page.id as string)
       return redirect(c, '/admin/content/pages')
     }
+    const formInboxes = await listFormInboxes(c.env.DB, true)
     return c.html(
       <AdminShell ctx={ctx} title="Edit page" activePath="/admin/content" publicSiteOrigin={c.env.PUBLIC_SITE_ORIGIN}>
-        <PageForm page={page} publicSiteOrigin={c.env.PUBLIC_SITE_ORIGIN} />
+        <PageForm page={page} publicSiteOrigin={c.env.PUBLIC_SITE_ORIGIN} formInboxes={formInboxes} />
       </AdminShell>,
     )
   })
@@ -879,7 +882,15 @@ function QaForm({ item }: { item?: Record<string, unknown> }) {
   )
 }
 
-function PageForm({ page, publicSiteOrigin }: { page?: Record<string, unknown>; publicSiteOrigin: string }) {
+function PageForm({
+  page,
+  publicSiteOrigin,
+  formInboxes = [],
+}: {
+  page?: Record<string, unknown>
+  publicSiteOrigin: string
+  formInboxes?: Array<Record<string, unknown>>
+}) {
   const slug = String(page?.slug ?? '')
   const isHome = slug === 'home'
   let regions: { hero_html?: string; contact_html?: string } = {}
@@ -895,6 +906,12 @@ function PageForm({ page, publicSiteOrigin }: { page?: Record<string, unknown>; 
   const bodyHtml = page?.body_html != null ? String(page.body_html) : ''
   const bodyJsonFallback = !bodyHtml && page?.body_json ? String(page.body_json) : ''
   const liveHref = pageLiveUrl(publicSiteOrigin, slug, page?.is_custom)
+  const inboxPickerData = JSON.stringify(
+    formInboxes.map((row) => ({
+      slug: String(row.slug ?? ''),
+      title: String(row.title ?? row.slug ?? ''),
+    })),
+  )
 
   return (
     <form method="post" class="admin-form admin-page-rich-form" id="page-form">
@@ -935,14 +952,15 @@ function PageForm({ page, publicSiteOrigin }: { page?: Record<string, unknown>; 
         <h3>{isHome ? 'Mission / main content' : 'Page body'}</h3>
         <p class="admin-muted">
           Edit text inline. Use Font / Color / Size in the toolbar (select text first, or place the cursor in a
-          paragraph). Insert Image, Button, Callout, Embed, Grid, or Spacer as needed. Hover a block to see its
-          bounds; right-click to edit images, buttons, callouts, embeds, and grids.
+          paragraph). Insert Image, Button, Callout, Embed, Form, Grid, or Spacer as needed. Hover a block to see its
+          bounds; right-click to edit images, buttons, callouts, embeds, forms, and grids.
         </p>
         <div
           class="tiptap-host"
           data-rich-editor
           data-field="body_html"
           data-form="page-form"
+          data-form-inboxes={inboxPickerData}
           data-initial={bodyHtml}
           data-fallback-json={bodyJsonFallback || undefined}
         ></div>
