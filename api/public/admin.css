@@ -1771,7 +1771,8 @@
 }
 
 .tiptap-surface .page-block-embed.pb-embed-pdf iframe,
-.tiptap-surface .page-block-embed.pb-embed-form iframe {
+.tiptap-surface .page-block-embed.pb-embed-form iframe,
+.tiptap-surface .page-block-embed.pb-embed-custom iframe {
   aspect-ratio: auto;
   min-height: 360px;
 }

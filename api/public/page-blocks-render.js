@@ -25,15 +25,74 @@
     return origin ? `${origin}${raw}` : raw
   }
 
+  function normalizeEmbedUrl(url) {
+    const raw = String(url || '').trim()
+    if (!raw) return ''
+
+    if (/youtube\.com\/embed\//i.test(raw)) return raw
+
+    let match = raw.match(/(?:youtube\.com\/watch\?(?:.*&)?v=|youtube\.com\/watch\?v=)([a-zA-Z0-9_-]{11})/i)
+    if (match) return `https://www.youtube.com/embed/${match[1]}`
+
+    match = raw.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/i)
+    if (match) return `https://www.youtube.com/embed/${match[1]}`
+
+    match = raw.match(/youtube\.com\/shorts\/([a-zA-Z0-9_-]{11})/i)
+    if (match) return `https://www.youtube.com/embed/${match[1]}`
+
+    return raw
+  }
+
   function resolveMediaUrlsInHtml(html) {
     const raw = String(html || '')
-    if (!raw.includes('/api/v1/')) return raw
-    const origin = apiOrigin()
-    if (!origin) return raw
-    return raw
-      .replace(/(["'])(\/api\/v1\/)/g, `$1${origin}$2`)
-      .replace(/(url\(\s*)(\/api\/v1\/)/gi, `$1${origin}$2`)
-      .replace(/(\s(?:src|href)=)(\/api\/v1\/)/gi, `$1${origin}$2`)
+    let out = raw
+    if (out.includes('/api/v1/')) {
+      const origin = apiOrigin()
+      if (origin) {
+        out = out
+          .replace(/(["'])(\/api\/v1\/)/g, `$1${origin}$2`)
+          .replace(/(url\(\s*(?:&quot;|"|'|))(\/api\/v1\/)/gi, `$1${origin}$2`)
+          .replace(/(\s(?:src|href)=)(\/api\/v1\/)/gi, `$1${origin}$2`)
+      }
+    }
+    if (/youtube\.com\/watch|youtu\.be\//i.test(out)) {
+      out = out.replace(/(<iframe[^>]+src=["'])([^"']+)(["'])/gi, (match, pre, src, post) => {
+        return `${pre}${normalizeEmbedUrl(src)}${post}`
+      })
+    }
+    return out
+  }
+
+  function resolveFigureImageUrl(img) {
+    if (!img) return ''
+    const raw = String(img.getAttribute('src') || img.currentSrc || '').trim()
+    if (!raw) return ''
+    if (/^https?:\/\//i.test(raw) || raw.startsWith('data:')) return raw
+    if (raw.startsWith('/api/v1/')) {
+      const origin = apiOrigin()
+      return origin ? `${origin}${raw}` : raw
+    }
+    try {
+      return new URL(raw, document.baseURI || window.location.href).href
+    } catch {
+      return raw
+    }
+  }
+
+  function syncParallaxFigure(figure) {
+    if (!figure) return
+    const img = figure.querySelector('img')
+    if (figure.classList.contains('pb-img-layout-parallax') && img) {
+      const src = resolveFigureImageUrl(img)
+      figure.style.backgroundImage = src ? `url("${src.replace(/"/g, '\\"')}")` : ''
+    } else {
+      figure.style.backgroundImage = ''
+    }
+  }
+
+  function initParallaxFigures(root) {
+    const scope = root && typeof root.querySelectorAll === 'function' ? root : document
+    scope.querySelectorAll('figure.page-block-image.pb-img-layout-parallax').forEach(syncParallaxFigure)
   }
 
   function styleClasses(style) {
@@ -147,14 +206,16 @@
           .join('')
         return `<div class="pb-hof-grid">${items}</div>`
       }
-      case 'embed':
+      case 'embed': {
+        const embedUrl = escapeHtml(resolveMediaUrl(normalizeEmbedUrl(block.url)))
         if (block.embed_type === 'youtube') {
-          return `<div class="page-block-embed"><iframe src="${escapeHtml(resolveMediaUrl(block.url))}" allowfullscreen></iframe></div>`
+          return `<div class="page-block-embed"><iframe src="${embedUrl}" allowfullscreen></iframe></div>`
         }
         if (block.embed_type === 'pdf') {
-          return `<div class="page-block-embed pb-embed-pdf"><iframe src="${escapeHtml(resolveMediaUrl(block.url))}"></iframe></div>`
+          return `<div class="page-block-embed pb-embed-pdf"><iframe src="${embedUrl}"></iframe></div>`
         }
-        return `<div class="page-block-embed pb-embed-form"><iframe src="${escapeHtml(resolveMediaUrl(block.url))}"></iframe></div>`
+        return `<div class="page-block-embed pb-embed-form"><iframe src="${embedUrl}"></iframe></div>`
+      }
       default:
         return ''
     }
@@ -175,18 +236,36 @@
       .join('\n')
   }
 
+  function isLikelyCtaOnlyBodyHtml(html) {
+    const trimmed = String(html || '').trim()
+    if (!trimmed) return false
+    if (!trimmed.includes('committee-enrollment.html') || !trimmed.includes('Get Involved')) return false
+    return !trimmed.includes('page-block') && (trimmed.match(/<section/gi) || []).length <= 1
+  }
+
+  function renderBodyFromJson(bodyJson) {
+    if (!bodyJson) return ''
+    try {
+      const blocks = JSON.parse(String(bodyJson))
+      return renderBlocks(blocks, '')
+    } catch {
+      return ''
+    }
+  }
+
   function renderPageBody(page) {
-    if (page.body_html) {
-      return resolveMediaUrlsInHtml(String(page.body_html))
-    }
-    if (page.body_json) {
-      try {
-        const blocks = JSON.parse(page.body_json)
-        return renderBlocks(blocks, '')
-      } catch {
-        return ''
+    const html = page.body_html ? String(page.body_html).trim() : ''
+    const jsonHtml = renderBodyFromJson(page.body_json)
+    const htmlOut = html ? resolveMediaUrlsInHtml(html) : ''
+
+    if (htmlOut && jsonHtml) {
+      if (isLikelyCtaOnlyBodyHtml(html)) {
+        return jsonHtml
       }
+      return htmlOut
     }
+    if (htmlOut) return htmlOut
+    if (jsonHtml) return jsonHtml
     if (page.body_md) {
       return `<div class="content-text">${escapeHtml(page.body_md).replace(/\n/g, '<br>')}</div>`
     }
@@ -363,6 +442,9 @@ body { margin: 0; }
   global.NRCGA_pageBlocks = {
     escapeHtml,
     resolveMediaUrl,
+    resolveMediaUrlsInHtml,
+    syncParallaxFigure,
+    initParallaxFigures,
     styleClasses,
     renderBlocks,
     renderBlockInner,

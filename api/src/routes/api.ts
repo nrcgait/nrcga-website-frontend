@@ -1,7 +1,7 @@
 import type { Hono } from 'hono'
 import type { Env } from '../env'
 import {
-  getBreakingNews,
+  getPublicBreakingNews,
   getContactInfo,
   getFooterInfo,
   getNavigation,
@@ -83,7 +83,7 @@ export function registerPublicApiRoutes(app: Hono<{ Bindings: Env }>) {
     }))
     return cachedJson(c, mapped)
   })
-  app.get('/api/v1/breaking-news', async (c) => cachedJson(c, await getBreakingNews(c.env.DB)))
+  app.get('/api/v1/breaking-news', async (c) => cachedJson(c, await getPublicBreakingNews(c.env.DB)))
   app.get('/api/v1/committees', async (c) => cachedJson(c, await listCommitteesData(c.env.DB)))
   app.get('/api/v1/zero-damages', async (c) => cachedJson(c, await listZeroDamages(c.env.DB)))
   app.get('/api/v1/qa', async (c) => cachedJson(c, await listQaItems(c.env.DB, true)))

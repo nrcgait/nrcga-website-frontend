@@ -61,6 +61,8 @@ import {
   getNavigation,
   getThemeSettings,
   setSetting,
+  type BreakingNewsItem,
+  type BreakingNewsSettings,
 } from '../lib/site-settings'
 import { notifyCancelledGuests } from './api'
 import { registerAdminContentRoutes } from './admin-content'
@@ -94,6 +96,58 @@ async function requireAdmin(c: { env: Env; req: { header: (name: string) => stri
 
 function redirect(c: { redirect: (url: string, status?: 303) => Response }, url: string) {
   return c.redirect(url, 303)
+}
+
+function parseBreakingNewsForm(body: Record<string, string | File>): BreakingNewsSettings {
+  const count = parseInt(String(body.breaking_item_count ?? '0'), 10)
+  const items: BreakingNewsItem[] = []
+  for (let i = 0; i < count; i++) {
+    const prefix = `breaking_item_${i}_`
+    const idRaw = body[`${prefix}id`]
+    const id = typeof idRaw === 'string' && idRaw.trim() ? idRaw.trim() : crypto.randomUUID()
+    const expiresRaw = body[`${prefix}expires_at`]
+    items.push({
+      id,
+      active: body[`${prefix}active`] === '1',
+      title: String(body[`${prefix}title`] ?? ''),
+      content: String(body[`${prefix}content`] ?? ''),
+      image_url: String(body[`${prefix}image_url`] ?? ''),
+      read_more_url: String(body[`${prefix}read_more_url`] ?? ''),
+      storage_key: String(body[`${prefix}storage_key`] || `nrcga_breaking_news_${id}`),
+      expires_at: typeof expiresRaw === 'string' && expiresRaw.trim() ? expiresRaw.trim() : null,
+    })
+  }
+  return { items }
+}
+
+function BreakingNewsItemFields({ item, index }: { item: BreakingNewsItem; index: number }) {
+  const prefix = `breaking_item_${index}_`
+  return (
+    <fieldset class="admin-breaking-news-item admin-fieldset" data-breaking-index={String(index)}>
+      <legend>Entry {index + 1}</legend>
+      <input type="hidden" name={`${prefix}id`} value={item.id} />
+      <label class="admin-checkbox-label">
+        <input type="checkbox" name={`${prefix}active`} value="1" checked={item.active} /> Active
+      </label>
+      <label>Title</label>
+      <input name={`${prefix}title`} value={item.title} />
+      <label>Content</label>
+      <textarea name={`${prefix}content`}>{item.content}</textarea>
+      <AssetUrlField label="Image URL" name={`${prefix}image_url`} value={item.image_url} />
+      <label>Read more URL</label>
+      <input name={`${prefix}read_more_url`} value={item.read_more_url} />
+      <label>Dismiss storage key</label>
+      <input
+        name={`${prefix}storage_key`}
+        value={item.storage_key}
+        placeholder={`nrcga_breaking_news_${item.id}`}
+      />
+      <p class="admin-muted">Use a unique key per entry so visitors can dismiss one announcement without hiding others.</p>
+      <button type="button" class="btn btn-secondary btn-sm admin-breaking-remove">
+        Remove entry
+      </button>
+    </fieldset>
+  )
 }
 
 function canEditMember(ctx: AdminContext, memberId: string): boolean {
@@ -247,6 +301,9 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>) {
   app.get('/page-block-inspector.js', async (c) => c.env.ASSETS.fetch(new URL('/page-block-inspector.js', c.req.url)))
   app.get('/admin-forms.js', async (c) => c.env.ASSETS.fetch(new URL('/admin-forms.js', c.req.url)))
   app.get('/asset-picker.js', async (c) => c.env.ASSETS.fetch(new URL('/asset-picker.js', c.req.url)))
+  app.get('/admin-breaking-news.js', async (c) =>
+    c.env.ASSETS.fetch(new URL('/admin-breaking-news.js', c.req.url)),
+  )
   app.get('/navigation-editor.js', async (c) => c.env.ASSETS.fetch(new URL('/navigation-editor.js', c.req.url)))
   app.get('/event-location-picker.js', async (c) =>
     c.env.ASSETS.fetch(new URL('/event-location-picker.js', c.req.url)),
@@ -851,15 +908,7 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>) {
         tagline: body.tagline,
         copyright: body.copyright,
       })
-      await setSetting(c.env.DB, 'breaking_news', {
-        active: body.breaking_active === '1',
-        title: body.breaking_title,
-        content: body.breaking_content,
-        image_url: body.breaking_image_url,
-        read_more_url: body.breaking_read_more_url,
-        storage_key: body.breaking_storage_key || 'nrcga_breaking_news_dismissed',
-        expires_at: body.breaking_expires_at || null,
-      })
+      await setSetting(c.env.DB, 'breaking_news', parseBreakingNewsForm(body as Record<string, string | File>))
       await setSetting(c.env.DB, 'theme', {
         primary: body.theme_primary || '#0066cc',
         primary_dark: body.theme_primary_dark || '#0052a3',
@@ -868,9 +917,24 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>) {
       })
       return redirect(c, '/admin/content/settings')
     }
+    const breakingItems =
+      breaking.items.length > 0
+        ? breaking.items
+        : [
+            {
+              id: 'default',
+              active: false,
+              title: '',
+              content: '',
+              image_url: '',
+              read_more_url: '',
+              storage_key: 'nrcga_breaking_news_dismissed',
+              expires_at: null,
+            },
+          ]
     return c.html(
       <AdminShell ctx={ctx} title="Site settings" activePath="/admin/content" publicSiteOrigin={c.env.PUBLIC_SITE_ORIGIN}>
-        <form method="post" class="admin-form">
+        <form method="post" class="admin-form" id="site-settings-form">
           <h3>Theme colors</h3>
           <label>Primary</label>
           <input name="theme_primary" type="color" value={theme.primary} />
@@ -899,16 +963,33 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>) {
           <label>Copyright</label>
           <input name="copyright" value={footer.copyright} />
           <h3>Breaking news</h3>
-          <label>
-            <input type="checkbox" name="breaking_active" value="1" checked={breaking.active} /> Active
-          </label>
-          <label>Title</label>
-          <input name="breaking_title" value={breaking.title} />
-          <label>Content</label>
-          <textarea name="breaking_content">{breaking.content}</textarea>
-          <AssetUrlField label="Image URL" name="breaking_image_url" value={breaking.image_url} />
-          <label>Read more URL</label>
-          <input name="breaking_read_more_url" value={breaking.read_more_url} />
+          <p class="admin-muted">
+            Add multiple announcements. Visitors can move between active entries in the home page popup.
+          </p>
+          <input type="hidden" name="breaking_item_count" id="breaking-item-count" value={String(breakingItems.length)} />
+          <div id="breaking-news-items">
+            {breakingItems.map((item, index) => (
+              <BreakingNewsItemFields item={item} index={index} />
+            ))}
+          </div>
+          <button type="button" class="btn btn-secondary" id="breaking-news-add">
+            Add entry
+          </button>
+          <template id="breaking-news-template">
+            <BreakingNewsItemFields
+              item={{
+                id: '',
+                active: true,
+                title: '',
+                content: '',
+                image_url: '',
+                read_more_url: '',
+                storage_key: '',
+                expires_at: null,
+              }}
+              index={0}
+            />
+          </template>
           <div class="admin-actions">
             <button class="btn btn-primary" type="submit">
               Save settings

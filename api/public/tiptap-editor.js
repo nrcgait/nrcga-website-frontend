@@ -397,9 +397,13 @@
   }
 
   function syncParallaxBackground(figure) {
+    if (window.NRCGA_pageBlocks?.syncParallaxFigure) {
+      window.NRCGA_pageBlocks.syncParallaxFigure(figure)
+      return
+    }
     const img = getFigureImg(figure)
     if (figure.classList.contains('pb-img-layout-parallax') && img) {
-      const src = img.getAttribute('src') || ''
+      const src = img.currentSrc || img.getAttribute('src') || ''
       figure.style.backgroundImage = src ? `url("${src.replace(/"/g, '\\"')}")` : ''
     } else {
       figure.style.backgroundImage = ''
@@ -510,22 +514,117 @@
     p.textContent = body
   }
 
-  function getEmbedUrl(el) {
-    return el.querySelector('iframe')?.getAttribute('src') || ''
+  function normalizeEmbedUrl(url) {
+    const raw = String(url || '').trim()
+    if (!raw) return ''
+
+    if (/youtube\.com\/embed\//i.test(raw)) return raw
+
+    let match = raw.match(/(?:youtube\.com\/watch\?(?:.*&)?v=|youtube\.com\/watch\?v=)([a-zA-Z0-9_-]{11})/i)
+    if (match) return `https://www.youtube.com/embed/${match[1]}`
+
+    match = raw.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/i)
+    if (match) return `https://www.youtube.com/embed/${match[1]}`
+
+    match = raw.match(/youtube\.com\/shorts\/([a-zA-Z0-9_-]{11})/i)
+    if (match) return `https://www.youtube.com/embed/${match[1]}`
+
+    return raw
   }
 
-  function setEmbedUrl(el, url) {
-    const iframe = el.querySelector('iframe')
-    if (!iframe || !url) return
-    iframe.setAttribute('src', url)
-    const isPdf = /\.pdf(\?|$)/i.test(url)
-    el.classList.toggle('pb-embed-pdf', isPdf)
-    el.classList.toggle('pb-embed-form', false)
-    if (isPdf) {
-      iframe.removeAttribute('allowfullscreen')
-    } else {
-      iframe.setAttribute('allowfullscreen', '')
+  const IFRAME_ATTRS = [
+    'src',
+    'width',
+    'height',
+    'title',
+    'allow',
+    'allowfullscreen',
+    'loading',
+    'referrerpolicy',
+    'name',
+    'id',
+    'sandbox',
+  ]
+
+  function isFormEmbedUrl(url) {
+    return /forms\.office\.com|forms\.microsoft\.com|google\.com\/forms|typeform\.com|jotform\.com|form\.jotform/i.test(
+      String(url || ''),
+    )
+  }
+
+  function embedWrapperClass(src, custom) {
+    if (custom) return 'page-block-embed pb-embed-custom'
+    if (/\.pdf(\?|$)/i.test(src)) return 'page-block-embed pb-embed-pdf'
+    if (isFormEmbedUrl(src)) return 'page-block-embed pb-embed-form'
+    return 'page-block-embed'
+  }
+
+  function buildSanitizedIframe(input) {
+    if (typeof document === 'undefined') return null
+    const raw = String(input || '').trim()
+    if (!/<iframe[\s>]/i.test(raw)) return null
+
+    const div = document.createElement('div')
+    div.innerHTML = raw
+    const source = div.querySelector('iframe')
+    if (!source) return null
+
+    const iframe = document.createElement('iframe')
+    IFRAME_ATTRS.forEach((attr) => {
+      if (!source.hasAttribute(attr)) return
+      let value = source.getAttribute(attr) || ''
+      if (attr === 'src') value = normalizeEmbedUrl(value)
+      if (!value) return
+      iframe.setAttribute(attr, value)
+    })
+
+    const style = source.getAttribute('style')
+    if (style && !/<|>|javascript:/i.test(style)) {
+      iframe.setAttribute('style', style)
     }
+
+    if (!iframe.getAttribute('src')) return null
+    return iframe
+  }
+
+  function parseEmbedInput(input) {
+    const raw = String(input || '').trim()
+    if (!raw) return null
+
+    const customIframe = buildSanitizedIframe(raw)
+    if (customIframe) {
+      const src = customIframe.getAttribute('src') || ''
+      return {
+        wrapperClass: embedWrapperClass(src, true),
+        iframeHtml: customIframe.outerHTML,
+      }
+    }
+
+    const url = normalizeEmbedUrl(raw)
+    if (!url) return null
+    const isPdf = /\.pdf(\?|$)/i.test(url)
+    return {
+      wrapperClass: embedWrapperClass(url, false),
+      iframeHtml: `<iframe src="${escapeHtml(url)}"${isPdf ? '' : ' allowfullscreen'}></iframe>`,
+    }
+  }
+
+  function buildEmbedBlockHtml(parsed) {
+    return `<div class="${parsed.wrapperClass}">${parsed.iframeHtml}</div>`
+  }
+
+  function getEmbedContentForEdit(el) {
+    const iframe = el.querySelector('iframe')
+    if (!iframe) return ''
+    return iframe.outerHTML
+  }
+
+  function setEmbedContent(el, input) {
+    const parsed = parseEmbedInput(input)
+    if (!parsed) return false
+    el.className = parsed.wrapperClass
+    el.innerHTML = parsed.iframeHtml
+    return true
   }
 
   function getGridColsId(grid) {
@@ -753,7 +852,7 @@
     const menu = ensureMenu()
     menu.innerHTML = [
       '<div class="pb-img-menu-label">Embed</div>',
-      '<button type="button" role="menuitem" data-action="url">Edit URL…</button>',
+      '<button type="button" role="menuitem" data-action="url">Edit embed…</button>',
       '<div class="pb-img-menu-sep"></div>',
       '<button type="button" role="menuitem" data-action="delete" class="is-danger">Delete</button>',
     ].join('')
@@ -1123,11 +1222,11 @@
     hideMenu()
 
     if (action === 'url') {
-      const next = window.prompt('Embed URL (YouTube embed or PDF)', getEmbedUrl(el))
+      const next = window.prompt('Embed URL or iframe HTML', getEmbedContentForEdit(el))
       if (next == null) return
       const trimmed = next.trim()
       if (!trimmed) return
-      setEmbedUrl(el, trimmed)
+      if (!setEmbedContent(el, trimmed)) return
       notifyChange()
       return
     }
@@ -1338,14 +1437,11 @@
       return
     }
     if (kind === 'embed') {
-      const url = window.prompt('Embed URL (YouTube embed or PDF)', '')
-      if (!url) return
-      const isPdf = /\.pdf(\?|$)/i.test(url)
-      const cls = isPdf ? 'page-block-embed pb-embed-pdf' : 'page-block-embed'
-      insertHtmlAtCursor(
-        editor,
-        `<div class="${cls}"><iframe src="${escapeHtml(url)}"${isPdf ? '' : ' allowfullscreen'}></iframe></div>`,
-      )
+      const input = window.prompt('Embed URL or iframe HTML', '')
+      if (!input) return
+      const parsed = parseEmbedInput(input)
+      if (!parsed) return
+      insertHtmlAtCursor(editor, buildEmbedBlockHtml(parsed))
       return
     }
     if (kind === 'grid') {
@@ -1440,6 +1536,15 @@
       form.addEventListener('submit', sync)
     }
     editor.addEventListener('input', sync)
+    editor.addEventListener('paste', (e) => {
+      const text = e.clipboardData?.getData('text/plain') || ''
+      if (!/<iframe[\s>]/i.test(text)) return
+      const parsed = parseEmbedInput(text)
+      if (!parsed) return
+      e.preventDefault()
+      insertHtmlAtCursor(editor, buildEmbedBlockHtml(parsed))
+      sync()
+    })
     bindBlockEditing(editor, sync)
   }
 

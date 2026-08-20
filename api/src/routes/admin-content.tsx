@@ -715,14 +715,15 @@ function parsePageForm(body: Record<string, string | File>) {
     const contact = body.contact_html != null ? String(body.contact_html) : ''
     regionsJson = JSON.stringify({ hero_html: hero, contact_html: contact })
   }
+  const bodyHtml = body.body_html != null ? String(body.body_html).trim() : ''
   return {
     slug,
     title: String(body.title ?? ''),
     section_label: body.section_label ? String(body.section_label) : null,
     subtitle: body.subtitle ? String(body.subtitle) : null,
     body_md: body.body_md ? String(body.body_md) : null,
-    body_json: body.body_json ? String(body.body_json) : null,
-    body_html: body.body_html != null ? String(body.body_html) : null,
+    body_json: bodyHtml ? null : body.body_json ? String(body.body_json) : null,
+    body_html: bodyHtml || null,
     regions_json: regionsJson,
     published: body.published === '1' ? 1 : 0,
     is_custom: body.is_custom === '1' ? 1 : 0,
