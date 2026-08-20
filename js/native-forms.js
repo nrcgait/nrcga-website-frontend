@@ -114,8 +114,6 @@
           <p class="form-status" data-form-status></p>
         </form>
       `;
-      const form = el.querySelector('form[data-nrcga-form]');
-      if (form) form.addEventListener('submit', onSubmit);
     } catch (err) {
       el.innerHTML = `<p class="form-status form-status-error">${escapeHtml(err.message || 'Could not load form.')}</p>`;
     }
