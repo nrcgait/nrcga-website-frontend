@@ -15,7 +15,8 @@ export type FooterInfo = {
   copyright: string
 }
 
-export type BreakingNews = {
+export type BreakingNewsItem = {
+  id: string
   active: boolean
   title: string
   content: string
@@ -24,6 +25,13 @@ export type BreakingNews = {
   storage_key: string
   expires_at: string | null
 }
+
+export type BreakingNewsSettings = {
+  items: BreakingNewsItem[]
+}
+
+/** @deprecated Legacy single-entry shape; normalized to BreakingNewsSettings on read. */
+export type BreakingNews = BreakingNewsItem
 
 export type NavigationConfig = {
   logo: {
@@ -62,14 +70,49 @@ const DEFAULT_FOOTER: FooterInfo = {
   copyright: '© 2026 NRCGA. All rights reserved.',
 }
 
-const DEFAULT_BREAKING: BreakingNews = {
-  active: false,
-  title: '',
-  content: '',
-  image_url: '',
-  read_more_url: '',
-  storage_key: 'nrcga_breaking_news_dismissed',
-  expires_at: null,
+const DEFAULT_BREAKING: BreakingNewsSettings = {
+  items: [],
+}
+
+function normalizeBreakingNewsItem(raw: unknown, fallbackId: string): BreakingNewsItem {
+  const obj = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {}
+  const id = String(obj.id || fallbackId).trim() || fallbackId
+  return {
+    id,
+    active: obj.active === true || obj.active === 1 || obj.active === '1' || obj.active === 'true',
+    title: String(obj.title ?? ''),
+    content: String(obj.content ?? ''),
+    image_url: String(obj.image_url ?? ''),
+    read_more_url: String(obj.read_more_url ?? ''),
+    storage_key: String(obj.storage_key || `nrcga_breaking_news_${id}`),
+    expires_at: obj.expires_at ? String(obj.expires_at) : null,
+  }
+}
+
+export function normalizeBreakingNews(raw: unknown): BreakingNewsSettings {
+  if (!raw || typeof raw !== 'object') return { items: [] }
+  const obj = raw as Record<string, unknown>
+  if (Array.isArray(obj.items)) {
+    return {
+      items: obj.items.map((item, index) => normalizeBreakingNewsItem(item, `item-${index + 1}`)),
+    }
+  }
+  if ('title' in obj || 'content' in obj || 'active' in obj) {
+    return { items: [normalizeBreakingNewsItem(obj, 'default')] }
+  }
+  return { items: [] }
+}
+
+export function filterActiveBreakingNewsItems(items: BreakingNewsItem[]): BreakingNewsItem[] {
+  const now = Date.now()
+  return items.filter((item) => {
+    if (!item.active) return false
+    if (item.expires_at) {
+      const expires = Date.parse(item.expires_at)
+      if (!Number.isNaN(expires) && expires < now) return false
+    }
+    return true
+  })
 }
 
 const DEFAULT_THEME: ThemeSettings = {
@@ -110,8 +153,14 @@ export async function getFooterInfo(db: D1Database): Promise<FooterInfo> {
   return getSetting(db, 'footer', DEFAULT_FOOTER)
 }
 
-export async function getBreakingNews(db: D1Database): Promise<BreakingNews> {
-  return getSetting(db, 'breaking_news', DEFAULT_BREAKING)
+export async function getBreakingNews(db: D1Database): Promise<BreakingNewsSettings> {
+  const raw = await getSetting<unknown>(db, 'breaking_news', DEFAULT_BREAKING)
+  return normalizeBreakingNews(raw)
+}
+
+export async function getPublicBreakingNews(db: D1Database): Promise<{ items: BreakingNewsItem[] }> {
+  const settings = await getBreakingNews(db)
+  return { items: filterActiveBreakingNewsItems(settings.items) }
 }
 
 export async function getNavigation(db: D1Database): Promise<NavigationConfig | null> {

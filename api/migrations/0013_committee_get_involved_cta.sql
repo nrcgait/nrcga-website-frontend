@@ -26,7 +26,9 @@ WHERE slug IN (
   'craig-rogers-award',
   'training'
 )
-AND (body_html IS NULL OR body_html NOT LIKE '%committee-enrollment.html%');
+AND body_html IS NOT NULL
+AND trim(body_html) != ''
+AND body_html NOT LIKE '%committee-enrollment.html%';
 
 UPDATE pages
 SET body_html = COALESCE(body_html, '') || '
@@ -47,7 +49,9 @@ SET body_html = COALESCE(body_html, '') || '
     </div>
 </section>'
 WHERE slug = '811-day'
-AND (body_html IS NULL OR body_html NOT LIKE '%committee-enrollment.html%');
+AND body_html IS NOT NULL
+AND trim(body_html) != ''
+AND body_html NOT LIKE '%committee-enrollment.html%';
 
 UPDATE pages
 SET body_html = COALESCE(body_html, '') || '
@@ -68,7 +72,9 @@ SET body_html = COALESCE(body_html, '') || '
     </div>
 </section>'
 WHERE slug = 'operations'
-AND (body_html IS NULL OR body_html NOT LIKE '%committee-enrollment.html%');
+AND body_html IS NOT NULL
+AND trim(body_html) != ''
+AND body_html NOT LIKE '%committee-enrollment.html%';
 
 UPDATE pages
 SET body_html = COALESCE(body_html, '') || '
@@ -89,7 +95,9 @@ SET body_html = COALESCE(body_html, '') || '
     </div>
 </section>'
 WHERE slug = 'golf-tournament'
-AND (body_html IS NULL OR body_html NOT LIKE '%committee-enrollment.html%');
+AND body_html IS NOT NULL
+AND trim(body_html) != ''
+AND body_html NOT LIKE '%committee-enrollment.html%';
 
 UPDATE pages
 SET body_html = COALESCE(body_html, '') || '
@@ -110,4 +118,6 @@ SET body_html = COALESCE(body_html, '') || '
     </div>
 </section>'
 WHERE slug IN ('silver-shovel-award', 'utility-locate-rodeo')
-AND (body_html IS NULL OR body_html NOT LIKE '%committee-enrollment.html%');
+AND body_html IS NOT NULL
+AND trim(body_html) != ''
+AND body_html NOT LIKE '%committee-enrollment.html%';

@@ -218,19 +218,24 @@ for (const t of memberTypes) {
   )
 }
 
-const breaking = readCsv('data/front-page-breaking-news.csv')[0]
-if (breaking) {
+const breakingRows = readCsv('data/front-page-breaking-news.csv')
+if (breakingRows.length) {
+  const items = breakingRows.map((breaking, index) => {
+    const id = breaking.storage_key || `item-${index + 1}`
+    return {
+      id,
+      active: breaking.active === 'true' || breaking.active === '1',
+      title: breaking.title,
+      content: breaking.content,
+      image_url: breaking.image_url,
+      read_more_url: breaking.read_more_url,
+      storage_key: breaking.storage_key || `nrcga_breaking_news_${id}`,
+      expires_at: null,
+    }
+  })
   statements.push(
     `INSERT OR REPLACE INTO site_settings (key, value_json) VALUES ('breaking_news', '${sqlEscape(
-      JSON.stringify({
-        active: breaking.active === 'true' || breaking.active === '1',
-        title: breaking.title,
-        content: breaking.content,
-        image_url: breaking.image_url,
-        read_more_url: breaking.read_more_url,
-        storage_key: breaking.storage_key || 'nrcga_breaking_news_dismissed',
-        expires_at: null,
-      }),
+      JSON.stringify({ items }),
     )}');`,
   )
 }

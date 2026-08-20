@@ -71,6 +71,7 @@ async function loadPageContent() {
     const bodyHtml = window.NRCGA_pageBlocks.renderPageBody(page);
     if (bodyHtml) {
       bodyContainer.innerHTML = bodyHtml;
+      window.NRCGA_pageBlocks.initParallaxFigures(bodyContainer);
     }
 
     const regions = parseRegions(page);

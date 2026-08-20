@@ -124,6 +124,7 @@ export function AdminShell({
           </main>
         </div>
         <script src="/asset-picker.js"></script>
+        <script src="/admin-breaking-news.js"></script>
         <script src="/admin-forms.js"></script>
       </body>
     </html>
