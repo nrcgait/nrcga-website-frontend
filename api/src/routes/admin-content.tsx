@@ -10,6 +10,7 @@ import {
   chairCommittees,
 } from '../lib/permissions'
 import { parsePageParam } from '../lib/pagination'
+import { parseSortParam, sortParams } from '../lib/sort'
 import {
   deleteArchiveItem,
   deleteCarouselSlide,
@@ -35,10 +36,16 @@ import {
   upsertProgram,
   upsertQaItem,
   upsertZeroDamage,
+  ARCHIVE_SORT_COLUMNS,
+  CAROUSEL_SORT_COLUMNS,
+  PAGE_SORT_COLUMNS,
+  PROGRAM_SORT_COLUMNS,
+  QA_SORT_COLUMNS,
+  ZERO_DAMAGE_SORT_COLUMNS,
 } from '../lib/content-db'
 import { listFormInboxes } from '../lib/forms-db'
 import { AdminShell } from '../views/AdminShell'
-import { AssetUrlField, Pagination, CommitteeSelect } from '../views/AdminComponents'
+import { AssetUrlField, Pagination, CommitteeSelect, SortableHead } from '../views/AdminComponents'
 
 type RequireAdmin = (c: { env: Env; req: { header: (name: string) => string | undefined } }) => Promise<AdminContext | null>
 type Redirect = (c: { redirect: (url: string, status?: 303) => Response }, url: string) => Response
@@ -95,7 +102,9 @@ export function registerAdminContentRoutes(
     const { ctx, denied } = await guardContent(c, requireAdmin, redirect, true)
     if (denied) return denied
     const page = parsePageParam(c.req.query('page'))
-    const result = await listCarouselSlidesPaginated(c.env.DB, page)
+    const sort = parseSortParam(c.req.query('sort'), c.req.query('dir'), CAROUSEL_SORT_COLUMNS)
+    const result = await listCarouselSlidesPaginated(c.env.DB, page, sort)
+    const listParams = sortParams(sort)
     return c.html(
       <AdminShell ctx={ctx} title="Carousel" activePath="/admin/content" publicSiteOrigin={c.env.PUBLIC_SITE_ORIGIN}>
         <p>
@@ -104,14 +113,17 @@ export function registerAdminContentRoutes(
           </a>
         </p>
         <table class="admin-table">
-          <thead>
-            <tr>
-              <th>Alt</th>
-              <th>Order</th>
-              <th>Active</th>
-              <th></th>
-            </tr>
-          </thead>
+          <SortableHead
+            current={sort}
+            basePath="/admin/content/carousel"
+            params={listParams}
+            columns={[
+              { key: 'alt', label: 'Alt' },
+              { key: 'order', label: 'Order' },
+              { key: 'active', label: 'Active' },
+              { label: '' },
+            ]}
+          />
           <tbody>
             {result.items.map((row) => (
               <tr>
@@ -125,7 +137,13 @@ export function registerAdminContentRoutes(
             ))}
           </tbody>
         </table>
-        <Pagination page={result.page} totalPages={result.totalPages} total={result.total} basePath="/admin/content/carousel" />
+        <Pagination
+          page={result.page}
+          totalPages={result.totalPages}
+          total={result.total}
+          basePath="/admin/content/carousel"
+          params={listParams}
+        />
       </AdminShell>,
     )
   })
@@ -188,7 +206,9 @@ export function registerAdminContentRoutes(
     const { ctx, denied } = await guardContent(c, requireAdmin, redirect)
     if (denied) return denied
     const page = parsePageParam(c.req.query('page'))
-    const result = await listProgramsPaginated(c.env.DB, page, committeeFilter(ctx))
+    const sort = parseSortParam(c.req.query('sort'), c.req.query('dir'), PROGRAM_SORT_COLUMNS)
+    const result = await listProgramsPaginated(c.env.DB, page, committeeFilter(ctx), sort)
+    const listParams = sortParams(sort)
     return c.html(
       <AdminShell ctx={ctx} title="Programs" activePath="/admin/content" publicSiteOrigin={c.env.PUBLIC_SITE_ORIGIN}>
         <p>
@@ -197,14 +217,17 @@ export function registerAdminContentRoutes(
           </a>
         </p>
         <table class="admin-table">
-          <thead>
-            <tr>
-              <th>Title</th>
-              <th>Committee</th>
-              <th>Link</th>
-              <th></th>
-            </tr>
-          </thead>
+          <SortableHead
+            current={sort}
+            basePath="/admin/content/programs"
+            params={listParams}
+            columns={[
+              { key: 'title', label: 'Title' },
+              { key: 'committee', label: 'Committee' },
+              { key: 'link', label: 'Link' },
+              { label: '' },
+            ]}
+          />
           <tbody>
             {result.items.map((row) => (
               <tr>
@@ -218,7 +241,13 @@ export function registerAdminContentRoutes(
             ))}
           </tbody>
         </table>
-        <Pagination page={result.page} totalPages={result.totalPages} total={result.total} basePath="/admin/content/programs" />
+        <Pagination
+          page={result.page}
+          totalPages={result.totalPages}
+          total={result.total}
+          basePath="/admin/content/programs"
+          params={listParams}
+        />
       </AdminShell>,
     )
   })
@@ -284,7 +313,9 @@ export function registerAdminContentRoutes(
     const { ctx, denied } = await guardContent(c, requireAdmin, redirect)
     if (denied) return denied
     const page = parsePageParam(c.req.query('page'))
-    const result = await listArchiveItemsPaginated(c.env.DB, page, committeeFilter(ctx))
+    const sort = parseSortParam(c.req.query('sort'), c.req.query('dir'), ARCHIVE_SORT_COLUMNS)
+    const result = await listArchiveItemsPaginated(c.env.DB, page, committeeFilter(ctx), sort)
+    const listParams = sortParams(sort)
     return c.html(
       <AdminShell ctx={ctx} title="Archive" activePath="/admin/content" publicSiteOrigin={c.env.PUBLIC_SITE_ORIGIN}>
         <p>
@@ -293,15 +324,18 @@ export function registerAdminContentRoutes(
           </a>
         </p>
         <table class="admin-table">
-          <thead>
-            <tr>
-              <th>Type</th>
-              <th>Title</th>
-              <th>Committee</th>
-              <th>Date</th>
-              <th></th>
-            </tr>
-          </thead>
+          <SortableHead
+            current={sort}
+            basePath="/admin/content/archive"
+            params={listParams}
+            columns={[
+              { key: 'type', label: 'Type' },
+              { key: 'title', label: 'Title' },
+              { key: 'committee', label: 'Committee' },
+              { key: 'date', label: 'Date', defaultDir: 'desc' },
+              { label: '' },
+            ]}
+          />
           <tbody>
             {result.items.map((row) => (
               <tr>
@@ -316,7 +350,13 @@ export function registerAdminContentRoutes(
             ))}
           </tbody>
         </table>
-        <Pagination page={result.page} totalPages={result.totalPages} total={result.total} basePath="/admin/content/archive" />
+        <Pagination
+          page={result.page}
+          totalPages={result.totalPages}
+          total={result.total}
+          basePath="/admin/content/archive"
+          params={listParams}
+        />
       </AdminShell>,
     )
   })
@@ -413,7 +453,9 @@ export function registerAdminContentRoutes(
     const { ctx, denied } = await guardContent(c, requireAdmin, redirect, true)
     if (denied) return denied
     const page = parsePageParam(c.req.query('page'))
-    const result = await listZeroDamagesPaginated(c.env.DB, page)
+    const sort = parseSortParam(c.req.query('sort'), c.req.query('dir'), ZERO_DAMAGE_SORT_COLUMNS)
+    const result = await listZeroDamagesPaginated(c.env.DB, page, sort)
+    const listParams = sortParams(sort)
     return c.html(
       <AdminShell ctx={ctx} title="Zero at-fault damages" activePath="/admin/content" publicSiteOrigin={c.env.PUBLIC_SITE_ORIGIN}>
         <p>
@@ -422,12 +464,12 @@ export function registerAdminContentRoutes(
           </a>
         </p>
         <table class="admin-table">
-          <thead>
-            <tr>
-              <th>Company</th>
-              <th></th>
-            </tr>
-          </thead>
+          <SortableHead
+            current={sort}
+            basePath="/admin/content/zero-damages"
+            params={listParams}
+            columns={[{ key: 'company', label: 'Company' }, { label: '' }]}
+          />
           <tbody>
             {result.items.map((row) => (
               <tr>
@@ -439,7 +481,13 @@ export function registerAdminContentRoutes(
             ))}
           </tbody>
         </table>
-        <Pagination page={result.page} totalPages={result.totalPages} total={result.total} basePath="/admin/content/zero-damages" />
+        <Pagination
+          page={result.page}
+          totalPages={result.totalPages}
+          total={result.total}
+          basePath="/admin/content/zero-damages"
+          params={listParams}
+        />
       </AdminShell>,
     )
   })
@@ -496,7 +544,9 @@ export function registerAdminContentRoutes(
     const { ctx, denied } = await guardContent(c, requireAdmin, redirect, true)
     if (denied) return denied
     const page = parsePageParam(c.req.query('page'))
-    const result = await listQaItemsPaginated(c.env.DB, page)
+    const sort = parseSortParam(c.req.query('sort'), c.req.query('dir'), QA_SORT_COLUMNS)
+    const result = await listQaItemsPaginated(c.env.DB, page, sort)
+    const listParams = sortParams(sort)
     return c.html(
       <AdminShell ctx={ctx} title="Q & A" activePath="/admin/content" publicSiteOrigin={c.env.PUBLIC_SITE_ORIGIN}>
         <p>
@@ -505,13 +555,16 @@ export function registerAdminContentRoutes(
           </a>
         </p>
         <table class="admin-table">
-          <thead>
-            <tr>
-              <th>Question</th>
-              <th>Published</th>
-              <th></th>
-            </tr>
-          </thead>
+          <SortableHead
+            current={sort}
+            basePath="/admin/content/qa"
+            params={listParams}
+            columns={[
+              { key: 'question', label: 'Question' },
+              { key: 'published', label: 'Published' },
+              { label: '' },
+            ]}
+          />
           <tbody>
             {result.items.map((row) => (
               <tr>
@@ -524,7 +577,13 @@ export function registerAdminContentRoutes(
             ))}
           </tbody>
         </table>
-        <Pagination page={result.page} totalPages={result.totalPages} total={result.total} basePath="/admin/content/qa" />
+        <Pagination
+          page={result.page}
+          totalPages={result.totalPages}
+          total={result.total}
+          basePath="/admin/content/qa"
+          params={listParams}
+        />
       </AdminShell>,
     )
   })
@@ -584,7 +643,9 @@ export function registerAdminContentRoutes(
     if (denied) return denied
     const page = parsePageParam(c.req.query('page'))
     const slugFilter = chairPageSlugs(ctx)
-    const result = await listPagesPaginated(c.env.DB, page, slugFilter)
+    const sort = parseSortParam(c.req.query('sort'), c.req.query('dir'), PAGE_SORT_COLUMNS)
+    const result = await listPagesPaginated(c.env.DB, page, slugFilter, sort)
+    const listParams = sortParams(sort)
     return c.html(
       <AdminShell ctx={ctx} title="Pages" activePath="/admin/content" publicSiteOrigin={c.env.PUBLIC_SITE_ORIGIN}>
         {canManageAllContent(ctx.user.role) ? (
@@ -595,14 +656,17 @@ export function registerAdminContentRoutes(
           </p>
         ) : null}
         <table class="admin-table">
-          <thead>
-            <tr>
-              <th>Slug</th>
-              <th>Title</th>
-              <th>Published</th>
-              <th></th>
-            </tr>
-          </thead>
+          <SortableHead
+            current={sort}
+            basePath="/admin/content/pages"
+            params={listParams}
+            columns={[
+              { key: 'slug', label: 'Slug' },
+              { key: 'title', label: 'Title' },
+              { key: 'published', label: 'Published' },
+              { label: '' },
+            ]}
+          />
           <tbody>
             {result.items.map((row) => (
               <tr>
@@ -629,7 +693,13 @@ export function registerAdminContentRoutes(
             ))}
           </tbody>
         </table>
-        <Pagination page={result.page} totalPages={result.totalPages} total={result.total} basePath="/admin/content/pages" />
+        <Pagination
+          page={result.page}
+          totalPages={result.totalPages}
+          total={result.total}
+          basePath="/admin/content/pages"
+          params={listParams}
+        />
       </AdminShell>,
     )
   })

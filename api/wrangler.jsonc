@@ -35,6 +35,18 @@
     "ADMIN_EMAIL": "info@nrcga.org",
     "PUBLIC_SITE_ORIGIN": "https://nrcga.org"
   },
+  "ratelimits": [
+    {
+      "name": "LOGIN_RATE_LIMITER",
+      "namespace_id": "7101",
+      "simple": { "limit": 8, "period": 60 }
+    },
+    {
+      "name": "PUBLIC_WRITE_RATE_LIMITER",
+      "namespace_id": "7102",
+      "simple": { "limit": 20, "period": 60 }
+    }
+  ],
   "env": {
     "staging": {
       "name": "nrcga-api-staging",
@@ -42,6 +54,18 @@
         "ADMIN_EMAIL": "info@nrcga.org",
         "PUBLIC_SITE_ORIGIN": "https://nrcga.ayowerks.com"
       },
+      "ratelimits": [
+        {
+          "name": "LOGIN_RATE_LIMITER",
+          "namespace_id": "7201",
+          "simple": { "limit": 8, "period": 60 }
+        },
+        {
+          "name": "PUBLIC_WRITE_RATE_LIMITER",
+          "namespace_id": "7202",
+          "simple": { "limit": 20, "period": 60 }
+        }
+      ],
       "d1_databases": [
         {
           "binding": "DB",

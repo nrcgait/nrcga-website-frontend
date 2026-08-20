@@ -1,4 +1,5 @@
 import { escapeHtml } from '../lib/admin-context'
+import { listUrl, mergeListParams, type ListParams, type SortDir, type SortSpec } from '../lib/sort'
 
 export function CommitteeSelect({
   committees,
@@ -34,13 +35,19 @@ export function ListSearch({
   action,
   query,
   placeholder = 'Search…',
+  params,
 }: {
   action: string
   query?: string
   placeholder?: string
+  params?: ListParams
 }) {
+  const hidden = Object.entries(params ?? {}).filter(([key, value]) => key !== 'q' && value)
   return (
     <form method="get" action={action} class="admin-list-search">
+      {hidden.map(([name, value]) => (
+        <input type="hidden" name={name} value={escapeHtml(value ?? '')} />
+      ))}
       <input
         type="search"
         name="q"
@@ -52,11 +59,92 @@ export function ListSearch({
         Search
       </button>
       {query ? (
-        <a class="btn btn-secondary" href={action}>
+        <a class="btn btn-secondary" href={listUrl(action, params ?? {})}>
           Clear
         </a>
       ) : null}
     </form>
+  )
+}
+
+export type SortableColumn = {
+  key?: string
+  label: string
+  defaultDir?: SortDir
+}
+
+export function SortableHead({
+  columns,
+  current,
+  basePath,
+  search,
+  params,
+}: {
+  columns: SortableColumn[]
+  current: SortSpec | null
+  basePath: string
+  search?: string
+  params?: ListParams
+}) {
+  return (
+    <thead>
+      <tr>
+        {columns.map((col) =>
+          col.key ? (
+            <SortableTh
+              label={col.label}
+              column={col.key}
+              current={current}
+              basePath={basePath}
+              search={search}
+              params={params}
+              defaultDir={col.defaultDir}
+            />
+          ) : (
+            <th>{col.label}</th>
+          ),
+        )}
+      </tr>
+    </thead>
+  )
+}
+
+export function SortableTh({
+  label,
+  column,
+  current,
+  basePath,
+  search,
+  params,
+  defaultDir = 'asc',
+}: {
+  label: string
+  column: string
+  current: SortSpec | null
+  basePath: string
+  search?: string
+  params?: ListParams
+  defaultDir?: SortDir
+}) {
+  const active = current?.column === column
+  const nextDir: SortDir = active ? (current.dir === 'asc' ? 'desc' : 'asc') : defaultDir
+  const href = listUrl(
+    basePath,
+    mergeListParams(params, search?.trim() ? { q: search.trim() } : undefined, {
+      sort: column,
+      dir: nextDir,
+    }),
+  )
+  const ariaSort = active ? (current.dir === 'desc' ? 'descending' : 'ascending') : 'none'
+  return (
+    <th aria-sort={ariaSort}>
+      <a class={`admin-sort${active ? ' is-active' : ''}`} href={href}>
+        {label}
+        <span class="admin-sort-ind" aria-hidden="true">
+          {active ? (current.dir === 'asc' ? '▲' : '▼') : '↕'}
+        </span>
+      </a>
+    </th>
   )
 }
 
@@ -100,23 +188,20 @@ export function Pagination({
   total,
   basePath,
   search,
+  params,
 }: {
   page: number
   totalPages: number
   total: number
   basePath: string
   search?: string
+  params?: ListParams
 }) {
   const PAGE_SIZE = 20
   if (total <= PAGE_SIZE && !search?.trim()) return null
 
-  const pageUrl = (targetPage: number) => {
-    const params = new URLSearchParams()
-    if (search?.trim()) params.set('q', search.trim())
-    if (targetPage > 1) params.set('page', String(targetPage))
-    const qs = params.toString()
-    return qs ? `${basePath}?${qs}` : basePath
-  }
+  const merged = mergeListParams(params, search?.trim() ? { q: search.trim() } : undefined)
+  const pageUrl = (targetPage: number) => listUrl(basePath, merged, targetPage)
 
   const prev = page > 1 ? pageUrl(page - 1) : null
   const next = page < totalPages ? pageUrl(page + 1) : null

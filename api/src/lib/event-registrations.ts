@@ -214,8 +214,22 @@ export async function listRegistrations(
 }
 
 import { paginateQuery } from './pagination'
+import { sqlOrderBy, type SortColumnSql, type SortSpec } from './sort'
 
-export async function listRegistrationsPaginated(db: D1Database, eventId: string, page: number) {
+export const REGISTRATION_SORT_COLUMNS: SortColumnSql = {
+  date: 'occurrence_date',
+  name: 'guest_name COLLATE NOCASE',
+  email: 'guest_email COLLATE NOCASE',
+  spots: 'spot_count',
+}
+
+export async function listRegistrationsPaginated(
+  db: D1Database,
+  eventId: string,
+  page: number,
+  sort?: SortSpec | null,
+) {
+  const order = sqlOrderBy(sort, REGISTRATION_SORT_COLUMNS, 'ORDER BY registered_at DESC')
   return paginateQuery<{
     id: string
     guest_name: string
@@ -228,7 +242,7 @@ export async function listRegistrationsPaginated(db: D1Database, eventId: string
   }>(
     db,
     'SELECT COUNT(*) as c FROM event_registrations WHERE event_id = ?',
-    'SELECT * FROM event_registrations WHERE event_id = ? ORDER BY registered_at DESC',
+    `SELECT * FROM event_registrations WHERE event_id = ? ${order}`,
     page,
     [eventId],
   )

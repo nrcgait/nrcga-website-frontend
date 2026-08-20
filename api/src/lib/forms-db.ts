@@ -1,5 +1,6 @@
 import type { PaginatedResult } from './pagination'
 import { likePattern, paginateQuery } from './pagination'
+import { sqlOrderBy, type SortColumnSql, type SortSpec } from './sort'
 
 export const FORM_TYPES = [
   'contact',
@@ -134,16 +135,23 @@ export async function createFormSubmission(
   return id
 }
 
+export const SUBMISSION_SORT_COLUMNS: SortColumnSql = {
+  date: 'created_at',
+  type: 'form_type COLLATE NOCASE',
+  status: 'status COLLATE NOCASE',
+}
+
 export async function listFormSubmissionsPaginated(
   db: D1Database,
   page: number,
   formType?: string,
   status?: string,
+  sort?: SortSpec | null,
 ): Promise<PaginatedResult<Record<string, unknown>>> {
   if (formType) {
-    return listFormSubmissionsPaginatedByTypes(db, page, [formType], status)
+    return listFormSubmissionsPaginatedByTypes(db, page, [formType], status, false, sort)
   }
-  return listFormSubmissionsPaginatedByTypes(db, page, [], status, true)
+  return listFormSubmissionsPaginatedByTypes(db, page, [], status, true, sort)
 }
 
 export async function listFormSubmissionsPaginatedByTypes(
@@ -152,6 +160,7 @@ export async function listFormSubmissionsPaginatedByTypes(
   formTypes: string[],
   status?: string,
   allTypes = false,
+  sort?: SortSpec | null,
 ): Promise<PaginatedResult<Record<string, unknown>>> {
   const clauses: string[] = []
   const binds: string[] = []
@@ -168,10 +177,11 @@ export async function listFormSubmissionsPaginatedByTypes(
     binds.push(status)
   }
   const where = clauses.length ? `WHERE ${clauses.join(' AND ')}` : ''
+  const order = sqlOrderBy(sort, SUBMISSION_SORT_COLUMNS, 'ORDER BY created_at DESC')
   return paginateQuery(
     db,
     `SELECT COUNT(*) as c FROM form_submissions ${where}`,
-    `SELECT * FROM form_submissions ${where} ORDER BY created_at DESC`,
+    `SELECT * FROM form_submissions ${where} ${order}`,
     page,
     binds,
   )
@@ -350,17 +360,26 @@ export async function upsertNewsletterSubscriber(
   return id
 }
 
+export const NEWSLETTER_SORT_COLUMNS: SortColumnSql = {
+  email: 'email COLLATE NOCASE',
+  name: 'name COLLATE NOCASE',
+  status: 'status COLLATE NOCASE',
+  joined: 'created_at',
+}
+
 export async function listNewsletterPaginated(
   db: D1Database,
   page: number,
   search = '',
+  sort?: SortSpec | null,
 ): Promise<PaginatedResult<Record<string, unknown>>> {
+  const order = sqlOrderBy(sort, NEWSLETTER_SORT_COLUMNS, 'ORDER BY created_at DESC')
   const term = search.trim()
   if (!term) {
     return paginateQuery(
       db,
       'SELECT COUNT(*) as c FROM newsletter_subscribers',
-      'SELECT * FROM newsletter_subscribers ORDER BY created_at DESC',
+      `SELECT * FROM newsletter_subscribers ${order}`,
       page,
     )
   }
@@ -368,7 +387,7 @@ export async function listNewsletterPaginated(
   return paginateQuery(
     db,
     `SELECT COUNT(*) as c FROM newsletter_subscribers WHERE email LIKE ? ESCAPE '\\' OR name LIKE ? ESCAPE '\\'`,
-    `SELECT * FROM newsletter_subscribers WHERE email LIKE ? ESCAPE '\\' OR name LIKE ? ESCAPE '\\' ORDER BY created_at DESC`,
+    `SELECT * FROM newsletter_subscribers WHERE email LIKE ? ESCAPE '\\' OR name LIKE ? ESCAPE '\\' ${order}`,
     page,
     [pattern, pattern],
   )

@@ -2,6 +2,7 @@ import type { EventRecord } from './event-repeat'
 import { expandEventOccurrences } from './event-repeat'
 import type { PaginatedResult } from './pagination'
 import { paginateQuery } from './pagination'
+import { sqlOrderBy, type SortColumnSql, type SortSpec } from './sort'
 
 export type EventListFilter = {
   committeeSlugs?: string[]
@@ -60,16 +61,26 @@ export async function listPublishedEvents(db: D1Database, category?: string): Pr
   return results ?? []
 }
 
+export const EVENT_SORT_COLUMNS: SortColumnSql = {
+  title: 'title COLLATE NOCASE',
+  starts: 'starts_at',
+  committee: 'committee_slug COLLATE NOCASE',
+  category: 'category COLLATE NOCASE',
+  registration: 'registration_enabled',
+}
+
 export async function listAllEventsPaginated(
   db: D1Database,
   page: number,
   filter?: EventListFilter,
+  sort?: SortSpec | null,
 ): Promise<PaginatedResult<EventRecord>> {
   const { sql: where, binds } = eventWhereClause(filter)
+  const order = sqlOrderBy(sort, EVENT_SORT_COLUMNS, 'ORDER BY starts_at DESC')
   return paginateQuery<EventRecord>(
     db,
     `SELECT COUNT(*) as c FROM events ${where}`,
-    `SELECT * FROM events ${where} ORDER BY starts_at DESC`,
+    `SELECT * FROM events ${where} ${order}`,
     page,
     binds,
   )
@@ -237,16 +248,23 @@ export type OccurrenceCancellation = {
   cancellation_message: string | null
 }
 
+export const CANCELLATION_SORT_COLUMNS: SortColumnSql = {
+  date: 'occurrence_date',
+  message: 'cancellation_message COLLATE NOCASE',
+}
+
 export async function listCancelledOccurrences(
   db: D1Database,
   eventId: string,
+  sort?: SortSpec | null,
 ): Promise<OccurrenceCancellation[]> {
+  const order = sqlOrderBy(sort, CANCELLATION_SORT_COLUMNS, 'ORDER BY occurrence_date ASC')
   const { results } = await db
     .prepare(
       `SELECT event_id, occurrence_date, cancelled_at, cancellation_message
        FROM event_occurrence_cancellations
        WHERE event_id = ?
-       ORDER BY occurrence_date ASC`,
+       ${order}`,
     )
     .bind(eventId)
     .all<OccurrenceCancellation>()

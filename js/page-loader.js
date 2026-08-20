@@ -52,6 +52,20 @@ async function mountPageForms(container) {
   }
 }
 
+function contentIncludesEnrollment(html) {
+  return String(html || '').includes('committee-enrollment.html')
+}
+
+function extractStaticEnrollmentCta(container) {
+  if (!container) return null
+  for (const section of container.querySelectorAll('section')) {
+    if (section.querySelector('a[href*="committee-enrollment.html"]')) {
+      return section.outerHTML
+    }
+  }
+  return null
+}
+
 async function loadPageContent() {
   let slug = document.body.dataset.pageSlug;
   if (!slug) {
@@ -61,14 +75,19 @@ async function loadPageContent() {
   }
   if (!slug || !window.NRCGA_API || !window.NRCGA_pageBlocks) return;
 
-  const bodyContainer = document.getElementById('page-body');
-  if (!bodyContainer) return;
+  const bodyContainer = document.getElementById('page-body')
+  if (!bodyContainer) return
+
+  const staticEnrollmentCta = extractStaticEnrollmentCta(bodyContainer)
 
   try {
     const page = await window.NRCGA_API.get(`/pages/${encodeURIComponent(slug)}`);
     updatePageHeader(page);
 
-    const bodyHtml = window.NRCGA_pageBlocks.renderPageBody(page);
+    let bodyHtml = window.NRCGA_pageBlocks.renderPageBody(page);
+    if (bodyHtml && !contentIncludesEnrollment(bodyHtml) && staticEnrollmentCta) {
+      bodyHtml += staticEnrollmentCta;
+    }
     if (bodyHtml) {
       bodyContainer.innerHTML = bodyHtml;
       window.NRCGA_pageBlocks.initParallaxFigures(bodyContainer);

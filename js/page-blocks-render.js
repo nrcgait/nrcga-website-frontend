@@ -238,6 +238,10 @@
       .join('\n')
   }
 
+  function contentIncludesEnrollment(html) {
+    return String(html || '').includes('committee-enrollment.html')
+  }
+
   function isLikelyCtaOnlyBodyHtml(html) {
     const trimmed = String(html || '').trim()
     if (!trimmed) return false
@@ -262,6 +266,9 @@
 
     if (htmlOut && jsonHtml) {
       if (isLikelyCtaOnlyBodyHtml(html)) {
+        return jsonHtml
+      }
+      if (!contentIncludesEnrollment(htmlOut) && contentIncludesEnrollment(jsonHtml)) {
         return jsonHtml
       }
       return htmlOut

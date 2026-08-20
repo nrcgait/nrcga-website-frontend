@@ -50,6 +50,15 @@ npx wrangler pages deploy . --project-name nrcga-website-staging --branch featur
 
 Public JSON GETs send `Cache-Control: public, max-age=60` (no KV cache layer — fine for chapter traffic).
 
+## Rate limiting
+
+Cloudflare Workers Rate Limiting bindings (per colo, per key):
+
+- **Staff login** (`POST /admin/login`): 8 attempts / 60s per IP and per email
+- **Public writes** (`POST /api/v1/*`): 20 requests / 60s per IP (forms, event registration)
+
+Exceeded requests return **429** with `Retry-After: 60`. Staging uses separate namespace IDs so it does not share counters with production.
+
 ## Pages editor
 
 CMS pages use a rich-text editor (same toolbar model as posts) with insertable blocks: Image, Button, Callout, Embed, Spacer. Content is stored in `pages.body_html`. The home page (`slug=home`) also stores hero and contact copy in `pages.regions_json`. Legacy `body_json` remains as a read fallback until pages are re-saved.

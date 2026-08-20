@@ -21,6 +21,7 @@ import {
   listUsersPaginated,
   updateUser,
   verifyUserLogin,
+  USER_SORT_COLUMNS,
 } from '../lib/auth'
 import { loadAdminContext, escapeHtml, type AdminContext } from '../lib/admin-context'
 import {
@@ -32,6 +33,7 @@ import {
   listMembersPaginated,
   listStakeholderMembers,
   upsertMember,
+  MEMBER_SORT_COLUMNS,
 } from '../lib/content-db'
 import {
   cancelEventOccurrence,
@@ -45,6 +47,8 @@ import {
   uncancelEventSeries,
   updateEvent,
   type EventListFilter,
+  EVENT_SORT_COLUMNS,
+  CANCELLATION_SORT_COLUMNS,
 } from '../lib/events-db'
 import {
   canEditEvent,
@@ -54,7 +58,7 @@ import {
   validateEventAssignment,
 } from '../lib/permissions'
 import { registerAdminAssetRoutes } from './admin-assets'
-import { deleteRegistration, listRegistrationsPaginated } from '../lib/event-registrations'
+import { deleteRegistration, listRegistrationsPaginated, REGISTRATION_SORT_COLUMNS } from '../lib/event-registrations'
 import {
   getBreakingNews,
   getContactInfo,
@@ -77,14 +81,21 @@ import {
 } from '../lib/session'
 import { combineDateTime, formatEventDateTime, splitDateTime, toDateInputValue } from '../lib/event-datetime'
 import { parsePageParam, parseSearchParam } from '../lib/pagination'
+import { parseSortParam, sortParams } from '../lib/sort'
 import {
   geocodeNevadaAddress,
   geocodeNevadaAddressCandidates,
   parseManualCoordinates,
   resolveEventFormCoordinates,
 } from '../lib/geocode'
+import {
+  clientIp,
+  consumeRateLimits,
+  LOGIN_RATE_LIMIT_MESSAGE,
+  rateLimitHeaders,
+} from '../lib/rate-limit'
 import { AdminShell, LoginPage } from '../views/AdminShell'
-import { AssetUrlField, Pagination, CommitteeSelect, ListSearch } from '../views/AdminComponents'
+import { AssetUrlField, Pagination, CommitteeSelect, ListSearch, SortableHead } from '../views/AdminComponents'
 import { MemberForm, UserForm } from '../views/MemberForm'
 
 async function requireAdmin(c: { env: Env; req: { header: (name: string) => string | undefined } }) {
@@ -346,6 +357,13 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>) {
     const body = await c.req.parseBody()
     const email = typeof body.email === 'string' ? body.email : ''
     const password = typeof body.password === 'string' ? body.password : ''
+    const loginKeys = [`ip:${clientIp(c)}`]
+    const normalizedEmail = email.toLowerCase().trim()
+    if (normalizedEmail) loginKeys.push(`email:${normalizedEmail}`)
+    const allowed = await consumeRateLimits(c.env.LOGIN_RATE_LIMITER, loginKeys)
+    if (!allowed) {
+      return c.html(<LoginPage error={LOGIN_RATE_LIMIT_MESSAGE} />, 429, rateLimitHeaders())
+    }
     const user = await verifyUserLogin(c.env, email, password)
     if (!user) return c.html(<LoginPage error="Invalid email or password." />)
     const token = await createSessionToken(user.id, user.role, c.env)
@@ -449,7 +467,9 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>) {
     if (!ctx || !canManageMembers(ctx.user.role)) return redirect(c, '/admin/login')
     const page = parsePageParam(c.req.query('page'))
     const search = parseSearchParam(c.req.query('q'))
-    const result = await listMembersPaginated(c.env.DB, page, search)
+    const sort = parseSortParam(c.req.query('sort'), c.req.query('dir'), MEMBER_SORT_COLUMNS)
+    const result = await listMembersPaginated(c.env.DB, page, search, sort)
+    const listParams = sortParams(sort)
     return c.html(
       <AdminShell ctx={ctx} title="Members" activePath="/admin/members" publicSiteOrigin={c.env.PUBLIC_SITE_ORIGIN}>
         <p>
@@ -457,19 +477,28 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>) {
             Add member
           </a>
         </p>
-        <ListSearch action="/admin/members" query={search} placeholder="Search by company, type, group, or contact…" />
+        <ListSearch
+          action="/admin/members"
+          query={search}
+          placeholder="Search by company, type, group, or contact…"
+          params={listParams}
+        />
         <table class="admin-table">
-          <thead>
-            <tr>
-              <th>Type</th>
-              <th>Company</th>
-              <th>Group</th>
-              <th>Board</th>
-              <th>Officer</th>
-              <th>Contact</th>
-              <th></th>
-            </tr>
-          </thead>
+          <SortableHead
+            current={sort}
+            basePath="/admin/members"
+            search={search}
+            params={listParams}
+            columns={[
+              { key: 'type', label: 'Type' },
+              { key: 'company', label: 'Company' },
+              { key: 'group', label: 'Group' },
+              { key: 'board', label: 'Board' },
+              { key: 'officer', label: 'Officer' },
+              { key: 'contact', label: 'Contact' },
+              { label: '' },
+            ]}
+          />
           <tbody>
             {result.items.length === 0 ? (
               <tr>
@@ -504,6 +533,7 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>) {
           total={result.total}
           basePath="/admin/members"
           search={search}
+          params={listParams}
         />
       </AdminShell>,
     )
@@ -578,7 +608,9 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>) {
     const ctx = await requireAdmin(c)
     if (!ctx || !canViewEvents(ctx)) return redirect(c, '/admin/login')
     const page = parsePageParam(c.req.query('page'))
-    const result = await listAllEventsPaginated(c.env.DB, page, eventListFilter(ctx))
+    const sort = parseSortParam(c.req.query('sort'), c.req.query('dir'), EVENT_SORT_COLUMNS)
+    const result = await listAllEventsPaginated(c.env.DB, page, eventListFilter(ctx), sort)
+    const listParams = sortParams(sort)
     return c.html(
       <AdminShell ctx={ctx} title="Events" activePath="/admin/events" publicSiteOrigin={c.env.PUBLIC_SITE_ORIGIN}>
         <p>
@@ -587,16 +619,19 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>) {
           </a>
         </p>
         <table class="admin-table">
-          <thead>
-            <tr>
-              <th>Title</th>
-              <th>Starts</th>
-              <th>Committee</th>
-              <th>Category</th>
-              <th>Registration</th>
-              <th></th>
-            </tr>
-          </thead>
+          <SortableHead
+            current={sort}
+            basePath="/admin/events"
+            params={listParams}
+            columns={[
+              { key: 'title', label: 'Title' },
+              { key: 'starts', label: 'Starts', defaultDir: 'desc' },
+              { key: 'committee', label: 'Committee' },
+              { key: 'category', label: 'Category' },
+              { key: 'registration', label: 'Registration' },
+              { label: '' },
+            ]}
+          />
           <tbody>
             {result.items.map((e) => (
               <tr>
@@ -616,7 +651,13 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>) {
             ))}
           </tbody>
         </table>
-        <Pagination page={result.page} totalPages={result.totalPages} total={result.total} basePath="/admin/events" />
+        <Pagination
+          page={result.page}
+          totalPages={result.totalPages}
+          total={result.total}
+          basePath="/admin/events"
+          params={listParams}
+        />
       </AdminShell>,
     )
   })
@@ -755,9 +796,12 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>) {
     if (!event) return c.text('Not found', 404)
     if (!canEditEvent(ctx, event)) return c.text('Forbidden', 403)
     const page = parsePageParam(c.req.query('page'))
-    const result = await listRegistrationsPaginated(c.env.DB, event.id, page)
-    const cancelledOccurrences = await listCancelledOccurrences(c.env.DB, event.id)
+    const sort = parseSortParam(c.req.query('sort'), c.req.query('dir'), REGISTRATION_SORT_COLUMNS)
+      ?? parseSortParam(c.req.query('sort'), c.req.query('dir'), CANCELLATION_SORT_COLUMNS)
+    const result = await listRegistrationsPaginated(c.env.DB, event.id, page, sort)
+    const cancelledOccurrences = await listCancelledOccurrences(c.env.DB, event.id, sort)
     const basePath = `/admin/events/${event.id}/registrations`
+    const listParams = sortParams(sort)
     return c.html(
       <AdminShell ctx={ctx} title={`Registrations — ${event.title}`} activePath="/admin/events" publicSiteOrigin={c.env.PUBLIC_SITE_ORIGIN}>
         {event.cancelled_at ? (
@@ -770,13 +814,16 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>) {
           <>
             <h3>Cancelled occurrences</h3>
             <table class="admin-table">
-              <thead>
-                <tr>
-                  <th>Date</th>
-                  <th>Message</th>
-                  <th></th>
-                </tr>
-              </thead>
+              <SortableHead
+                current={sort}
+                basePath={basePath}
+                params={listParams}
+                columns={[
+                  { key: 'date', label: 'Date', defaultDir: 'desc' },
+                  { key: 'message', label: 'Message' },
+                  { label: '' },
+                ]}
+              />
               <tbody>
                 {cancelledOccurrences.map((occ) => (
                   <tr>
@@ -810,15 +857,18 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>) {
           </button>
         </form>
         <table class="admin-table">
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Name</th>
-              <th>Email</th>
-              <th>Spots</th>
-              <th></th>
-            </tr>
-          </thead>
+          <SortableHead
+            current={sort}
+            basePath={basePath}
+            params={listParams}
+            columns={[
+              { key: 'date', label: 'Date', defaultDir: 'desc' },
+              { key: 'name', label: 'Name' },
+              { key: 'email', label: 'Email' },
+              { key: 'spots', label: 'Spots' },
+              { label: '' },
+            ]}
+          />
           <tbody>
             {result.items.map((r) => (
               <tr>
@@ -837,7 +887,13 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>) {
             ))}
           </tbody>
         </table>
-        <Pagination page={result.page} totalPages={result.totalPages} total={result.total} basePath={basePath} />
+        <Pagination
+          page={result.page}
+          totalPages={result.totalPages}
+          total={result.total}
+          basePath={basePath}
+          params={listParams}
+        />
       </AdminShell>,
     )
   })
@@ -1091,14 +1147,9 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>) {
     if (!ctx || !canManageUsers(ctx.user.role)) return redirect(c, '/admin/login')
     const page = parsePageParam(c.req.query('page'))
     const search = parseSearchParam(c.req.query('q'))
-    const result = await listUsersPaginated(c.env.DB, page, search)
-    const memberNames = new Map<string, string>()
-    for (const u of result.items) {
-      if (u.member_id) {
-        const member = await getMemberById(c.env.DB, u.member_id)
-        if (member) memberNames.set(u.member_id, String(member.company_name ?? ''))
-      }
-    }
+    const sort = parseSortParam(c.req.query('sort'), c.req.query('dir'), USER_SORT_COLUMNS)
+    const result = await listUsersPaginated(c.env.DB, page, search, sort)
+    const listParams = sortParams(sort)
     return c.html(
       <AdminShell ctx={ctx} title="Users & roles" activePath="/admin/users" publicSiteOrigin={c.env.PUBLIC_SITE_ORIGIN}>
         <p>
@@ -1106,17 +1157,26 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>) {
             Add user
           </a>
         </p>
-        <ListSearch action="/admin/users" query={search} placeholder="Search by email, name, role, or linked member…" />
+        <ListSearch
+          action="/admin/users"
+          query={search}
+          placeholder="Search by email, name, role, or linked member…"
+          params={listParams}
+        />
         <table class="admin-table">
-          <thead>
-            <tr>
-              <th>Email</th>
-              <th>Role</th>
-              <th>Name</th>
-              <th>Linked member</th>
-              <th></th>
-            </tr>
-          </thead>
+          <SortableHead
+            current={sort}
+            basePath="/admin/users"
+            search={search}
+            params={listParams}
+            columns={[
+              { key: 'email', label: 'Email' },
+              { key: 'role', label: 'Role' },
+              { key: 'name', label: 'Name' },
+              { key: 'member', label: 'Linked member' },
+              { label: '' },
+            ]}
+          />
           <tbody>
             {result.items.length === 0 ? (
               <tr>
@@ -1130,7 +1190,7 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>) {
                   <td>{escapeHtml(u.email)}</td>
                   <td>{escapeHtml(ROLE_LABELS[u.role])}</td>
                   <td>{escapeHtml(u.display_name ?? '')}</td>
-                  <td>{u.member_id ? escapeHtml(memberNames.get(u.member_id) ?? '—') : '—'}</td>
+                  <td>{u.member_id ? escapeHtml(u.member_name ?? '—') : '—'}</td>
                   <td>
                     <a href={`/admin/users/${u.id}/edit`}>Edit</a>
                   </td>
@@ -1145,6 +1205,7 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>) {
           total={result.total}
           basePath="/admin/users"
           search={search}
+          params={listParams}
         />
       </AdminShell>,
     )

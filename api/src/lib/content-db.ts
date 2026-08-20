@@ -1,5 +1,6 @@
 import type { PaginatedResult } from './pagination'
 import { likePattern, paginateQuery } from './pagination'
+import { sqlOrderBy, type SortColumnSql, type SortSpec } from './sort'
 
 type Row = Record<string, unknown>
 
@@ -10,17 +11,28 @@ export async function listMembers(db: D1Database) {
   return results ?? []
 }
 
+export const MEMBER_SORT_COLUMNS: SortColumnSql = {
+  type: 'type COLLATE NOCASE',
+  company: 'company_name COLLATE NOCASE',
+  group: 'stakeholder_group COLLATE NOCASE',
+  board: 'is_board_member',
+  officer: '(CASE WHEN is_chair = 1 THEN 1 WHEN is_vice_chair = 1 THEN 2 ELSE 3 END)',
+  contact: 'contact_person COLLATE NOCASE',
+}
+
 export async function listMembersPaginated(
   db: D1Database,
   page: number,
   search = '',
+  sort?: SortSpec | null,
 ): Promise<PaginatedResult<Row>> {
+  const order = sqlOrderBy(sort, MEMBER_SORT_COLUMNS, 'ORDER BY type, company_name')
   const term = search.trim()
   if (!term) {
     return paginateQuery(
       db,
       'SELECT COUNT(*) as c FROM members',
-      'SELECT * FROM members ORDER BY type, company_name',
+      `SELECT * FROM members ${order}`,
       page,
     )
   }
@@ -39,7 +51,7 @@ export async function listMembersPaginated(
   return paginateQuery(
     db,
     `SELECT COUNT(*) as c FROM members ${where}`,
-    `SELECT * FROM members ${where} ORDER BY type, company_name`,
+    `SELECT * FROM members ${where} ${order}`,
     page,
     binds,
   )
@@ -262,17 +274,25 @@ export async function listPrograms(db: D1Database) {
   return results ?? []
 }
 
+export const PROGRAM_SORT_COLUMNS: SortColumnSql = {
+  title: 'title COLLATE NOCASE',
+  committee: 'committee_slug COLLATE NOCASE',
+  link: 'link COLLATE NOCASE',
+}
+
 export async function listProgramsPaginated(
   db: D1Database,
   page: number,
   committeeSlugs?: string[],
+  sort?: SortSpec | null,
 ): Promise<PaginatedResult<Row>> {
+  const order = sqlOrderBy(sort, PROGRAM_SORT_COLUMNS, 'ORDER BY sort_order, title')
   if (committeeSlugs?.length) {
     const placeholders = committeeSlugs.map(() => '?').join(', ')
     return paginateQuery(
       db,
       `SELECT COUNT(*) as c FROM programs WHERE committee_slug IN (${placeholders})`,
-      `SELECT * FROM programs WHERE committee_slug IN (${placeholders}) ORDER BY sort_order, title`,
+      `SELECT * FROM programs WHERE committee_slug IN (${placeholders}) ${order}`,
       page,
       committeeSlugs,
     )
@@ -280,7 +300,7 @@ export async function listProgramsPaginated(
   return paginateQuery(
     db,
     'SELECT COUNT(*) as c FROM programs',
-    'SELECT * FROM programs ORDER BY sort_order, title',
+    `SELECT * FROM programs ${order}`,
     page,
   )
 }
@@ -369,17 +389,26 @@ export async function listArchiveFeed(
   )
 }
 
+export const ARCHIVE_SORT_COLUMNS: SortColumnSql = {
+  type: 'type COLLATE NOCASE',
+  title: 'title COLLATE NOCASE',
+  committee: 'committee_slug COLLATE NOCASE',
+  date: 'date',
+}
+
 export async function listArchiveItemsPaginated(
   db: D1Database,
   page: number,
   committeeSlugs?: string[],
+  sort?: SortSpec | null,
 ): Promise<PaginatedResult<Row>> {
+  const order = sqlOrderBy(sort, ARCHIVE_SORT_COLUMNS, 'ORDER BY date DESC, title')
   if (committeeSlugs?.length) {
     const placeholders = committeeSlugs.map(() => '?').join(', ')
     return paginateQuery(
       db,
       `SELECT COUNT(*) as c FROM archive_items WHERE committee_slug IN (${placeholders})`,
-      `SELECT * FROM archive_items WHERE committee_slug IN (${placeholders}) ORDER BY date DESC, title`,
+      `SELECT * FROM archive_items WHERE committee_slug IN (${placeholders}) ${order}`,
       page,
       committeeSlugs,
     )
@@ -387,7 +416,7 @@ export async function listArchiveItemsPaginated(
   return paginateQuery(
     db,
     'SELECT COUNT(*) as c FROM archive_items',
-    'SELECT * FROM archive_items ORDER BY date DESC, title',
+    `SELECT * FROM archive_items ${order}`,
     page,
   )
 }
@@ -427,11 +456,22 @@ export async function listCarouselSlides(db: D1Database) {
   return results ?? []
 }
 
-export async function listCarouselSlidesPaginated(db: D1Database, page: number): Promise<PaginatedResult<Row>> {
+export const CAROUSEL_SORT_COLUMNS: SortColumnSql = {
+  alt: 'alt_text COLLATE NOCASE',
+  order: 'display_order',
+  active: 'active',
+}
+
+export async function listCarouselSlidesPaginated(
+  db: D1Database,
+  page: number,
+  sort?: SortSpec | null,
+): Promise<PaginatedResult<Row>> {
+  const order = sqlOrderBy(sort, CAROUSEL_SORT_COLUMNS, 'ORDER BY display_order, created_at')
   return paginateQuery(
     db,
     'SELECT COUNT(*) as c FROM carousel_slides',
-    'SELECT * FROM carousel_slides ORDER BY display_order, created_at',
+    `SELECT * FROM carousel_slides ${order}`,
     page,
   )
 }
@@ -476,11 +516,20 @@ export async function listZeroDamages(db: D1Database) {
   return results ?? []
 }
 
-export async function listZeroDamagesPaginated(db: D1Database, page: number): Promise<PaginatedResult<Row>> {
+export const ZERO_DAMAGE_SORT_COLUMNS: SortColumnSql = {
+  company: 'company COLLATE NOCASE',
+}
+
+export async function listZeroDamagesPaginated(
+  db: D1Database,
+  page: number,
+  sort?: SortSpec | null,
+): Promise<PaginatedResult<Row>> {
+  const order = sqlOrderBy(sort, ZERO_DAMAGE_SORT_COLUMNS, 'ORDER BY company')
   return paginateQuery(
     db,
     'SELECT COUNT(*) as c FROM zero_damages',
-    'SELECT * FROM zero_damages ORDER BY company',
+    `SELECT * FROM zero_damages ${order}`,
     page,
   )
 }
@@ -513,11 +562,21 @@ export async function listQaItems(db: D1Database, publishedOnly = false) {
   return results ?? []
 }
 
-export async function listQaItemsPaginated(db: D1Database, page: number): Promise<PaginatedResult<Row>> {
+export const QA_SORT_COLUMNS: SortColumnSql = {
+  question: 'question COLLATE NOCASE',
+  published: 'published',
+}
+
+export async function listQaItemsPaginated(
+  db: D1Database,
+  page: number,
+  sort?: SortSpec | null,
+): Promise<PaginatedResult<Row>> {
+  const order = sqlOrderBy(sort, QA_SORT_COLUMNS, 'ORDER BY sort_order, question')
   return paginateQuery(
     db,
     'SELECT COUNT(*) as c FROM qa_items',
-    'SELECT * FROM qa_items ORDER BY sort_order, question',
+    `SELECT * FROM qa_items ${order}`,
     page,
   )
 }
@@ -559,13 +618,25 @@ export async function listPages(db: D1Database) {
   return results ?? []
 }
 
-export async function listPagesPaginated(db: D1Database, page: number, slugFilter?: string[]): Promise<PaginatedResult<Row>> {
+export const PAGE_SORT_COLUMNS: SortColumnSql = {
+  slug: 'slug COLLATE NOCASE',
+  title: 'title COLLATE NOCASE',
+  published: 'published',
+}
+
+export async function listPagesPaginated(
+  db: D1Database,
+  page: number,
+  slugFilter?: string[],
+  sort?: SortSpec | null,
+): Promise<PaginatedResult<Row>> {
+  const order = sqlOrderBy(sort, PAGE_SORT_COLUMNS, 'ORDER BY slug')
   if (slugFilter && slugFilter.length > 0) {
     const placeholders = slugFilter.map(() => '?').join(', ')
     return paginateQuery(
       db,
       `SELECT COUNT(*) as c FROM pages WHERE slug IN (${placeholders})`,
-      `SELECT * FROM pages WHERE slug IN (${placeholders}) ORDER BY slug`,
+      `SELECT * FROM pages WHERE slug IN (${placeholders}) ${order}`,
       page,
       slugFilter,
     )
@@ -573,7 +644,7 @@ export async function listPagesPaginated(db: D1Database, page: number, slugFilte
   return paginateQuery(
     db,
     'SELECT COUNT(*) as c FROM pages',
-    'SELECT * FROM pages ORDER BY slug',
+    `SELECT * FROM pages ${order}`,
     page,
   )
 }

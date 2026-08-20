@@ -1,5 +1,6 @@
 import type { PaginatedResult } from './pagination'
 import { paginateQuery } from './pagination'
+import { sqlOrderBy, type SortColumnSql, type SortSpec } from './sort'
 
 type Row = Record<string, unknown>
 
@@ -78,11 +79,22 @@ export async function listResourceLinks(db: D1Database, activeOnly = false) {
   return results ?? []
 }
 
-export async function listResourceLinksPaginated(db: D1Database, page: number): Promise<PaginatedResult<Row>> {
+export const RESOURCE_SORT_COLUMNS: SortColumnSql = {
+  title: 'title COLLATE NOCASE',
+  category: 'category COLLATE NOCASE',
+  url: 'url COLLATE NOCASE',
+}
+
+export async function listResourceLinksPaginated(
+  db: D1Database,
+  page: number,
+  sort?: SortSpec | null,
+): Promise<PaginatedResult<Row>> {
+  const order = sqlOrderBy(sort, RESOURCE_SORT_COLUMNS, 'ORDER BY sort_order, title')
   return paginateQuery(
     db,
     'SELECT COUNT(*) as c FROM resource_links',
-    'SELECT * FROM resource_links ORDER BY sort_order, title',
+    `SELECT * FROM resource_links ${order}`,
     page,
   )
 }
@@ -132,11 +144,22 @@ export async function listMembershipTypes(db: D1Database, activeOnly = false) {
   return results ?? []
 }
 
-export async function listMembershipTypesPaginated(db: D1Database, page: number): Promise<PaginatedResult<Row>> {
+export const MEMBERSHIP_TYPE_SORT_COLUMNS: SortColumnSql = {
+  name: 'name COLLATE NOCASE',
+  slug: 'slug COLLATE NOCASE',
+  active: 'active',
+}
+
+export async function listMembershipTypesPaginated(
+  db: D1Database,
+  page: number,
+  sort?: SortSpec | null,
+): Promise<PaginatedResult<Row>> {
+  const order = sqlOrderBy(sort, MEMBERSHIP_TYPE_SORT_COLUMNS, 'ORDER BY sort_order, name')
   return paginateQuery(
     db,
     'SELECT COUNT(*) as c FROM membership_types',
-    'SELECT * FROM membership_types ORDER BY sort_order, name',
+    `SELECT * FROM membership_types ${order}`,
     page,
   )
 }
@@ -178,11 +201,22 @@ export async function listCommitteesFull(db: D1Database) {
   return results ?? []
 }
 
-export async function listCommitteesPaginated(db: D1Database, page: number): Promise<PaginatedResult<Row>> {
+export const COMMITTEE_SORT_COLUMNS: SortColumnSql = {
+  name: 'name COLLATE NOCASE',
+  slug: 'slug COLLATE NOCASE',
+  order: 'COALESCE(sort_order, 0)',
+}
+
+export async function listCommitteesPaginated(
+  db: D1Database,
+  page: number,
+  sort?: SortSpec | null,
+): Promise<PaginatedResult<Row>> {
+  const order = sqlOrderBy(sort, COMMITTEE_SORT_COLUMNS, 'ORDER BY COALESCE(sort_order, 0), name')
   return paginateQuery(
     db,
     'SELECT COUNT(*) as c FROM committees',
-    'SELECT * FROM committees ORDER BY COALESCE(sort_order, 0), name',
+    `SELECT * FROM committees ${order}`,
     page,
   )
 }
@@ -223,11 +257,22 @@ export async function deleteCommittee(db: D1Database, id: string) {
   await db.prepare('DELETE FROM committees WHERE id = ?').bind(id).run()
 }
 
-export async function listCommitteePeoplePaginated(db: D1Database, page: number): Promise<PaginatedResult<Row>> {
+export const COMMITTEE_PERSON_SORT_COLUMNS: SortColumnSql = {
+  name: 'name COLLATE NOCASE',
+  company: 'company COLLATE NOCASE',
+  email: 'email COLLATE NOCASE',
+}
+
+export async function listCommitteePeoplePaginated(
+  db: D1Database,
+  page: number,
+  sort?: SortSpec | null,
+): Promise<PaginatedResult<Row>> {
+  const order = sqlOrderBy(sort, COMMITTEE_PERSON_SORT_COLUMNS, 'ORDER BY name')
   return paginateQuery(
     db,
     'SELECT COUNT(*) as c FROM committee_members',
-    'SELECT * FROM committee_members ORDER BY name',
+    `SELECT * FROM committee_members ${order}`,
     page,
   )
 }
@@ -289,11 +334,22 @@ export async function listPosts(db: D1Database, publishedOnly = false) {
   return results ?? []
 }
 
-export async function listPostsPaginated(db: D1Database, page: number): Promise<PaginatedResult<Row>> {
+export const POST_SORT_COLUMNS: SortColumnSql = {
+  title: 'title COLLATE NOCASE',
+  slug: 'slug COLLATE NOCASE',
+  published: 'published',
+}
+
+export async function listPostsPaginated(
+  db: D1Database,
+  page: number,
+  sort?: SortSpec | null,
+): Promise<PaginatedResult<Row>> {
+  const order = sqlOrderBy(sort, POST_SORT_COLUMNS, 'ORDER BY COALESCE(published_at, created_at) DESC, title')
   return paginateQuery(
     db,
     'SELECT COUNT(*) as c FROM posts',
-    'SELECT * FROM posts ORDER BY COALESCE(published_at, created_at) DESC, title',
+    `SELECT * FROM posts ${order}`,
     page,
   )
 }

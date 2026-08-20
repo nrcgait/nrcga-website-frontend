@@ -10,6 +10,7 @@ import {
 import { canViewInbox, canViewSubmission } from '../lib/permissions'
 import { listUsers } from '../lib/auth'
 import { parsePageParam, parseSearchParam } from '../lib/pagination'
+import { parseSortParam, sortParams, type ListParams, type SortSpec } from '../lib/sort'
 import {
   deleteCommittee,
   deleteCommitteePerson,
@@ -34,6 +35,11 @@ import {
   upsertMembershipType,
   upsertPost,
   upsertResourceLink,
+  COMMITTEE_PERSON_SORT_COLUMNS,
+  COMMITTEE_SORT_COLUMNS,
+  MEMBERSHIP_TYPE_SORT_COLUMNS,
+  POST_SORT_COLUMNS,
+  RESOURCE_SORT_COLUMNS,
 } from '../lib/parity-db'
 import {
   countNewFormSubmissionsByType,
@@ -57,9 +63,11 @@ import {
   updateNewsletterStatus,
   upsertFormInbox,
   type FormFieldDef,
+  NEWSLETTER_SORT_COLUMNS,
+  SUBMISSION_SORT_COLUMNS,
 } from '../lib/forms-db'
 import { AdminShell } from '../views/AdminShell'
-import { AssetUrlField, ListSearch, Pagination } from '../views/AdminComponents'
+import { AssetUrlField, ListSearch, Pagination, SortableHead } from '../views/AdminComponents'
 
 type RequireAdmin = (c: { env: Env; req: { header: (name: string) => string | undefined } }) => Promise<AdminContext | null>
 type Redirect = (c: { redirect: (url: string, status?: 303) => Response }, url: string) => Response
@@ -124,7 +132,9 @@ export function registerAdminParityRoutes(app: Hono<{ Bindings: Env }>, requireA
     const ctx = await requireAdmin(c)
     if (!ctx || !canManageAllContent(ctx.user.role)) return redirect(c, '/admin/login')
     const page = parsePageParam(c.req.query('page'))
-    const result = await listCommitteesPaginated(c.env.DB, page)
+    const sort = parseSortParam(c.req.query('sort'), c.req.query('dir'), COMMITTEE_SORT_COLUMNS)
+    const result = await listCommitteesPaginated(c.env.DB, page, sort)
+    const listParams = sortParams(sort)
     return c.html(
       <AdminShell ctx={ctx} title="Committees" activePath="/admin/content" publicSiteOrigin={c.env.PUBLIC_SITE_ORIGIN}>
         <p>
@@ -136,14 +146,17 @@ export function registerAdminParityRoutes(app: Hono<{ Bindings: Env }>, requireA
           </a>
         </p>
         <table class="admin-table">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Slug</th>
-              <th>Order</th>
-              <th></th>
-            </tr>
-          </thead>
+          <SortableHead
+            current={sort}
+            basePath="/admin/content/committees"
+            params={listParams}
+            columns={[
+              { key: 'name', label: 'Name' },
+              { key: 'slug', label: 'Slug' },
+              { key: 'order', label: 'Order' },
+              { label: '' },
+            ]}
+          />
           <tbody>
             {result.items.map((row) => (
               <tr>
@@ -157,7 +170,13 @@ export function registerAdminParityRoutes(app: Hono<{ Bindings: Env }>, requireA
             ))}
           </tbody>
         </table>
-        <Pagination page={result.page} totalPages={result.totalPages} total={result.total} basePath="/admin/content/committees" />
+        <Pagination
+          page={result.page}
+          totalPages={result.totalPages}
+          total={result.total}
+          basePath="/admin/content/committees"
+          params={listParams}
+        />
       </AdminShell>,
     )
   })
@@ -202,7 +221,9 @@ export function registerAdminParityRoutes(app: Hono<{ Bindings: Env }>, requireA
     const ctx = await requireAdmin(c)
     if (!ctx || !canManageAllContent(ctx.user.role)) return redirect(c, '/admin/login')
     const page = parsePageParam(c.req.query('page'))
-    const result = await listCommitteePeoplePaginated(c.env.DB, page)
+    const sort = parseSortParam(c.req.query('sort'), c.req.query('dir'), COMMITTEE_PERSON_SORT_COLUMNS)
+    const result = await listCommitteePeoplePaginated(c.env.DB, page, sort)
+    const listParams = sortParams(sort)
     return c.html(
       <AdminShell ctx={ctx} title="Committee people" activePath="/admin/content" publicSiteOrigin={c.env.PUBLIC_SITE_ORIGIN}>
         <p>
@@ -214,14 +235,17 @@ export function registerAdminParityRoutes(app: Hono<{ Bindings: Env }>, requireA
           </a>
         </p>
         <table class="admin-table">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Company</th>
-              <th>Email</th>
-              <th></th>
-            </tr>
-          </thead>
+          <SortableHead
+            current={sort}
+            basePath="/admin/content/committee-people"
+            params={listParams}
+            columns={[
+              { key: 'name', label: 'Name' },
+              { key: 'company', label: 'Company' },
+              { key: 'email', label: 'Email' },
+              { label: '' },
+            ]}
+          />
           <tbody>
             {result.items.map((row) => (
               <tr>
@@ -240,6 +264,7 @@ export function registerAdminParityRoutes(app: Hono<{ Bindings: Env }>, requireA
           totalPages={result.totalPages}
           total={result.total}
           basePath="/admin/content/committee-people"
+          params={listParams}
         />
       </AdminShell>,
     )
@@ -295,7 +320,9 @@ export function registerAdminParityRoutes(app: Hono<{ Bindings: Env }>, requireA
     const ctx = await requireAdmin(c)
     if (!ctx || !canManageAllContent(ctx.user.role)) return redirect(c, '/admin/login')
     const page = parsePageParam(c.req.query('page'))
-    const result = await listResourceLinksPaginated(c.env.DB, page)
+    const sort = parseSortParam(c.req.query('sort'), c.req.query('dir'), RESOURCE_SORT_COLUMNS)
+    const result = await listResourceLinksPaginated(c.env.DB, page, sort)
+    const listParams = sortParams(sort)
     return c.html(
       <AdminShell ctx={ctx} title="Resources" activePath="/admin/content" publicSiteOrigin={c.env.PUBLIC_SITE_ORIGIN}>
         <p>
@@ -304,14 +331,17 @@ export function registerAdminParityRoutes(app: Hono<{ Bindings: Env }>, requireA
           </a>
         </p>
         <table class="admin-table">
-          <thead>
-            <tr>
-              <th>Title</th>
-              <th>Category</th>
-              <th>URL</th>
-              <th></th>
-            </tr>
-          </thead>
+          <SortableHead
+            current={sort}
+            basePath="/admin/content/resources"
+            params={listParams}
+            columns={[
+              { key: 'title', label: 'Title' },
+              { key: 'category', label: 'Category' },
+              { key: 'url', label: 'URL' },
+              { label: '' },
+            ]}
+          />
           <tbody>
             {result.items.map((row) => (
               <tr>
@@ -325,7 +355,13 @@ export function registerAdminParityRoutes(app: Hono<{ Bindings: Env }>, requireA
             ))}
           </tbody>
         </table>
-        <Pagination page={result.page} totalPages={result.totalPages} total={result.total} basePath="/admin/content/resources" />
+        <Pagination
+          page={result.page}
+          totalPages={result.totalPages}
+          total={result.total}
+          basePath="/admin/content/resources"
+          params={listParams}
+        />
       </AdminShell>,
     )
   })
@@ -371,7 +407,9 @@ export function registerAdminParityRoutes(app: Hono<{ Bindings: Env }>, requireA
     const ctx = await requireAdmin(c)
     if (!ctx || !canManageAllContent(ctx.user.role)) return redirect(c, '/admin/login')
     const page = parsePageParam(c.req.query('page'))
-    const result = await listMembershipTypesPaginated(c.env.DB, page)
+    const sort = parseSortParam(c.req.query('sort'), c.req.query('dir'), MEMBERSHIP_TYPE_SORT_COLUMNS)
+    const result = await listMembershipTypesPaginated(c.env.DB, page, sort)
+    const listParams = sortParams(sort)
     return c.html(
       <AdminShell ctx={ctx} title="Membership types" activePath="/admin/content" publicSiteOrigin={c.env.PUBLIC_SITE_ORIGIN}>
         <p>
@@ -380,14 +418,17 @@ export function registerAdminParityRoutes(app: Hono<{ Bindings: Env }>, requireA
           </a>
         </p>
         <table class="admin-table">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Slug</th>
-              <th>Active</th>
-              <th></th>
-            </tr>
-          </thead>
+          <SortableHead
+            current={sort}
+            basePath="/admin/content/member-types"
+            params={listParams}
+            columns={[
+              { key: 'name', label: 'Name' },
+              { key: 'slug', label: 'Slug' },
+              { key: 'active', label: 'Active' },
+              { label: '' },
+            ]}
+          />
           <tbody>
             {result.items.map((row) => (
               <tr>
@@ -401,7 +442,13 @@ export function registerAdminParityRoutes(app: Hono<{ Bindings: Env }>, requireA
             ))}
           </tbody>
         </table>
-        <Pagination page={result.page} totalPages={result.totalPages} total={result.total} basePath="/admin/content/member-types" />
+        <Pagination
+          page={result.page}
+          totalPages={result.totalPages}
+          total={result.total}
+          basePath="/admin/content/member-types"
+          params={listParams}
+        />
       </AdminShell>,
     )
   })
@@ -447,7 +494,9 @@ export function registerAdminParityRoutes(app: Hono<{ Bindings: Env }>, requireA
     const ctx = await requireAdmin(c)
     if (!ctx || !canManageAllContent(ctx.user.role)) return redirect(c, '/admin/login')
     const page = parsePageParam(c.req.query('page'))
-    const result = await listPostsPaginated(c.env.DB, page)
+    const sort = parseSortParam(c.req.query('sort'), c.req.query('dir'), POST_SORT_COLUMNS)
+    const result = await listPostsPaginated(c.env.DB, page, sort)
+    const listParams = sortParams(sort)
     return c.html(
       <AdminShell ctx={ctx} title="Posts" activePath="/admin/content" publicSiteOrigin={c.env.PUBLIC_SITE_ORIGIN}>
         <p>
@@ -456,14 +505,17 @@ export function registerAdminParityRoutes(app: Hono<{ Bindings: Env }>, requireA
           </a>
         </p>
         <table class="admin-table">
-          <thead>
-            <tr>
-              <th>Title</th>
-              <th>Slug</th>
-              <th>Published</th>
-              <th></th>
-            </tr>
-          </thead>
+          <SortableHead
+            current={sort}
+            basePath="/admin/content/posts"
+            params={listParams}
+            columns={[
+              { key: 'title', label: 'Title' },
+              { key: 'slug', label: 'Slug' },
+              { key: 'published', label: 'Published' },
+              { label: '' },
+            ]}
+          />
           <tbody>
             {result.items.map((row) => (
               <tr>
@@ -477,7 +529,13 @@ export function registerAdminParityRoutes(app: Hono<{ Bindings: Env }>, requireA
             ))}
           </tbody>
         </table>
-        <Pagination page={result.page} totalPages={result.totalPages} total={result.total} basePath="/admin/content/posts" />
+        <Pagination
+          page={result.page}
+          totalPages={result.totalPages}
+          total={result.total}
+          basePath="/admin/content/posts"
+          params={listParams}
+        />
       </AdminShell>,
     )
   })
@@ -644,15 +702,18 @@ export function registerAdminParityRoutes(app: Hono<{ Bindings: Env }>, requireA
       const page = parsePageParam(c.req.query('page'))
       const typeFilter = c.req.query('type') || undefined
       const status = c.req.query('status') || undefined
+      const sort = parseSortParam(c.req.query('sort'), c.req.query('dir'), SUBMISSION_SORT_COLUMNS)
       const formType = typeFilter && box.types.includes(typeFilter as never) ? typeFilter : undefined
       let result
       if (formType) {
-        result = await listFormSubmissionsPaginated(c.env.DB, page, formType, status)
+        result = await listFormSubmissionsPaginated(c.env.DB, page, formType, status, sort)
       } else {
-        result = await listFormSubmissionsPaginatedByTypes(c.env.DB, page, [...box.types], status)
+        result = await listFormSubmissionsPaginatedByTypes(c.env.DB, page, [...box.types], status, false, sort)
       }
       const accessUsers = canManageInboxes(ctx.user.role) ? await listUsers(c.env.DB) : []
       const assignedUserIds = canManageInboxes(ctx.user.role) ? await listInboxAssigneeIds(c.env.DB, inboxKey) : []
+      const basePath = `/admin/inbox/${box.key}`
+      const listParams = { ...sortParams(sort), type: formType, status }
       return c.html(
         <AdminShell ctx={ctx} title={`${box.title} inbox`} activePath="/admin/inbox" publicSiteOrigin={c.env.PUBLIC_SITE_ORIGIN}>
           <p>
@@ -660,12 +721,13 @@ export function registerAdminParityRoutes(app: Hono<{ Bindings: Env }>, requireA
               All inboxes
             </a>
           </p>
-          <SubmissionTable items={result.items} />
+          <SubmissionTable items={result.items} current={sort} basePath={basePath} params={listParams} />
           <Pagination
             page={result.page}
             totalPages={result.totalPages}
             total={result.total}
-            basePath={`/admin/inbox/${box.key}`}
+            basePath={basePath}
+            params={listParams}
           />
           {canManageInboxes(ctx.user.role) ? (
             <InboxAccessForm
@@ -758,7 +820,9 @@ export function registerAdminParityRoutes(app: Hono<{ Bindings: Env }>, requireA
     if (denied) return denied
     const page = parsePageParam(c.req.query('page'))
     const search = parseSearchParam(c.req.query('q'))
-    const result = await listNewsletterPaginated(c.env.DB, page, search)
+    const sort = parseSortParam(c.req.query('sort'), c.req.query('dir'), NEWSLETTER_SORT_COLUMNS)
+    const result = await listNewsletterPaginated(c.env.DB, page, search, sort)
+    const listParams = sortParams(sort)
     const accessUsers = canManageInboxes(ctx.user.role) ? await listUsers(c.env.DB) : []
     const assignedUserIds = canManageInboxes(ctx.user.role) ? await listInboxAssigneeIds(c.env.DB, 'newsletter') : []
     return c.html(
@@ -773,17 +837,26 @@ export function registerAdminParityRoutes(app: Hono<{ Bindings: Env }>, requireA
             </a>
           ) : null}
         </p>
-        <ListSearch action="/admin/inbox/newsletter" query={search} placeholder="Search email or name…" />
+        <ListSearch
+          action="/admin/inbox/newsletter"
+          query={search}
+          placeholder="Search email or name…"
+          params={listParams}
+        />
         <table class="admin-table">
-          <thead>
-            <tr>
-              <th>Email</th>
-              <th>Name</th>
-              <th>Status</th>
-              <th>Joined</th>
-              <th></th>
-            </tr>
-          </thead>
+          <SortableHead
+            current={sort}
+            basePath="/admin/inbox/newsletter"
+            search={search}
+            params={listParams}
+            columns={[
+              { key: 'email', label: 'Email' },
+              { key: 'name', label: 'Name' },
+              { key: 'status', label: 'Status' },
+              { key: 'joined', label: 'Joined', defaultDir: 'desc' },
+              { label: '' },
+            ]}
+          />
           <tbody>
             {result.items.map((row) => (
               <tr>
@@ -808,6 +881,8 @@ export function registerAdminParityRoutes(app: Hono<{ Bindings: Env }>, requireA
           totalPages={result.totalPages}
           total={result.total}
           basePath="/admin/inbox/newsletter"
+          search={search}
+          params={listParams}
         />
         {canManageInboxes(ctx.user.role) ? (
           <InboxAccessForm inboxKey="newsletter" users={accessUsers} assignedUserIds={assignedUserIds} />
@@ -917,7 +992,10 @@ export function registerAdminParityRoutes(app: Hono<{ Bindings: Env }>, requireA
     if (denied) return denied
     const page = parsePageParam(c.req.query('page'))
     const status = c.req.query('status') || undefined
-    const result = await listFormSubmissionsPaginated(c.env.DB, page, String(inbox.slug), status)
+    const sort = parseSortParam(c.req.query('sort'), c.req.query('dir'), SUBMISSION_SORT_COLUMNS)
+    const result = await listFormSubmissionsPaginated(c.env.DB, page, String(inbox.slug), status, sort)
+    const basePath = `/admin/inbox/${encodeURIComponent(String(inbox.slug))}`
+    const listParams = { ...sortParams(sort), status }
     return c.html(
       <AdminShell
         ctx={ctx}
@@ -935,12 +1013,13 @@ export function registerAdminParityRoutes(app: Hono<{ Bindings: Env }>, requireA
             </a>
           ) : null}
         </p>
-        <SubmissionTable items={result.items} />
+        <SubmissionTable items={result.items} current={sort} basePath={basePath} params={listParams} />
         <Pagination
           page={result.page}
           totalPages={result.totalPages}
           total={result.total}
-          basePath={`/admin/inbox/${encodeURIComponent(String(inbox.slug))}`}
+          basePath={basePath}
+          params={listParams}
         />
       </AdminShell>,
     )
@@ -1375,18 +1454,31 @@ function InboxHubCard({
   )
 }
 
-function SubmissionTable({ items }: { items: Array<Record<string, unknown>> }) {
+function SubmissionTable({
+  items,
+  current,
+  basePath,
+  params,
+}: {
+  items: Array<Record<string, unknown>>
+  current: SortSpec | null
+  basePath: string
+  params?: ListParams
+}) {
   return (
     <table class="admin-table">
-      <thead>
-        <tr>
-          <th>Date</th>
-          <th>Type</th>
-          <th>Status</th>
-          <th>Summary</th>
-          <th></th>
-        </tr>
-      </thead>
+      <SortableHead
+        current={current}
+        basePath={basePath}
+        params={params}
+        columns={[
+          { key: 'date', label: 'Date', defaultDir: 'desc' },
+          { key: 'type', label: 'Type' },
+          { key: 'status', label: 'Status' },
+          { label: 'Summary' },
+          { label: '' },
+        ]}
+      />
       <tbody>
         {items.map((row) => (
           <tr>

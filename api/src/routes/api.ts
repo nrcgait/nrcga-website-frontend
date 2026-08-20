@@ -51,6 +51,7 @@ import {
 import { getAvailability, listRegistrations, registerGuest } from '../lib/event-registrations'
 import { instantOnNevadaDate, parseToInstant } from '../lib/nevada-time'
 import { withCors, corsHeaders, PUBLIC_JSON_CACHE } from '../lib/cors'
+import { clientIp, consumeRateLimit, RATE_LIMIT_MESSAGE, rateLimitHeaders } from '../lib/rate-limit'
 
 function cachedJson(c: Parameters<typeof withCors>[0], body: unknown, status = 200) {
   return withCors(c, body, status, PUBLIC_JSON_CACHE)
@@ -60,6 +61,15 @@ export function registerPublicApiRoutes(app: Hono<{ Bindings: Env }>) {
   app.options('/api/v1/*', (c) => {
     const headers = corsHeaders(c.req.header('Origin') ?? '', c.env)
     return new Response(null, { status: 204, headers })
+  })
+
+  app.use('/api/v1/*', async (c, next) => {
+    if (c.req.method !== 'POST') return next()
+    const allowed = await consumeRateLimit(c.env.PUBLIC_WRITE_RATE_LIMITER, `ip:${clientIp(c)}`)
+    if (!allowed) {
+      return withCors(c, { success: false, error: RATE_LIMIT_MESSAGE }, 429, rateLimitHeaders())
+    }
+    return next()
   })
 
   app.get('/api/v1/members', async (c) => {

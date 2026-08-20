@@ -1,5 +1,6 @@
 import type { PaginatedResult } from './pagination'
 import { PAGE_SIZE } from './pagination'
+import type { SortColumnSql, SortSpec } from './sort'
 
 export const ASSET_UPLOAD_MAX_FILES = 10
 export const ASSET_PHOTO_MAX_BYTES = 5 * 1024 * 1024
@@ -14,11 +15,36 @@ export type R2AssetRow = {
   mime_type: string | null
 }
 
+export const ASSET_SORT_COLUMNS: SortColumnSql = {
+  filename: 'filename',
+  size: 'size',
+  uploaded: 'uploaded',
+  url: 'url',
+}
+
 export type ListR2AssetsOptions = {
   prefix?: string
-  sort?: 'date' | 'name'
+  sort?: string
+  dir?: 'asc' | 'desc'
   pageSize?: number
   imagesOnly?: boolean
+}
+
+function resolveAssetSort(options: ListR2AssetsOptions): SortSpec {
+  const sort = options.sort
+  if (sort === 'name' || sort === 'filename') {
+    return { column: 'filename', dir: options.dir === 'desc' ? 'desc' : 'asc' }
+  }
+  if (sort === 'size') {
+    return { column: 'size', dir: options.dir === 'desc' ? 'desc' : 'asc' }
+  }
+  if (sort === 'url') {
+    return { column: 'url', dir: options.dir === 'desc' ? 'desc' : 'asc' }
+  }
+  if (sort === 'uploaded') {
+    return { column: 'uploaded', dir: options.dir === 'asc' ? 'asc' : 'desc' }
+  }
+  return { column: 'uploaded', dir: options.dir === 'asc' ? 'asc' : 'desc' }
 }
 
 function isImageAsset(row: Pick<R2AssetRow, 'filename' | 'mime_type'>): boolean {
@@ -52,7 +78,7 @@ export async function listR2Assets(
   options: ListR2AssetsOptions = {},
 ): Promise<PaginatedResult<R2AssetRow>> {
   const prefix = options.prefix ?? 'uploads/'
-  const sort = options.sort === 'name' ? 'name' : 'date'
+  const { column, dir } = resolveAssetSort(options)
   const pageSize = options.pageSize && options.pageSize > 0 ? options.pageSize : PAGE_SIZE
   const listed = await r2.list({ prefix, limit: 1000 })
   const objects = [...listed.objects]
@@ -85,12 +111,19 @@ export async function listR2Assets(
   }
 
   rows.sort((a, b) => {
-    if (sort === 'name') {
-      return a.filename.localeCompare(b.filename, undefined, { sensitivity: 'base' })
+    let cmp = 0
+    if (column === 'filename') {
+      cmp = a.filename.localeCompare(b.filename, undefined, { sensitivity: 'base' })
+    } else if (column === 'size') {
+      cmp = a.size - b.size
+    } else if (column === 'url') {
+      cmp = a.key.localeCompare(b.key, undefined, { sensitivity: 'base' })
+    } else {
+      const aTime = a.uploaded ? Date.parse(a.uploaded) : 0
+      const bTime = b.uploaded ? Date.parse(b.uploaded) : 0
+      cmp = aTime - bTime
     }
-    const aTime = a.uploaded ? Date.parse(a.uploaded) : 0
-    const bTime = b.uploaded ? Date.parse(b.uploaded) : 0
-    return bTime - aTime
+    return dir === 'desc' ? -cmp : cmp
   })
 
   const total = rows.length

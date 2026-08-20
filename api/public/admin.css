@@ -348,6 +348,37 @@
   letter-spacing: 0.06em;
   color: var(--admin-text-muted);
   border-bottom: 1px solid var(--admin-border);
+  white-space: nowrap;
+}
+
+.admin-table th a.admin-sort {
+  color: inherit;
+  text-decoration: none;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.admin-table th a.admin-sort:hover,
+.admin-table th a.admin-sort.is-active {
+  color: var(--admin-navy);
+  text-decoration: none;
+}
+
+.admin-sort-ind {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: none;
+  opacity: 0;
+}
+
+.admin-table th a.admin-sort:hover .admin-sort-ind,
+.admin-table th a.admin-sort.is-active .admin-sort-ind {
+  opacity: 1;
 }
 
 .admin-table td {

@@ -2,6 +2,7 @@ import type { User, UserRole } from '../config/roles'
 import type { Env } from '../env'
 import { hashPassword, randomSaltHex, verifyPassword } from './password'
 import { likePattern, paginateQuery } from './pagination'
+import { sqlOrderBy, type SortColumnSql, type SortSpec } from './sort'
 
 type UserRow = {
   id: string
@@ -129,13 +130,31 @@ export async function listUsers(db: D1Database): Promise<User[]> {
   return (results ?? []).map(mapUser)
 }
 
-export async function listUsersPaginated(db: D1Database, page: number, search = '') {
+export type UserListItem = User & { member_name: string | null }
+
+export const USER_SORT_COLUMNS: SortColumnSql = {
+  email: 'u.email COLLATE NOCASE',
+  role: 'u.role COLLATE NOCASE',
+  name: 'u.display_name COLLATE NOCASE',
+  member: 'm.company_name COLLATE NOCASE',
+}
+
+const USER_LIST_FROM = `users u LEFT JOIN members m ON m.id = u.member_id`
+const USER_LIST_SELECT = `SELECT u.id, u.email, u.role, u.display_name, u.member_id, m.company_name as member_name FROM ${USER_LIST_FROM}`
+
+export async function listUsersPaginated(
+  db: D1Database,
+  page: number,
+  search = '',
+  sort?: SortSpec | null,
+) {
+  const order = sqlOrderBy(sort, USER_SORT_COLUMNS, 'ORDER BY u.role, u.email')
   const term = search.trim()
   if (!term) {
-    return paginateQuery<User>(
+    return paginateQuery<UserListItem>(
       db,
       'SELECT COUNT(*) as c FROM users',
-      'SELECT id, email, role, display_name, member_id FROM users ORDER BY role, email',
+      `${USER_LIST_SELECT} ${order}`,
       page,
     )
   }
@@ -149,10 +168,10 @@ export async function listUsersPaginated(db: D1Database, page: number, search = 
     m.company_name LIKE ? ESCAPE '\\'
   )`
 
-  return paginateQuery<User>(
+  return paginateQuery<UserListItem>(
     db,
-    `SELECT COUNT(*) as c FROM users u LEFT JOIN members m ON m.id = u.member_id ${where}`,
-    `SELECT u.id, u.email, u.role, u.display_name, u.member_id FROM users u LEFT JOIN members m ON m.id = u.member_id ${where} ORDER BY u.role, u.email`,
+    `SELECT COUNT(*) as c FROM ${USER_LIST_FROM} ${where}`,
+    `${USER_LIST_SELECT} ${where} ${order}`,
     page,
     binds,
   )

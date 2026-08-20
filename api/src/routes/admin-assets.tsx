@@ -4,10 +4,12 @@ import type { AdminContext } from '../lib/admin-context'
 import { escapeHtml } from '../lib/admin-context'
 import { canAccessAssets, canManageAllContent } from '../config/roles'
 import { parsePageParam } from '../lib/pagination'
+import { parseSortParam, sortParams } from '../lib/sort'
 import {
   ASSET_PDF_MAX_BYTES,
   ASSET_PHOTO_MAX_BYTES,
   ASSET_PICKER_PAGE_SIZE,
+  ASSET_SORT_COLUMNS,
   ASSET_UPLOAD_MAX_FILES,
   deleteR2Asset,
   formatBytes,
@@ -18,7 +20,7 @@ import {
   uploadR2Asset,
 } from '../lib/r2-assets'
 import { AdminShell } from '../views/AdminShell'
-import { Pagination } from '../views/AdminComponents'
+import { Pagination, SortableHead } from '../views/AdminComponents'
 
 type RequireAdmin = (c: { env: Env; req: { header: (name: string) => string | undefined } }) => Promise<AdminContext | null>
 type Redirect = (c: { redirect: (url: string, status?: 303) => Response }, url: string) => Response
@@ -53,7 +55,12 @@ export function registerAdminAssetRoutes(
     const page = parsePageParam(c.req.query('page'))
     const error = c.req.query('error') ?? ''
     const uploaded = c.req.query('uploaded') ?? ''
-    const result = await listR2Assets(c.env.R2, c.env.DB, page)
+    const sort = parseSortParam(c.req.query('sort'), c.req.query('dir'), ASSET_SORT_COLUMNS)
+    const result = await listR2Assets(c.env.R2, c.env.DB, page, {
+      sort: sort?.column,
+      dir: sort?.dir,
+    })
+    const listParams = sortParams(sort)
     return c.html(
       <AdminShell ctx={ctx} title="Assets" activePath="/admin/assets" publicSiteOrigin={c.env.PUBLIC_SITE_ORIGIN}>
         <p class="muted">
@@ -94,15 +101,18 @@ export function registerAdminAssetRoutes(
           </div>
         </form>
         <table class="admin-table">
-          <thead>
-            <tr>
-              <th>Filename</th>
-              <th>Size</th>
-              <th>Uploaded</th>
-              <th>Public URL</th>
-              <th></th>
-            </tr>
-          </thead>
+          <SortableHead
+            current={sort}
+            basePath="/admin/assets"
+            params={listParams}
+            columns={[
+              { key: 'filename', label: 'Filename' },
+              { key: 'size', label: 'Size' },
+              { key: 'uploaded', label: 'Uploaded', defaultDir: 'desc' },
+              { key: 'url', label: 'Public URL' },
+              { label: '' },
+            ]}
+          />
           <tbody>
             {result.items.length === 0 ? (
               <tr>
@@ -139,7 +149,13 @@ export function registerAdminAssetRoutes(
             )}
           </tbody>
         </table>
-        <Pagination page={result.page} totalPages={result.totalPages} total={result.total} basePath="/admin/assets" />
+        <Pagination
+          page={result.page}
+          totalPages={result.totalPages}
+          total={result.total}
+          basePath="/admin/assets"
+          params={listParams}
+        />
       </AdminShell>,
     )
   })

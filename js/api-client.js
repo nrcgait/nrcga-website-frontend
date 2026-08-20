@@ -68,7 +68,16 @@
     });
     if (!response.ok) {
       const text = await response.text();
-      throw new Error(text || `API error ${response.status}`);
+      let message = text || `API error ${response.status}`;
+      try {
+        const parsed = JSON.parse(text);
+        if (parsed && (parsed.error || parsed.message)) {
+          message = parsed.error || parsed.message;
+        }
+      } catch {
+        /* use raw text */
+      }
+      throw new Error(message);
     }
     return rewriteMediaUrls(await response.json());
   }
