@@ -1,0 +1,80 @@
+[
+  {
+    "id": "qa-001",
+    "question": "What is 811?",
+    "answer_md": "811 is the national \"Call Before You Dig\" number that connects you to your local one-call center. When you call 811, you'll be connected to operators who will notify utility companies about your planned excavation. Those utilities will then send locators to mark the approximate location of underground lines at no cost to you.",
+    "sort_order": 0
+  },
+  {
+    "id": "qa-002",
+    "question": "How far in advance should I call 811?",
+    "answer_md": "You should call 811 at least 2-3 business days before you plan to start digging. This gives utility operators enough time to mark underground lines. Some states require specific notice periods, so check your local requirements.",
+    "sort_order": 1
+  },
+  {
+    "id": "qa-003",
+    "question": "Is calling 811 free?",
+    "answer_md": "Yes, calling 811 is completely free. There is no charge for the service, and utility operators mark underground lines at no cost to you.",
+    "sort_order": 2
+  },
+  {
+    "id": "qa-004",
+    "question": "What information do I need when calling 811?",
+    "answer_md": "When calling 811, be ready to provide:\n\n- The exact location where you'll be digging (address or description)\n- Type of work you're planning (fence, landscaping, construction, etc.)\n- When you plan to start digging\n- Your contact information",
+    "sort_order": 3
+  },
+  {
+    "id": "qa-005",
+    "question": "What do the colored flags and paint marks mean?",
+    "answer_md": "Utility locators use standardized colors to mark different types of underground utilities:\n\n- **Red:** Electric power lines\n- **Yellow:** Gas, oil, or petroleum lines\n- **Orange:** Communication lines (phone, cable, internet)\n- **Blue:** Potable water\n- **Green:** Sewers and drain lines\n- **Purple:** Reclaimed water or irrigation\n- **White:** Proposed excavation limits\n- **Pink:** Temporary survey markings",
+    "sort_order": 4
+  },
+  {
+    "id": "qa-006",
+    "question": "How accurate are the utility marks?",
+    "answer_md": "Utility marks indicate the approximate location of underground lines. They are not exact, so you should use hand tools or vacuum excavation within 18-24 inches of marked utilities. Always dig carefully and watch for any unmarked utilities that may have been missed.",
+    "sort_order": 5
+  },
+  {
+    "id": "qa-007",
+    "question": "How long are the marks valid?",
+    "answer_md": "Mark validity periods vary by state and utility type, but typically range from 10 to 30 days. If marks become damaged, unclear, or if your project extends beyond the validity period, you should call 811 again to request remarking.",
+    "sort_order": 6
+  },
+  {
+    "id": "qa-008",
+    "question": "What if I hit a utility line?",
+    "answer_md": "If you hit a utility line:\n\n1. Stop digging immediately\n2. Evacuate the area if there's any danger (gas leak, electrical hazard)\n3. Call 911 if there's an emergency\n4. Contact the utility company\n5. Report the damage to your local one-call center",
+    "sort_order": 7
+  },
+  {
+    "id": "qa-009",
+    "question": "Do I need to call 811 for small projects like planting flowers?",
+    "answer_md": "Yes, you should call 811 for any digging project, no matter how small. Even shallow digging can damage utility lines. It's always better to be safe and have utilities marked before you dig.",
+    "sort_order": 8
+  },
+  {
+    "id": "qa-010",
+    "question": "What if I'm only digging a few inches deep?",
+    "answer_md": "Many utility lines are buried just a few inches below the surface. Even shallow digging can damage these lines. Always call 811 before digging, regardless of depth.",
+    "sort_order": 9
+  },
+  {
+    "id": "qa-011",
+    "question": "Can I use power tools near marked utilities?",
+    "answer_md": "You should use hand tools or vacuum excavation within 18-24 inches of marked utilities. Power tools can easily damage underground lines, even when you think you're being careful.",
+    "sort_order": 10
+  },
+  {
+    "id": "qa-012",
+    "question": "What if no utilities are marked?",
+    "answer_md": "If no utilities are marked, it doesn't necessarily mean there are no underground lines. Some utilities may not be members of the one-call system, or lines may have been installed without proper documentation. Always dig carefully and watch for any signs of underground utilities.",
+    "sort_order": 11
+  },
+  {
+    "id": "qa-013",
+    "question": "Is calling 811 required by law?",
+    "answer_md": "Yes, in most states, calling 811 before digging is required by law. Failure to call can result in fines, liability for damages, and criminal penalties in some cases. Even if it's not legally required in your area, it's always the safe and responsible thing to do.",
+    "sort_order": 12
+  }
+]

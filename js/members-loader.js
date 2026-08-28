@@ -4,8 +4,17 @@
 // Load and display members
 async function loadMembers() {
     try {
-        // Load CSV and map to canonical keys (Excel may use different header casing)
-        const raw = await loadCSV('data/members.csv');
+        let raw = null;
+        if (window.NRCGA_API) {
+            try {
+                raw = await window.NRCGA_API.get('/members');
+            } catch (e) {
+                console.warn('Members API unavailable, falling back to CSV', e);
+            }
+        }
+        if (!raw) {
+            raw = await loadCSV('data/members.csv');
+        }
         const members = raw.map(r => ({
             Type: pickCsvField(r, 'Type'),
             'Company Name': pickCsvField(r, 'Company Name'),
@@ -14,14 +23,67 @@ async function loadMembers() {
             Website: pickCsvField(r, 'Website'),
             Category: pickCsvField(r, 'Category'),
             Term: pickCsvField(r, 'Term'),
-            'Contact Person': pickCsvField(r, 'Contact Person')
+            'Contact Person': pickCsvField(r, 'Contact Person'),
+            'Is Board Member': pickCsvField(r, 'Is Board Member'),
+            'Is Chair': pickCsvField(r, 'Is Chair'),
+            'Is Vice Chair': pickCsvField(r, 'Is Vice Chair'),
         }));
-        
-        // Separate members by type (case-insensitive; spreadsheets often change casing)
+
+        const flagOn = (v) => {
+            const s = String(v ?? '').trim().toLowerCase();
+            return s === '1' || s === 'true' || s === 'yes';
+        };
+
+        // Officers / directors are attributes on stakeholders (CSV flags or API-synthesized Type rows).
         let officers = members.filter(m => m.Type && m.Type.trim().toLowerCase() === 'officer');
         let directors = members.filter(m => m.Type && m.Type.trim().toLowerCase() === 'director');
         let stakeholderMembers = members.filter(m => m.Type && m.Type.trim().toLowerCase() === 'stakeholder');
         let associateMembers = members.filter(m => m.Type && m.Type.trim().toLowerCase() === 'associate');
+
+        // CSV fallback: synthesize officer/director display rows from stakeholder flags
+        // (API already returns synthesized Type=Officer / Type=Director rows)
+        const synthesizeOfficers = officers.length === 0
+        const synthesizeDirectors = directors.length === 0
+        if (synthesizeOfficers || synthesizeDirectors) {
+            for (const m of stakeholderMembers) {
+                if (synthesizeDirectors && flagOn(m['Is Board Member'])) {
+                    directors.push({
+                        Type: 'Director',
+                        'Company Name': m['Company Name'],
+                        'Stakeholder Group': m['Stakeholder Group'],
+                        'Voting Member': m['Voting Member'],
+                        Website: m.Website,
+                        Category: m.Category,
+                        Term: m.Term,
+                        'Contact Person': m['Contact Person'],
+                    });
+                }
+                if (synthesizeOfficers && flagOn(m['Is Chair'])) {
+                    officers.push({
+                        Type: 'Officer',
+                        'Company Name': m['Contact Person'] || m['Company Name'],
+                        'Stakeholder Group': 'Chair',
+                        'Voting Member': m['Voting Member'],
+                        Website: m.Website,
+                        Category: m.Category,
+                        Term: m.Term,
+                        'Contact Person': m['Contact Person'] ? m['Company Name'] : '',
+                    });
+                }
+                if (synthesizeOfficers && flagOn(m['Is Vice Chair'])) {
+                    officers.push({
+                        Type: 'Officer',
+                        'Company Name': m['Contact Person'] || m['Company Name'],
+                        'Stakeholder Group': 'Vice Chair',
+                        'Voting Member': m['Voting Member'],
+                        Website: m.Website,
+                        Category: m.Category,
+                        Term: m.Term,
+                        'Contact Person': m['Contact Person'] ? m['Company Name'] : '',
+                    });
+                }
+            }
+        }
         
         // Sort officers by Stakeholder Group (Position) alphabetically
         officers.sort((a, b) => {

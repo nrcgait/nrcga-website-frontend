@@ -8,11 +8,21 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        .honeypot { position: absolute; left: -9999px; height: 0; overflow: hidden; }
+        .form-status { margin-top: 1rem; }
+        .form-status-success { color: #2e7d32; }
+        .form-status-error { color: #c62828; }
+        .nrcga-form .form-group { margin-bottom: 1rem; }
+        .nrcga-form label { display: block; font-weight: 600; margin-bottom: 0.35rem; }
+        .nrcga-form input, .nrcga-form select, .nrcga-form textarea {
+            width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 8px; font: inherit;
+        }
+    </style>
 </head>
-<body>
+<body data-page-slug="contact">
     <div id="nav-placeholder"></div>
 
-    <!-- Page Header -->
     <section class="page-header">
         <div class="container">
             <span class="section-label">Get in Touch</span>
@@ -21,45 +31,36 @@
         </div>
     </section>
 
-    <!-- Contact Section -->
+    <div id="page-body"></div>
+
     <section class="contact">
         <div class="container">
             <div class="contact-layout">
                 <div class="contact-info">
                     <h2>Contact Information</h2>
-                    <p>Reach out to us through any of the following methods. We typically respond within 1–2 business days.</p>
-                    
+                    <p id="contact-response-note">Reach out to us through any of the following methods.</p>
                     <div class="contact-details">
                         <div class="contact-item">
                             <strong>Email</strong>
-                            <a href="mailto:info@nrcga.org">info@nrcga.org</a>
+                            <a id="contact-email-link" href="mailto:info@nrcga.org">info@nrcga.org</a>
                         </div>
-                        <!-- Phone Section 
-                        <div class="contact-item">
+                        <div class="contact-item" id="contact-phone-item" hidden>
                             <strong>Phone</strong>
-                            <span>(###) ###-####</span>
-                        </div> -->
+                            <span id="contact-phone"></span>
+                        </div>
                         <div class="contact-item">
                             <strong>Response Time</strong>
-                            <span>1–2 business days</span>
+                            <span id="contact-response-time">1–2 business days</span>
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="contact-form-wrapper">
                     <h2>Send us a Message</h2>
-                    <!-- Mobile Button (hidden on desktop) -->
-                    <div class="contact-form-mobile-button" style="display: none; text-align: center; margin: 2rem 0;">
-                        <a href="https://forms.office.com/Pages/ResponsePage.aspx?id=l_bTl4Fr-UGCMvL2nXpxRyBVFANpJf9BgeFLspJ7BSZUQ0VGNFhKQ1BQNlcyNUY5RTVDMTREUlhFVC4u" target="_blank" rel="noopener noreferrer" class="btn btn-primary" style="font-size: 1.125rem; padding: 1rem 2.5rem;">
-                            Open Contact Form
-                        </a>
-                    </div>
-                    <!-- Desktop Iframe (hidden on mobile) -->
-                    <div class="contact-form-iframe" style="width: 100%; position: relative; padding-bottom: 450%; height: 0; overflow: hidden; margin-top: 1.5rem;">
-                        <iframe src="https://forms.office.com/Pages/ResponsePage.aspx?id=l_bTl4Fr-UGCMvL2nXpxRyBVFANpJf9BgeFLspJ7BSZUQ0VGNFhKQ1BQNlcyNUY5RTVDMTREUlhFVC4u&embed=true" frameborder="0" marginwidth="0" marginheight="0" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; min-height: 900px;" allowfullscreen webkitallowfullscreen mozallowfullscreen msallowfullscreen></iframe>
-                    </div>
-                    <!--
-                    <form class="contact-form">
+                    <form class="nrcga-form" data-nrcga-form="contact">
+                        <div class="honeypot" aria-hidden="true">
+                            <label>Website<input type="text" name="website_url" tabindex="-1" autocomplete="off"></label>
+                        </div>
                         <div class="form-group">
                             <label for="name">Name *</label>
                             <input type="text" id="name" name="name" required>
@@ -69,9 +70,17 @@
                             <input type="email" id="email" name="email" required>
                         </div>
                         <div class="form-group">
+                            <label for="organization">Organization</label>
+                            <input type="text" id="organization" name="organization">
+                        </div>
+                        <div class="form-group">
+                            <label for="phone">Phone</label>
+                            <input type="tel" id="phone" name="phone">
+                        </div>
+                        <div class="form-group">
                             <label for="subject">Subject</label>
                             <select id="subject" name="subject">
-                                <option value="">Select a topic...</option>
+                                <option value="">Select a topic…</option>
                                 <option value="membership">Membership</option>
                                 <option value="training">Training</option>
                                 <option value="events">Events</option>
@@ -85,49 +94,60 @@
                             <textarea id="message" name="message" rows="6" required></textarea>
                         </div>
                         <button type="submit" class="btn btn-primary">Send Message</button>
+                        <p class="form-status" data-form-status></p>
                     </form>
-                    -->
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Additional Contact Info -->
-    <section class="content-section bg-light">
-        <div class="container">
-            <div class="section-header">
-                <h2 class="section-title">Other Ways to Connect</h2>
-            </div>
-
-            <div class="features-grid">
-                <div class="feature-item">
-                    <div class="feature-icon">📅</div>
-                    <h3>Attend a Meeting</h3>
-                    <p>Join us at our regular general member meetings. Check our calendar for upcoming events.</p>
-                    <a href="index.html#calendar" class="link-arrow">View Calendar →</a>
+    <section class="content-section bg-light" id="newsletter">
+        <div class="container" style="max-width: 560px;">
+            <h2 class="section-title">Newsletter</h2>
+            <p>Subscribe for training sessions, events, and damage prevention news.</p>
+            <form class="nrcga-form" data-nrcga-form="newsletter">
+                <div class="honeypot" aria-hidden="true">
+                    <label>Website<input type="text" name="website_url" tabindex="-1" autocomplete="off"></label>
                 </div>
-                <div class="feature-item">
-                    <div class="feature-icon">👥</div>
-                    <h3>Join a Committee</h3>
-                    <p>Get involved with one of our committees focused on education, events, awards, or technical solutions.</p>
-                    <a href="programs.html" class="link-arrow">Learn More →</a>
+                <div class="form-group">
+                    <label for="newsletter-name">Name</label>
+                    <input type="text" id="newsletter-name" name="name">
                 </div>
-                <div class="feature-item">
-                    <div class="feature-icon">📧</div>
-                    <h3>Newsletter</h3>
-                    <p>Subscribe to our newsletter to stay updated on training sessions, events, and damage prevention news.</p>
-                    <a href="#newsletter" class="link-arrow">Subscribe →</a>
+                <div class="form-group">
+                    <label for="newsletter-email">Email *</label>
+                    <input type="email" id="newsletter-email" name="email" required>
                 </div>
-            </div>
+                <button type="submit" class="btn btn-primary">Subscribe</button>
+                <p class="form-status" data-form-status></p>
+            </form>
         </div>
     </section>
 
-    
     <div id="footer-placeholder"></div>
 
     <script src="js/nav-config.js"></script>
+    <script src="js/api-client.js"></script>
     <script src="js/components.js"></script>
-    <script src="js/script.js"></script>
+    <script src="js/page-blocks-render.js"></script>
+    <script src="js/page-loader.js"></script>
+    <script src="js/native-forms.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const c = window.nrcgaContactSettings;
+            if (!c) return;
+            if (c.email) {
+                const link = document.getElementById('contact-email-link');
+                link.href = `mailto:${c.email}`;
+                link.textContent = c.email;
+            }
+            if (c.phone) {
+                document.getElementById('contact-phone-item').hidden = false;
+                document.getElementById('contact-phone').textContent = c.phone;
+            }
+            if (c.response_time) {
+                document.getElementById('contact-response-time').textContent = c.response_time;
+            }
+        });
+    </script>
 </body>
 </html>
-

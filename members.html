@@ -174,10 +174,69 @@
 
             <div style="display: flex; justify-content: center; gap: 1.5rem; margin-top: 3rem; flex-wrap: wrap;">
                 <a href="contact.html" class="btn btn-primary">Contact Us to Join</a>
-                <a href="https://forms.office.com/r/JwTtpEKCpA" class="btn btn-primary">Application Form</a>
+            </div>
+
+            <div style="margin-top: 3rem;">
+                <div class="section-header">
+                    <h2 class="section-title">Membership types</h2>
+                    <p class="section-subtitle">Choose the membership type that best fits your organization when you apply.</p>
+                </div>
+                <div class="membership-types" id="membership-types-grid">
+                    <div class="membership-card">
+                        <h3>Stakeholder</h3>
+                        <p>Voting membership for organizations actively involved in damage prevention across Nevada.</p>
+                    </div>
+                    <div class="membership-card">
+                        <h3>Associate</h3>
+                        <p>Non-voting membership for organizations that support NRCGA's mission and programs.</p>
+                    </div>
+                    <div class="membership-card">
+                        <h3>Affiliate</h3>
+                        <p>Affiliate membership for partners and related organizations aligned with damage prevention.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div style="max-width: 640px; margin: 3rem auto 0;">
+                <h3 style="text-align:center; margin-bottom: 1rem;">Membership application</h3>
+                <form class="nrcga-form" data-nrcga-form="member_application">
+                    <div style="position:absolute;left:-9999px;" aria-hidden="true">
+                        <input type="text" name="website_url" tabindex="-1" autocomplete="off">
+                    </div>
+                    <div class="form-group" style="margin-bottom:1rem;">
+                        <label for="ma-company">Company name *</label>
+                        <input id="ma-company" name="company_name" required style="width:100%;padding:0.75rem;border-radius:8px;border:1px solid var(--border);">
+                    </div>
+                    <div class="form-group" style="margin-bottom:1rem;">
+                        <label for="ma-contact">Contact name *</label>
+                        <input id="ma-contact" name="contact_name" required style="width:100%;padding:0.75rem;border-radius:8px;border:1px solid var(--border);">
+                    </div>
+                    <div class="form-group" style="margin-bottom:1rem;">
+                        <label for="ma-email">Email *</label>
+                        <input id="ma-email" name="email" type="email" required style="width:100%;padding:0.75rem;border-radius:8px;border:1px solid var(--border);">
+                    </div>
+                    <div class="form-group" style="margin-bottom:1rem;">
+                        <label for="ma-phone">Phone</label>
+                        <input id="ma-phone" name="phone" style="width:100%;padding:0.75rem;border-radius:8px;border:1px solid var(--border);">
+                    </div>
+                    <div class="form-group" style="margin-bottom:1rem;">
+                        <label for="ma-type">Membership type *</label>
+                        <select id="ma-type" name="membership_type" required style="width:100%;padding:0.75rem;border-radius:8px;border:1px solid var(--border);">
+                            <option value="">Select…</option>
+                            <option value="stakeholder">Stakeholder</option>
+                            <option value="associate">Associate</option>
+                            <option value="affiliate">Affiliate</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin-bottom:1rem;">
+                        <label for="ma-notes">Notes</label>
+                        <textarea id="ma-notes" name="notes" rows="4" style="width:100%;padding:0.75rem;border-radius:8px;border:1px solid var(--border);"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Submit application</button>
+                    <p data-form-status></p>
+                </form>
             </div>
         </div>
-    </section>
     </section>
 
     <!-- Member Popup Modal -->
@@ -216,9 +275,45 @@
     <div id="footer-placeholder"></div>
 
     <script src="js/nav-config.js"></script>
+    <script src="js/api-client.js"></script>
     <script src="js/components.js"></script>
     <script src="js/script.js"></script>
     <script src="js/csv-parser.js"></script>
     <script src="js/members-loader.js"></script>
+    <script src="js/native-forms.js"></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', async () => {
+        const select = document.getElementById('ma-type');
+        const grid = document.getElementById('membership-types-grid');
+        const escapeHtml = (value) => String(value ?? '')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;');
+        if (!window.NRCGA_API) return;
+        try {
+          const types = await window.NRCGA_API.get('/member-types');
+          if (!Array.isArray(types) || !types.length) return;
+          if (select) {
+            select.innerHTML = '<option value="">Select…</option>' +
+              types.map((t) => {
+                const value = escapeHtml(t.slug || t.name);
+                const label = escapeHtml(t.name);
+                return `<option value="${value}">${label}</option>`;
+              }).join('');
+          }
+          if (grid) {
+            grid.innerHTML = types.map((t) => `
+              <div class="membership-card">
+                <h3>${escapeHtml(t.name)}</h3>
+                <p>${escapeHtml(t.description || '')}</p>
+              </div>
+            `).join('');
+          }
+        } catch (e) {
+          // Keep static fallback options and cards already in the HTML.
+        }
+      });
+    </script>
 </body>
 </html>

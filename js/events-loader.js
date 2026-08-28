@@ -1,992 +1,973 @@
-// Events Loader
-// Loads and displays events from backend API (with fallback to data/events.js)
-// Fetches availability from backend API and displays events with registration buttons
+// Events loader — fetches from NRCGA API and renders calendar list/month views with registration modal.
 
-// API URL - Update this to match your backend deployment
-// For local development: 'http://localhost:3000/api'
-// For production: 'https://your-backend-url.com/api'
-var API_BASE_URL = 'https://script.google.com/macros/s/AKfycbxedrS__W258karGEE_SZDN8vnCYLa82TjSoUWyZKtm4SzwlkLvU6UXCsfTUBpe7C_PaA/exec';
+const EVENTS_PAGE_SIZE = 7;
+const WEEKDAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const MONTH_LABELS = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+];
 
-// Fetch events from backend API
-async function fetchEventsFromAPI() {
-    try {
-        const response = await fetch(`${API_BASE_URL}/events`);
-        if (!response.ok) {
-            console.warn('Failed to fetch events from API:', response.statusText);
-            return null;
-        }
-        const data = await response.json();
-        // Transform database events to match frontend format
-        const transformed = (data.events || []).map(event => {
-            // Map repeat fields from database to frontend format
-            let eventRepeats = null;
-            if (event.repeat_interval) {
-                // Custom interval (every X days)
-                eventRepeats = parseInt(event.repeat_interval);
-            } else if (event.event_repeats) {
-                // Standard repeat type (daily, weekly, monthly)
-                eventRepeats = event.event_repeats;
-            }
-            
-            const transformedEvent = {
-                id: event.id.toString(),
-                name: event.name,
-                date: event.date,
-                time: event.time,
-                length: 180, // Default length (can be added to database schema later)
-                location: event.location || '',
-                additionalDetails: event.description || '',
-                registrationLimit: event.registration_enabled ? event.capacity : null,
-                eventRepeats: eventRepeats,
-                repeatEnds: event.repeat_ends || null
-            };
-            
-            // Debug logging
-            if (eventRepeats) {
-                console.log(`Event "${event.name}" (ID: ${event.id}) - Repeats: ${eventRepeats}, Interval: ${event.repeat_interval}, Ends: ${event.repeat_ends}`);
-            }
-            
-            return transformedEvent;
-        });
-        
-        console.log(`Loaded ${transformed.length} events from API`);
-        return transformed;
-    } catch (error) {
-        console.warn('Error fetching events from API:', error);
-        return null;
-    }
-}
+const calendarStates = new Map();
+const NEVADA_CENTER = { lat: 39.5, lon: -117.0 };
+const NEVADA_BBOX = '-120.0,35.0,-114.0,42.0';
 
-// Fetch events from Google Apps Script (Google Sheet)
-async function fetchEventsFromGoogleSheet() {
-    try {
-        // Use JSONP to avoid CORS issues
-        return new Promise((resolve, reject) => {
-            // Create callback function
-            const callbackName = 'handleEvents_' + Date.now();
-            
-            // Set a timeout (10 seconds)
-            const timeout = setTimeout(() => {
-                delete window[callbackName];
-                if (document.body.contains(script)) {
-                    document.body.removeChild(script);
-                }
-                reject(new Error('Timeout: Failed to load events from Google Sheet'));
-            }, 10000);
-            
-            window[callbackName] = function(data) {
-                clearTimeout(timeout);
-                delete window[callbackName];
-                if (document.body.contains(script)) {
-                    document.body.removeChild(script);
-                }
-                console.log('Received data from Google Sheet:', data);
-                if (data.success && data.events) {
-                    resolve(data.events);
-                } else {
-                    reject(new Error(data.error || 'Failed to fetch events'));
-                }
-            };
-            
-            // Create script tag for JSONP
-            const script = document.createElement('script');
-            const url = `${API_BASE_URL}?callback=${callbackName}`;
-            console.log('Loading events from:', url);
-            script.src = url;
-            script.onerror = (error) => {
-                clearTimeout(timeout);
-                delete window[callbackName];
-                if (document.body.contains(script)) {
-                    document.body.removeChild(script);
-                }
-                console.error('Script load error:', error);
-                reject(new Error('Failed to load events from Google Sheet - script failed to load'));
-            };
-            document.body.appendChild(script);
-        });
-    } catch (error) {
-        console.error('Error fetching events from Google Sheet:', error);
-        return null;
-    }
-}
+let registrationMap = null;
+let registrationMarker = null;
+let leafletLoadPromise = null;
 
-// Expand repeating events into individual instances
-function expandRepeatingEvents(events, maxDaysAhead = 14) {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    const endDate = new Date(today);
-    endDate.setDate(today.getDate() + maxDaysAhead);
-    
-    const expandedEvents = [];
-    
-    events.forEach(event => {
-        console.log(`Processing event: ${event.name}, date: ${event.date}, repeats: ${event.eventRepeats}`);
-        
-        // Parse date - handle both YYYY-MM-DD format and Date object strings
-        if (!event.date) {
-            console.warn(`Event ${event.name} has no date field!`, event);
-            return;
-        }
-        
-        let baseDate;
-        let dateStr;
-        
-        // Check if date is already a Date object or a formatted date string
-        if (event.date instanceof Date) {
-            baseDate = new Date(event.date);
-            baseDate.setHours(0, 0, 0, 0);
-            dateStr = `${baseDate.getFullYear()}-${String(baseDate.getMonth() + 1).padStart(2, '0')}-${String(baseDate.getDate()).padStart(2, '0')}`;
-        } else if (typeof event.date === 'string') {
-            // Try to parse as YYYY-MM-DD first
-            if (event.date.match(/^\d{4}-\d{2}-\d{2}$/)) {
-                const [year, month, day] = event.date.split('-').map(Number);
-                baseDate = new Date(year, month - 1, day);
-                baseDate.setHours(0, 0, 0, 0);
-                dateStr = event.date;
-            } else {
-                // Try to parse as a date string (e.g., "Mon Feb 02 2026 00:00:00 GMT-0800")
-                baseDate = new Date(event.date);
-                if (isNaN(baseDate.getTime())) {
-                    console.warn(`Event ${event.name} has invalid date format: ${event.date}`, event);
-                    return;
-                }
-                baseDate.setHours(0, 0, 0, 0);
-                dateStr = `${baseDate.getFullYear()}-${String(baseDate.getMonth() + 1).padStart(2, '0')}-${String(baseDate.getDate()).padStart(2, '0')}`;
-            }
-        } else {
-            console.warn(`Event ${event.name} has unexpected date type: ${typeof event.date}`, event);
-            return;
-        }
-        
-        console.log(`Parsed date: ${dateStr} from original: ${event.date}`);
-        
-        // Parse repeatEnds date string as local date, not UTC
-        let repeatEnds = null;
-        if (event.repeatEnds) {
-            if (event.repeatEnds instanceof Date) {
-                repeatEnds = new Date(event.repeatEnds);
-            } else if (typeof event.repeatEnds === 'string') {
-                if (event.repeatEnds.match(/^\d{4}-\d{2}-\d{2}$/)) {
-                    const [endYear, endMonth, endDay] = event.repeatEnds.split('-').map(Number);
-                    repeatEnds = new Date(endYear, endMonth - 1, endDay);
-                } else {
-                    repeatEnds = new Date(event.repeatEnds);
-                }
-            }
-            if (repeatEnds && !isNaN(repeatEnds.getTime())) {
-                repeatEnds.setHours(23, 59, 59, 999);
-            } else {
-                repeatEnds = null;
-            }
-        }
-        
-        if (!event.eventRepeats) {
-            // Single event - add if within date range
-            // Compare dates as strings to avoid timezone issues
-            const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-            const endDateStr = `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, '0')}-${String(endDate.getDate()).padStart(2, '0')}`;
-            
-            console.log(`Single event check: baseDateStr=${dateStr}, todayStr=${todayStr}, endDateStr=${endDateStr}`);
-            console.log(`Date comparison: ${dateStr} >= ${todayStr} = ${dateStr >= todayStr}, ${dateStr} <= ${endDateStr} = ${dateStr <= endDateStr}`);
-            
-            if (dateStr >= todayStr && dateStr <= endDateStr) {
-                expandedEvents.push({ ...event, instanceDate: dateStr, date: dateStr });
-                console.log(`✓ Added single event: ${event.name} on ${dateStr}`);
-            } else {
-                console.log(`✗ Skipped single event: ${event.name} on ${dateStr} (outside range: today=${todayStr}, end=${endDateStr})`);
-            }
-        } else {
-            // Repeating event - generate instances
-            let currentDate = new Date(baseDate);
-            const instances = [];
-            
-            console.log(`Repeating event: ${event.name}, baseDate=${dateStr}, repeatType=${event.eventRepeats}, today=${today.toISOString().split('T')[0]}`);
-            
-            // If base date is in the past, fast-forward to the first future occurrence
-            if (currentDate < today) {
-                // Calculate how many intervals have passed
-                const daysDiff = Math.floor((today - currentDate) / (1000 * 60 * 60 * 24));
-                
-                if (event.eventRepeats === 'daily') {
-                    // Fast-forward to today or next occurrence
-                    const intervalsPassed = daysDiff;
-                    currentDate.setDate(currentDate.getDate() + intervalsPassed);
-                    // If still in past, add one more interval
-                    if (currentDate < today) {
-                        currentDate.setDate(currentDate.getDate() + 1);
-                    }
-                } else if (event.eventRepeats === 'weekly') {
-                    const intervalsPassed = Math.floor(daysDiff / 7);
-                    currentDate.setDate(currentDate.getDate() + (intervalsPassed * 7));
-                    // If still in past, add one more week
-                    if (currentDate < today) {
-                        currentDate.setDate(currentDate.getDate() + 7);
-                    }
-                } else if (event.eventRepeats === 'monthly') {
-                    // For monthly, just keep adding months until we're at or past today
-                    while (currentDate < today) {
-                        currentDate.setMonth(currentDate.getMonth() + 1);
-                    }
-                } else if (typeof event.eventRepeats === 'number' && event.eventRepeats > 0) {
-                    // Integer value = repeat every N days
-                    const intervalsPassed = Math.floor(daysDiff / event.eventRepeats);
-                    currentDate.setDate(currentDate.getDate() + (intervalsPassed * event.eventRepeats));
-                    // If still in past, add one more interval
-                    if (currentDate < today) {
-                        currentDate.setDate(currentDate.getDate() + event.eventRepeats);
-                    }
-                }
-            }
-            
-            // Generate instances up to endDate or until repeatEnds
-            // Compare dates properly (ignore time component) by comparing date strings
-            const getDateString = (date) => {
-                const year = date.getFullYear();
-                const month = String(date.getMonth() + 1).padStart(2, '0');
-                const day = String(date.getDate()).padStart(2, '0');
-                return `${year}-${month}-${day}`;
-            };
-            
-            const endDateStr = getDateString(endDate);
-            const repeatEndsStr = repeatEnds ? getDateString(repeatEnds) : null;
-            const todayStr = getDateString(today);
-            
-            let loopCount = 0;
-            while (true) {
-                loopCount++;
-                if (loopCount > 1000) {
-                    // Safety limit to prevent infinite loops
-                    break;
-                }
-                
-                const currentDateStr = getDateString(currentDate);
-                
-                // Check if we've exceeded our limits
-                if (currentDateStr > endDateStr) break;
-                if (repeatEndsStr && currentDateStr > repeatEndsStr) break;
-                
-                // Add instance if it's today or in the future
-                if (currentDateStr >= todayStr) {
-                    instances.push(new Date(currentDate));
-                }
-                
-                // Calculate next occurrence based on repeat type
-                if (event.eventRepeats === 'daily') {
-                    currentDate.setDate(currentDate.getDate() + 1);
-                } else if (event.eventRepeats === 'weekly') {
-                    currentDate.setDate(currentDate.getDate() + 7);
-                } else if (event.eventRepeats === 'monthly') {
-                    currentDate.setMonth(currentDate.getMonth() + 1);
-                } else if (typeof event.eventRepeats === 'number' && event.eventRepeats > 0) {
-                    // Integer value = repeat every N days
-                    currentDate.setDate(currentDate.getDate() + event.eventRepeats);
-                } else {
-                    break; // Unknown repeat type
-                }
-            }
-            
-            // Create event instances
-            console.log(`Generated ${instances.length} instances for repeating event ${event.name}`);
-            instances.forEach(instanceDate => {
-                const instanceDateStr = instanceDate.toISOString().split('T')[0];
-                expandedEvents.push({
-                    ...event,
-                    instanceDate: instanceDateStr,
-                    date: dateStr, // Normalize the date field
-                    originalDate: event.date
-                });
-            });
-        }
+function formatEventDate(isoString) {
+  try {
+    if (window.NRCGATime) return window.NRCGATime.formatDate(isoString);
+    const d = new Date(isoString);
+    return d.toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      timeZone: 'America/Los_Angeles',
     });
-    
-    const sorted = expandedEvents.sort((a, b) => {
-        // Sort by instance date, then by time
-        const dateCompare = new Date(a.instanceDate || a.date) - new Date(b.instanceDate || b.date);
-        if (dateCompare !== 0) return dateCompare;
-        return a.time.localeCompare(b.time);
+  } catch {
+    return isoString;
+  }
+}
+
+function formatEventTime(isoString) {
+  try {
+    if (window.NRCGATime) return window.NRCGATime.formatTime(isoString);
+    const d = new Date(isoString);
+    return d.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      timeZone: 'America/Los_Angeles',
+      timeZoneName: 'short',
     });
-    
-    console.log(`Expanded ${events.length} events into ${sorted.length} instances (maxDaysAhead: ${maxDaysAhead})`);
-    return sorted;
+  } catch {
+    return '';
+  }
 }
 
-// Get events for the next 2 weeks
-function getNextTwoWeeksEvents(events) {
-    return expandRepeatingEvents(events, 14); // 2 weeks = 14 days
-}
-
-// Get all upcoming events (no 2-week limit, but limit to 6 months ahead for performance)
-function getAllUpcomingEvents(events) {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    // Expand events up to 6 months ahead (180 days) for calendar/training pages
-    const expandedEvents = expandRepeatingEvents(events, 180);
-    
-    // Filter to only show future events (should already be filtered, but double-check)
-    return expandedEvents.filter(event => {
-        const eventDate = new Date(event.instanceDate || event.date);
-        eventDate.setHours(0, 0, 0, 0);
-        return eventDate >= today;
-    }).sort((a, b) => {
-        // Sort by date, then by time
-        const dateCompare = new Date(a.instanceDate || a.date) - new Date(b.instanceDate || b.date);
-        if (dateCompare !== 0) return dateCompare;
-        return a.time.localeCompare(b.time);
-    });
-}
-
-// Format time from 24-hour to 12-hour format
-function formatTime(time24) {
-    const [hours, minutes] = time24.split(':');
-    const hour = parseInt(hours);
-    const ampm = hour >= 12 ? 'PM' : 'AM';
-    const hour12 = hour % 12 || 12;
-    return `${hour12}:${minutes} ${ampm}`;
-}
-
-// Format date to readable format
-function formatDate(dateString) {
-    const date = new Date(dateString);
-    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-    return date.toLocaleDateString('en-US', options);
-}
-
-// Format length in minutes to readable format
-function formatLength(minutes) {
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    if (hours === 0) return `${mins} minutes`;
-    if (mins === 0) return `${hours} hour${hours > 1 ? 's' : ''}`;
-    return `${hours} hour${hours > 1 ? 's' : ''} ${mins} minutes`;
-}
-
-// Check if registration is still open for an event
-// Returns true if registration is open, false if past cutoff
-function isRegistrationOpen(event, instanceDate = null) {
-    // If event has no registration limit, registration is always open
-    if (event.registrationLimit === null || event.registrationLimit === undefined) {
-        return true;
-    }
-    
-    // Get the event date (use instanceDate for repeating events)
-    const eventDateStr = instanceDate || event.instanceDate || event.date;
-    if (!eventDateStr) {
-        return false;
-    }
-    
-    // Parse event date and time
-    const [year, month, day] = eventDateStr.split('-').map(Number);
-    const eventDateTime = new Date(year, month - 1, day);
-    
-    // Parse event time (HH:MM format)
-    if (event.time) {
-        const [hours, minutes] = event.time.split(':').map(Number);
-        eventDateTime.setHours(hours, minutes, 0, 0);
-    } else {
-        // Default to start of day if no time specified
-        eventDateTime.setHours(0, 0, 0, 0);
-    }
-    
-    // Registration cutoff: 24 hours before event start time
-    // You can adjust this (e.g., 48 hours, or a specific time like "end of previous day")
-    const cutoffHours = 24;
-    const cutoffTime = new Date(eventDateTime);
-    cutoffTime.setHours(cutoffTime.getHours() - cutoffHours);
-    
-    // Check if current time is before cutoff
-    const now = new Date();
-    const isOpen = now < cutoffTime;
-    
-    return isOpen;
-}
-
-// Calendar view state
-let currentView = 'list'; // 'list', 'month', 'week'
-let currentDate = new Date(); // Current month/week being viewed
-
-// Cache for events to avoid reloading on view switches
-let cachedEvents = null;
-let cacheTimestamp = null;
-const CACHE_DURATION = 15 * 60 * 1000; // 5 minutes
-
-// Switch between calendar views
-function switchCalendarView(view) {
-    currentView = view;
-    
-    // Update button states
-    const buttons = {
-        'list': document.getElementById('view-list-btn'),
-        'week': document.getElementById('view-week-btn'),
-        'month': document.getElementById('view-month-btn')
+function formatEventDateParts(isoString) {
+  try {
+    if (window.NRCGATime) return window.NRCGATime.formatDateParts(isoString);
+    const d = new Date(isoString);
+    return {
+      month: d.toLocaleDateString('en-US', { month: 'short', timeZone: 'America/Los_Angeles' }).toUpperCase(),
+      day: Number(d.toLocaleDateString('en-US', { day: 'numeric', timeZone: 'America/Los_Angeles' })),
+      weekdayDate: d.toLocaleDateString('en-US', {
+        weekday: 'long',
+        month: 'long',
+        day: 'numeric',
+        timeZone: 'America/Los_Angeles',
+      }),
     };
-    
-    Object.keys(buttons).forEach(key => {
-        if (buttons[key]) {
-            if (key === view) {
-                buttons[key].classList.add('active', 'calendar-view-btn');
-            } else {
-                buttons[key].classList.remove('active');
-                if (!buttons[key].classList.contains('calendar-view-btn')) {
-                    buttons[key].classList.add('calendar-view-btn');
-                }
-            }
-        }
+  } catch {
+    return { month: '', day: '', weekdayDate: isoString };
+  }
+}
+
+function formatEventTimeRange(startsAt, endsAt) {
+  const start = formatEventTime(startsAt);
+  if (!endsAt) return start;
+  const end = formatEventTime(endsAt);
+  if (!start || !end) return start;
+  return `${start} – ${end}`;
+}
+
+function findEventOccurrence(seriesId, occurrenceDate) {
+  for (const state of calendarStates.values()) {
+    const match = state.events.find((event) => {
+      const sid = event.series_id || event.id.split(':')[0];
+      return sid === seriesId && event.occurrence_date === occurrenceDate;
     });
-    
-    const container = document.getElementById('calendar-events');
-    if (container) {
-        // Re-render with new view (will use cached events if available)
-        displayEvents('calendar-events', null, view);
-    }
+    if (match) return match;
+  }
+  return null;
 }
 
-// Navigate calendar (previous/next month or week)
-function navigateCalendar(direction) {
-    if (currentView === 'month') {
-        currentDate.setMonth(currentDate.getMonth() + direction);
-    } else if (currentView === 'week') {
-        currentDate.setDate(currentDate.getDate() + (direction * 7));
+async function ensureEventMapThumbs() {
+  await loadLeaflet();
+  if (window.initEventMapThumbs) return;
+  await new Promise((resolve, reject) => {
+    const existing = document.querySelector('script[data-event-map-thumbs]');
+    if (existing) {
+      existing.addEventListener('load', () => resolve());
+      existing.addEventListener('error', () => reject(new Error('Failed to load map thumbs')));
+      return;
     }
-    displayEvents('calendar-events');
+    const script = document.createElement('script');
+    script.src = 'js/event-map-thumbs.js';
+    script.dataset.eventMapThumbs = 'true';
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error('Failed to load map thumbs'));
+    document.head.appendChild(script);
+  });
 }
 
-// Render monthly calendar view
-function renderMonthlyCalendar(events, container) {
-    const year = currentDate.getFullYear();
-    const month = currentDate.getMonth();
-    
-    // Get first day of month and number of days
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-    const daysInMonth = lastDay.getDate();
-    const startingDayOfWeek = firstDay.getDay();
-    
-    // Group events by date
-    const eventsByDate = new Map();
-    events.forEach(event => {
-        const eventDate = new Date(event.instanceDate || event.date);
-        if (eventDate.getFullYear() === year && eventDate.getMonth() === month) {
-            const day = eventDate.getDate();
-            if (!eventsByDate.has(day)) {
-                eventsByDate.set(day, []);
-            }
-            eventsByDate.get(day).push(event);
-        }
-    });
-    
-    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
-                       'July', 'August', 'September', 'October', 'November', 'December'];
-    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    
-    let html = '<div class="calendar-view-controls" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">';
-    html += `<button onclick="navigateCalendar(-1)" class="btn btn-secondary" style="cursor: pointer;">← Previous</button>`;
-    html += `<h2 style="margin: 0; color: var(--text-primary);">${monthNames[month]} ${year}</h2>`;
-    html += `<button onclick="navigateCalendar(1)" class="btn btn-secondary" style="cursor: pointer;">Next →</button>`;
-    html += '</div>';
-    
-    html += '<div class="calendar-grid" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 8px; overflow: hidden;">';
-    
-    // Day headers
-    dayNames.forEach(day => {
-        html += `<div class="calendar-day-header" style="background: var(--bg-secondary); padding: 0.75rem; text-align: center; font-weight: 600; color: var(--text-primary);">${day}</div>`;
-    });
-    
-    // Empty cells for days before month starts
-    for (let i = 0; i < startingDayOfWeek; i++) {
-        html += '<div class="calendar-day-empty" style="background: white; min-height: 100px;"></div>';
+function loadLeaflet() {
+  if (window.L) return Promise.resolve();
+  if (leafletLoadPromise) return leafletLoadPromise;
+
+  leafletLoadPromise = new Promise((resolve, reject) => {
+    if (!document.querySelector('link[data-leaflet-css]')) {
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+      link.integrity = 'sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=';
+      link.crossOrigin = '';
+      link.dataset.leafletCss = 'true';
+      document.head.appendChild(link);
     }
-    
-    // Days of the month
-    for (let day = 1; day <= daysInMonth; day++) {
-        const dayEvents = eventsByDate.get(day) || [];
-        const isToday = new Date().toDateString() === new Date(year, month, day).toDateString();
-        
-        html += `<div class="calendar-day ${isToday ? 'today' : ''}" style="background: white; min-height: 100px; padding: 0.5rem; border-left: ${isToday ? '3px solid var(--primary)' : 'none'};">`;
-        html += `<div class="calendar-day-number" style="font-weight: 600; color: ${isToday ? 'var(--primary)' : 'var(--text-primary)'}; margin-bottom: 0.5rem;">${day}</div>`;
-        
-        // Show events for this day (limit to 3, show "+X more" if more)
-        const eventsToShow = dayEvents.slice(0, 3);
-        const moreCount = dayEvents.length - 3;
-        
-        eventsToShow.forEach(event => {
-            const instanceDate = event.instanceDate || event.date;
-            const registrationOpen = isRegistrationOpen(event, instanceDate);
-            const eventTitle = registrationOpen ? event.name : `${event.name} (Registration Closed)`;
-            const bgColor = registrationOpen ? 'var(--primary)' : '#999';
-            html += `<div class="calendar-event" onclick="showEventDetails('${event.id}', '${instanceDate}')" style="background: ${bgColor}; color: white; padding: 0.25rem 0.5rem; margin-bottom: 0.25rem; border-radius: 4px; font-size: 0.75rem; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${eventTitle}">${event.name}</div>`;
-        });
-        
-        if (moreCount > 0) {
-            html += `<div style="font-size: 0.75rem; color: var(--text-secondary); padding: 0.25rem;">+${moreCount} more</div>`;
-        }
-        
-        html += '</div>';
-    }
-    
-    html += '</div>';
-    
-    container.innerHTML = html;
+
+    const script = document.createElement('script');
+    script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+    script.integrity = 'sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=';
+    script.crossOrigin = '';
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error('Failed to load map library'));
+    document.head.appendChild(script);
+  });
+
+  return leafletLoadPromise;
 }
 
-// Render weekly calendar view
-function renderWeeklyCalendar(events, container) {
-    // Get start of week (Sunday)
-    const weekStart = new Date(currentDate);
-    weekStart.setDate(currentDate.getDate() - currentDate.getDay());
-    weekStart.setHours(0, 0, 0, 0);
-    
-    // Get end of week (Saturday)
-    const weekEnd = new Date(weekStart);
-    weekEnd.setDate(weekStart.getDate() + 6);
-    weekEnd.setHours(23, 59, 59, 999);
-    
-    // Group events by date
-    const eventsByDate = new Map();
-    events.forEach(event => {
-        const eventDate = new Date(event.instanceDate || event.date);
-        if (eventDate >= weekStart && eventDate <= weekEnd) {
-            const dateKey = eventDate.toDateString();
-            if (!eventsByDate.has(dateKey)) {
-                eventsByDate.set(dateKey, []);
-            }
-            eventsByDate.get(dateKey).push(event);
-        }
-    });
-    
-    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
-                       'July', 'August', 'September', 'October', 'November', 'December'];
-    
-    let html = '<div class="calendar-view-controls" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">';
-    html += `<button onclick="navigateCalendar(-1)" class="btn btn-secondary" style="cursor: pointer;">← Previous Week</button>`;
-    html += `<h2 style="margin: 0; color: var(--text-primary);">${monthNames[weekStart.getMonth()]} ${weekStart.getDate()} - ${monthNames[weekEnd.getMonth()]} ${weekEnd.getDate()}, ${weekStart.getFullYear()}</h2>`;
-    html += `<button onclick="navigateCalendar(1)" class="btn btn-secondary" style="cursor: pointer;">Next Week →</button>`;
-    html += '</div>';
-    
-    html += '<div class="weekly-calendar" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 1rem;">';
-    
-    for (let i = 0; i < 7; i++) {
-        const day = new Date(weekStart);
-        day.setDate(weekStart.getDate() + i);
-        const dayEvents = eventsByDate.get(day.toDateString()) || [];
-        const isToday = new Date().toDateString() === day.toDateString();
-        
-        html += `<div class="weekly-day ${isToday ? 'today' : ''}" style="background: white; border-radius: 8px; padding: 1rem; box-shadow: var(--shadow-sm); border: ${isToday ? '2px solid var(--primary)' : '1px solid var(--border)'};">`;
-        html += `<div class="weekly-day-header" style="margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border);">`;
-        html += `<div style="font-size: 0.875rem; color: var(--text-secondary); text-transform: uppercase;">${dayNames[i]}</div>`;
-        html += `<div style="font-size: 1.5rem; font-weight: 700; color: ${isToday ? 'var(--primary)' : 'var(--text-primary)'};">${day.getDate()}</div>`;
-        html += `</div>`;
-        
-        if (dayEvents.length === 0) {
-            html += `<div style="color: var(--text-light); font-size: 0.875rem; text-align: center; padding: 1rem;">No events</div>`;
-        } else {
-            dayEvents.forEach(event => {
-                const instanceDate = event.instanceDate || event.date;
-                const registrationOpen = isRegistrationOpen(event, instanceDate);
-                const borderColor = registrationOpen ? 'var(--primary)' : '#999';
-                html += `<div class="weekly-event" onclick="showEventDetails('${event.id}', '${instanceDate}')" style="background: var(--bg-secondary); padding: 0.75rem; margin-bottom: 0.5rem; border-radius: 6px; cursor: pointer; border-left: 3px solid ${borderColor};">`;
-                html += `<div style="font-weight: 600; color: var(--text-primary); margin-bottom: 0.25rem;">${event.name}${!registrationOpen ? ' <span style="color: #999; font-size: 0.75rem;">(Registration Closed)</span>' : ''}</div>`;
-                html += `<div style="font-size: 0.875rem; color: var(--text-secondary);">${formatTime(event.time)} • ${event.location}</div>`;
-                html += `</div>`;
-            });
-        }
-        
-        html += '</div>';
-    }
-    
-    html += '</div>';
-    
-    container.innerHTML = html;
+async function geocodeWithPhoton(address) {
+  let query = address.trim();
+  if (query && !/nevada|\bnv\b/i.test(query)) {
+    query = `${query}, Nevada`;
+  }
+
+  const url = new URL('https://photon.komoot.io/api/');
+  url.searchParams.set('q', query);
+  url.searchParams.set('limit', '1');
+  url.searchParams.set('bbox', NEVADA_BBOX);
+
+  const response = await fetch(url.toString());
+  if (!response.ok) return null;
+
+  const data = await response.json();
+  const feature = data.features?.[0];
+  if (!feature?.geometry?.coordinates) return null;
+
+  const [lon, lat] = feature.geometry.coordinates;
+  return { lat, lon };
 }
 
-// Show event details (can be a modal or expand)
-function showEventDetails(eventId, instanceDate) {
-    // You can implement a modal here or navigate to event details
-    console.log('Show event details:', eventId, instanceDate);
-    // For now, you could trigger the registration modal or show more info
-    // If registration is available, show the modal
-    if (typeof showRegistrationModal === 'function') {
-        showRegistrationModal(eventId, instanceDate);
-    }
+function destroyRegistrationMap() {
+  if (registrationMap) {
+    registrationMap.remove();
+    registrationMap = null;
+    registrationMarker = null;
+  }
 }
 
-// Fetch event availability from backend
-async function fetchEventAvailability(eventId, instanceDate = null) {
+function updateDirectionsLink(lat, lng) {
+  const link = document.getElementById('event-reg-directions');
+  if (link) {
+    link.href = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+  }
+}
+
+async function initEventLocationMap(locationAddress, coords) {
+  const mapEl = document.getElementById('event-reg-map');
+  if (!mapEl) return;
+
+  await loadLeaflet();
+  destroyRegistrationMap();
+
+  let lat = NEVADA_CENTER.lat;
+  let lon = NEVADA_CENTER.lon;
+  let geocoded = false;
+
+  if (coords && Number.isFinite(Number(coords.latitude)) && Number.isFinite(Number(coords.longitude))) {
+    lat = Number(coords.latitude);
+    lon = Number(coords.longitude);
+    geocoded = true;
+  } else if (locationAddress?.trim()) {
     try {
-        // Ensure eventId is a number
-        const id = typeof eventId === 'string' ? parseInt(eventId, 10) : eventId;
-        if (isNaN(id)) {
-            return null;
-        }
-        
-        // Use Apps Script for availability check
-        let url = `${API_BASE_URL}?eventId=${id}&action=availability`;
-        if (instanceDate) {
-            url += `&instanceDate=${instanceDate}`;
-        }
-        
-        const response = await fetch(url);
-        if (!response.ok) {
-            // Silently fail if backend is not available or event not found
-            return null;
-        }
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            return {
-                available: data.available,
-                registered: data.registered,
-                isFull: data.isFull,
-                capacity: data.capacity
-            };
-        }
-        return null;
-    } catch (error) {
-        // Silently fail if backend is not available (expected in development)
-        return null;
+      const result = await geocodeWithPhoton(locationAddress.trim());
+      if (result) {
+        lat = result.lat;
+        lon = result.lon;
+        geocoded = true;
+      }
+    } catch (err) {
+      console.warn('Geocoding failed:', err);
     }
+  }
+
+  registrationMap = window.L.map(mapEl, { scrollWheelZoom: false }).setView([lat, lon], geocoded ? 14 : 7);
+  window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    maxZoom: 19,
+  }).addTo(registrationMap);
+
+  registrationMarker = window.L.marker([lat, lon], { draggable: true }).addTo(registrationMap);
+  registrationMarker.on('dragend', () => {
+    const pos = registrationMarker.getLatLng();
+    updateDirectionsLink(pos.lat, pos.lng);
+  });
+
+  const hintEl = document.getElementById('event-reg-map-hint');
+  if (hintEl) {
+    hintEl.textContent = geocoded
+      ? 'Drag the pin if the map location isn\'t quite right.'
+      : 'We couldn\'t place this address automatically. Drag the pin to the correct location.';
+  }
+
+  updateDirectionsLink(lat, lon);
+  setTimeout(() => registrationMap.invalidateSize(), 150);
 }
 
-// Display events on any page
-async function displayEvents(containerId = 'upcoming-events-list', filterType = null, viewType = null, forceReload = false) {
-    const container = document.getElementById(containerId);
-    if (!container) return;
+function escapeHtml(text) {
+  return String(text || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
 
-    // Use viewType parameter or currentView state
-    const view = viewType || (containerId === 'calendar-events' ? currentView : 'list');
-
-    // Check cache first (unless force reload or cache expired)
-    let allEvents = null;
-    const now = Date.now();
-    const useCache = !forceReload && cachedEvents && cacheTimestamp && (now - cacheTimestamp) < CACHE_DURATION;
-    
-    if (useCache) {
-        console.log('Using cached events');
-        allEvents = cachedEvents;
-    } else {
-        console.log('Fetching events from source...');
-        // Try to fetch events from API first, fallback to CSV  
-        allEvents = await fetchEventsFromGoogleSheet();
-        console.log('allEvents from Google Sheet:', allEvents);
-        console.log('allEvents type:', typeof allEvents, 'is array:', Array.isArray(allEvents));
-        if (allEvents && allEvents.length > 0) {
-            console.log('First event structure:', allEvents[0]);
-        }
-        
-        if (!allEvents || allEvents.length === 0) {
-            // Fallback to CSV if API unavailable or returns no events
-            console.log('Falling back to CSV...');
-            try {
-                const csvEvents = await loadCSV('data/events.csv');
-                console.log('CSV events loaded:', csvEvents);
-                // Convert CSV data to match event format (handle numeric fields)
-                allEvents = csvEvents.map(event => ({
-                    ...event,
-                    id: event.id.toString(),
-                    length: parseInt(event.length) || 180,
-                    // Map regLimit to registrationLimit for consistency
-                    registrationLimit: (event.registrationLimit || event.regLimit) ? parseInt(event.registrationLimit || event.regLimit) : null,
-                    eventRepeats: event.eventRepeats ? (isNaN(event.eventRepeats) ? event.eventRepeats : parseInt(event.eventRepeats)) : null
-                }));
-                console.log('Processed CSV events:', allEvents);
-            } catch (error) {
-                console.error('Error loading events from CSV:', error);
-                container.innerHTML = '<p style="text-align: center; padding: 2rem; color: var(--text-secondary);">No events data available.</p>';
-                return;
-            }
-        }
-    }
-    
-    // Ensure all events have required fields and normalize dates
-    // Only normalize if not using cache (cache already has normalized events)
-    if (allEvents && allEvents.length > 0 && !useCache) {
-        allEvents = allEvents.map(event => {
-            // Normalize date to YYYY-MM-DD format
-            let normalizedDate = '';
-            if (event.date) {
-                if (event.date instanceof Date) {
-                    normalizedDate = `${event.date.getFullYear()}-${String(event.date.getMonth() + 1).padStart(2, '0')}-${String(event.date.getDate()).padStart(2, '0')}`;
-                } else if (typeof event.date === 'string') {
-                    if (event.date.match(/^\d{4}-\d{2}-\d{2}$/)) {
-                        normalizedDate = event.date;
-                    } else {
-                        // Try to parse as date string
-                        const parsedDate = new Date(event.date);
-                        if (!isNaN(parsedDate.getTime())) {
-                            normalizedDate = `${parsedDate.getFullYear()}-${String(parsedDate.getMonth() + 1).padStart(2, '0')}-${String(parsedDate.getDate()).padStart(2, '0')}`;
-                        }
-                    }
-                }
-            }
-            
-            // Normalize repeatEnds date
-            let normalizedRepeatEnds = null;
-            if (event.repeatEnds) {
-                if (event.repeatEnds instanceof Date) {
-                    normalizedRepeatEnds = `${event.repeatEnds.getFullYear()}-${String(event.repeatEnds.getMonth() + 1).padStart(2, '0')}-${String(event.repeatEnds.getDate()).padStart(2, '0')}`;
-                } else if (typeof event.repeatEnds === 'string') {
-                    if (event.repeatEnds.match(/^\d{4}-\d{2}-\d{2}$/)) {
-                        normalizedRepeatEnds = event.repeatEnds;
-                    } else {
-                        const parsedDate = new Date(event.repeatEnds);
-                        if (!isNaN(parsedDate.getTime())) {
-                            normalizedRepeatEnds = `${parsedDate.getFullYear()}-${String(parsedDate.getMonth() + 1).padStart(2, '0')}-${String(parsedDate.getDate()).padStart(2, '0')}`;
-                        }
-                    }
-                }
-            }
-            
-            return {
-                id: event.id ? event.id.toString() : '',
-                name: event.name || 'Unnamed Event',
-                date: normalizedDate,
-                time: event.time || '00:00',
-                length: parseInt(event.length) || 180,
-                location: event.location || '',
-                additionalDetails: event.additionalDetails || event.description || '',
-                // Map regLimit to registrationLimit for consistency
-                registrationLimit: (event.registrationLimit || event.regLimit) ? parseInt(event.registrationLimit || event.regLimit) : null,
-                eventRepeats: event.eventRepeats ? (isNaN(event.eventRepeats) ? event.eventRepeats : parseInt(event.eventRepeats)) : null,
-                repeatEnds: normalizedRepeatEnds
-            };
-        });
-        console.log('Normalized events:', allEvents);
-        
-        // Cache the normalized events
-        cachedEvents = allEvents;
-        cacheTimestamp = Date.now();
-        // Expose cached events globally for other scripts to use
-        window.cachedEvents = allEvents;
-        console.log('Events cached');
-    } else if (useCache) {
-        console.log('Using cached normalized events');
-        // Update global cache reference
-        window.cachedEvents = cachedEvents;
-    }
-    
-    // Filter events based on page type
-    let filteredEvents = allEvents;
-    if (filterType === 'training') {
-        // Filter for training-related events (you can customize this logic)
-        filteredEvents = allEvents.filter(event => 
-            event.name.toLowerCase().includes('training') || 
-            event.name.toLowerCase().includes('workshop') ||
-            event.name.toLowerCase().includes('session')
-        );
-    }
-    
-    // Expand repeating events (use longer range for calendar views)
-    // For list view on home page, show 1 month (30 days). For calendar views, show 90 days.
-    // For calendar page list view, also show 30 days
-    const maxDaysAhead = (view === 'month' || view === 'week') ? 90 : 30;
-    const expandedEvents = expandRepeatingEvents(filteredEvents, maxDaysAhead);
-    
-    console.log(`View: ${view}, Container: ${containerId}, maxDaysAhead: ${maxDaysAhead}`);
-    console.log(`Filtered events: ${filteredEvents.length}, Expanded events: ${expandedEvents.length}`);
-    
-    // Render based on view type
-    if (view === 'month' && containerId === 'calendar-events') {
-        renderMonthlyCalendar(expandedEvents, container);
-        return;
-    } else if (view === 'week' && containerId === 'calendar-events') {
-        renderWeeklyCalendar(expandedEvents, container);
-        return;
-    }
-    
-    // Default list view
-    // For home page, show next month (30 days). For other pages, show all upcoming events
-    // Parse dates consistently (as local dates, not UTC)
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    const upcomingEvents = containerId === 'upcoming-events-list' 
-        ? expandedEvents.filter(event => {
-            const dateStr = event.instanceDate || event.date;
-            // Parse as local date (YYYY-MM-DD)
-            const [year, month, day] = dateStr.split('-').map(Number);
-            const eventDate = new Date(year, month - 1, day);
-            eventDate.setHours(0, 0, 0, 0);
-            
-            const oneMonthFromNow = new Date(today);
-            oneMonthFromNow.setDate(today.getDate() + 30);
-            return eventDate >= today && eventDate <= oneMonthFromNow;
-          })
-        : expandedEvents.filter(event => {
-            const dateStr = event.instanceDate || event.date;
-            // Parse as local date (YYYY-MM-DD)
-            const [year, month, day] = dateStr.split('-').map(Number);
-            const eventDate = new Date(year, month - 1, day);
-            eventDate.setHours(0, 0, 0, 0);
-            return eventDate >= today;
-          });
-
-    console.log(`Filtered events: ${expandedEvents.length} expanded -> ${upcomingEvents.length} upcoming`);
-    console.log('Upcoming events:', upcomingEvents);
-    console.log('Today:', today.toISOString());
-    if (expandedEvents.length > 0) {
-        console.log('First expanded event date:', expandedEvents[0].instanceDate || expandedEvents[0].date);
-        console.log('First expanded event:', expandedEvents[0]);
-    }
-
-    if (upcomingEvents.length === 0) {
-        // Show more helpful message with debugging info
-        let message = containerId === 'upcoming-events-list' 
-            ? 'No upcoming events in the next month.'
-            : 'No upcoming events found.';
-        
-        if (expandedEvents.length > 0) {
-            message += ` (Found ${expandedEvents.length} events, but none are upcoming)`;
-        } else if (filteredEvents.length > 0) {
-            message += ` (Found ${filteredEvents.length} events, but none expanded)`;
-        } else if (allEvents && allEvents.length > 0) {
-            message += ` (Found ${allEvents.length} events, but none matched filters)`;
-        }
-        
-        container.innerHTML = `<p style="text-align: center; padding: 2rem; color: var(--text-secondary);">${message}</p>`;
-        return;
-    }
-
-    let html = '<div class="events-list" style="max-width: 900px; margin: 0 auto;">';
-
-    // Fetch availability for each event instance (for repeating events, each instance needs its own count)
-    // Group by event ID and instance date to fetch availability per instance
-    const eventsWithLimit = upcomingEvents.filter(e => e.registrationLimit !== null && e.registrationLimit !== undefined);
-    
-    // Fetch availability for each unique event instance
-    const availabilityMap = new Map();
-    if (eventsWithLimit.length > 0) {
-        console.log(`Fetching availability for ${eventsWithLimit.length} events with registration limits`);
-        const availabilityPromises = eventsWithLimit.map(async (event) => {
-            const eventId = event.id;
-            const instanceDate = event.instanceDate || event.date; // Use instanceDate for repeating events
-            const key = `${eventId}-${instanceDate}`; // Unique key for this instance
-            try {
-                const availability = await fetchEventAvailability(eventId, instanceDate);
-                console.log(`Availability for ${key}:`, availability);
-                return { key, availability };
-            } catch (error) {
-                console.warn(`Failed to fetch availability for event ${eventId}:`, error);
-                return { key, availability: null };
-            }
-        });
-        
-        const availabilityResults = await Promise.all(availabilityPromises);
-        availabilityResults.forEach(({ key, availability }) => {
-            if (availability) {
-                availabilityMap.set(key, availability);
-            }
-        });
-        console.log(`Availability map size: ${availabilityMap.size}`);
-    }
-
-    upcomingEvents.forEach((event) => {
-        const instanceDate = event.instanceDate || event.date;
-        const availabilityKey = `${event.id}-${instanceDate}`;
-        const availability = availabilityMap.get(availabilityKey) || null;
-        console.log(`Event ${event.id}: registrationLimit=${event.registrationLimit}, availability=`, availability);
-        // Use instanceDate for repeating events, otherwise use date
-        const displayDate = event.instanceDate || event.date;
-        const eventDate = new Date(displayDate);
-        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-        const month = monthNames[eventDate.getMonth()];
-        const day = eventDate.getDate();
-
-        // Make event card clickable
-        html += `<div class="event-card" onclick="showRegistrationModal('${event.id}', '${instanceDate}')" style="display: flex; gap: 2rem; background: white; border-radius: 12px; padding: 2rem; margin-bottom: 1.5rem; box-shadow: var(--shadow-sm); cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='var(--shadow-md, 0 4px 6px rgba(0,0,0,0.1))';" onmouseout="this.style.transform=''; this.style.boxShadow='var(--shadow-sm, 0 2px 4px rgba(0,0,0,0.05))';">`;
-        
-        // Date display
-        html += `<div class="event-date" style="flex-shrink: 0; text-align: center; min-width: 80px;">`;
-        html += `<div class="event-month" style="font-size: 0.875rem; font-weight: 600; color: var(--primary); text-transform: uppercase;">${month}</div>`;
-        html += `<div class="event-day" style="font-size: 2rem; font-weight: 700; color: var(--text-primary); line-height: 1;">${day}</div>`;
-        html += `</div>`;
-
-        // Event details
-        html += `<div class="event-details" style="flex: 1;">`;
-        html += `<h3 style="font-size: 1.5rem; margin-bottom: 0.75rem; color: var(--text-primary);">${event.name}</h3>`;
-        
-        html += `<p class="event-meta" style="display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 0.75rem; color: var(--text-secondary); font-size: 0.9375rem;">`;
-        html += `<span>${formatDate(displayDate)}</span>`;
-        html += `<span>${formatTime(event.time)}</span>`;
-        html += `<span>${event.location}</span>`;
-        html += `<span>${formatLength(event.length)}</span>`;
-        // Removed "Repeats" display from list view as requested
-        // Show registration count if event has a limit
-        if (event.registrationLimit !== null && event.registrationLimit !== undefined) {
-            if (availability) {
-                const registered = availability.registered || 0;
-                const capacity = availability.capacity || event.registrationLimit;
-                html += `<span style="color: var(--text-secondary); font-weight: 500;">${registered} / ${capacity} registered</span>`;
-            } else {
-                // Show limit even if availability fetch failed
-                html += `<span style="color: var(--text-secondary); font-weight: 500;">Capacity: ${event.registrationLimit}</span>`;
-            }
-        }
-        html += `</p>`;
-
-        if (event.additionalDetails) {
-            html += `<p style="color: var(--text-secondary); line-height: 1.6; margin-bottom: 1rem;">${event.additionalDetails}</p>`;
-        }
-
-        // Registration button and availability
-        if (event.registrationLimit !== null) {
-            const registrationOpen = isRegistrationOpen(event, instanceDate);
-            
-            if (availability) {
-                const isFull = availability.isFull || availability.registered >= event.registrationLimit;
-                const available = availability.available || (event.registrationLimit - availability.registered);
-                
-                html += `<div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">`;
-                
-                if (isFull) {
-                    html += `<span style="padding: 0.5rem 1rem; background: var(--bg-light); color: var(--text-secondary); border-radius: 6px; font-size: 0.875rem; font-weight: 600;">Booked</span>`;
-                } else if (!registrationOpen) {
-                    html += `<span style="padding: 0.5rem 1rem; background: var(--bg-light); color: var(--text-secondary); border-radius: 6px; font-size: 0.875rem; font-weight: 600;">Registration Closed</span>`;
-                } else {
-                    html += `<span style="padding: 0.5rem 1rem; background: var(--bg-light); color: var(--text-secondary); border-radius: 6px; font-size: 0.875rem;">${available} spot${available === 1 ? '' : 's'} available</span>`;
-                    html += `<button onclick="event.stopPropagation(); showRegistrationModal('${event.id}', '${instanceDate}')" class="btn btn-primary" style="cursor: pointer; border: none;">Register</button>`;
-                }
-                
-                html += `</div>`;
-            } else {
-                // Fallback if API is unavailable
-                if (registrationOpen) {
-                    html += `<button onclick="event.stopPropagation(); showRegistrationModal('${event.id}', '${instanceDate}')" class="btn btn-primary" style="cursor: pointer; border: none;">Register</button>`;
-                } else {
-                    html += `<span style="padding: 0.5rem 1rem; background: var(--bg-light); color: var(--text-secondary); border-radius: 6px; font-size: 0.875rem; font-weight: 600;">Registration Closed</span>`;
-                }
-            }
-        }
-
-        html += `</div>`;
-        html += `</div>`;
+function getCalendarState(container) {
+  if (!calendarStates.has(container)) {
+    const scope = container.dataset.eventsScope || 'all';
+    calendarStates.set(container, {
+      events: [],
+      view: 'list',
+      categoryFilter: scope === 'training' ? 'training' : 'all',
+      searchQuery: '',
+      appliedSearchQuery: '',
+      searchTimer: null,
+      searchSelection: null,
+      renderGen: 0,
+      listPage: 1,
+      monthDate: startOfNevadaMonth(),
+      loading: false,
+      activeContainer: container,
     });
-
-    html += '</div>';
-    container.innerHTML = html;
+  }
+  return calendarStates.get(container);
 }
 
-// Initialize when DOM is ready
+function startOfNevadaMonth(date) {
+  if (date) return startOfMonth(date);
+  const parts = window.NRCGATime ? window.NRCGATime.nowParts() : null;
+  if (parts) return new Date(parts.year, parts.month - 1, 1);
+  return startOfMonth(new Date());
+}
+
+function startOfMonth(date) {
+  return new Date(date.getFullYear(), date.getMonth(), 1);
+}
+
+function addMonths(date, months) {
+  return new Date(date.getFullYear(), date.getMonth() + months, 1);
+}
+
+function toDateParam(date) {
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
+
+function eventDateKey(event) {
+  if (event.occurrence_date) return event.occurrence_date;
+  if (window.NRCGATime) return window.NRCGATime.dateParam(event.starts_at);
+  return toDateParam(new Date(event.starts_at));
+}
+
+function nevadaTodayKey() {
+  if (window.NRCGATime) return window.NRCGATime.dateParam(new Date());
+  return toDateParam(new Date());
+}
+
+async function fetchEvents(category) {
+  if (!window.NRCGA_API) {
+    console.warn('NRCGA_API not loaded');
+    return [];
+  }
+  const query = category ? `?category=${encodeURIComponent(category)}` : '';
+  const data = await window.NRCGA_API.get(`/events${query}`);
+  return data.events || [];
+}
+
+async function fetchAvailability(seriesId, occurrenceDate) {
+  const data = await window.NRCGA_API.get(
+    `/events/${encodeURIComponent(seriesId)}/availability?occurrence_date=${encodeURIComponent(occurrenceDate)}`,
+  );
+  return data;
+}
+
+function filterEventsByCategory(events, categoryFilter) {
+  if (categoryFilter === 'training') {
+    return events.filter((event) => event.category === 'training');
+  }
+  return events;
+}
+
+function normalizeSearchText(value) {
+  return String(value || '')
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function eventSearchHaystack(event) {
+  return normalizeSearchText(
+    [
+      event.title,
+      event.location,
+      event.description,
+      event.category,
+      event.occurrence_date,
+      formatEventDate(event.starts_at),
+      formatEventTime(event.starts_at),
+      formatEventTimeRange(event.starts_at, event.ends_at),
+    ].join(' '),
+  );
+}
+
+function filterEventsBySearch(events, searchQuery) {
+  const query = normalizeSearchText(searchQuery);
+  if (!query) return events;
+  const terms = query.split(' ').filter(Boolean);
+  return events.filter((event) => {
+    const haystack = eventSearchHaystack(event);
+    return terms.every((term) => haystack.includes(term));
+  });
+}
+
+function ensureRegistrationModal() {
+  let modal = document.getElementById('event-registration-modal');
+  if (modal) return modal;
+
+  modal = document.createElement('div');
+  modal.id = 'event-registration-modal';
+  modal.className = 'event-reg-modal-overlay';
+  modal.innerHTML = `
+    <div class="event-reg-modal-panel" role="dialog" aria-modal="true" aria-labelledby="event-modal-title">
+      <button type="button" id="event-modal-close" class="event-reg-modal__close" aria-label="Close">&times;</button>
+      <div id="event-modal-body"></div>
+    </div>`;
+  document.body.appendChild(modal);
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) closeRegistrationModal();
+  });
+  modal.querySelector('#event-modal-close').addEventListener('click', closeRegistrationModal);
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal.style.display === 'flex') closeRegistrationModal();
+  });
+  return modal;
+}
+
+function closeRegistrationModal() {
+  const modal = document.getElementById('event-registration-modal');
+  if (modal) modal.style.display = 'none';
+  destroyRegistrationMap();
+}
+
+function renderEventMetaSection(event) {
+  const dateParts = formatEventDateParts(event.starts_at);
+  const timeRange = formatEventTimeRange(event.starts_at, event.ends_at);
+  const location = event.location?.trim();
+
+  const locationSection = location
+    ? `
+      <div class="event-reg-modal__location">
+        <p class="event-reg-modal__location-label">
+          <span aria-hidden="true">📍</span> Location
+        </p>
+        <p class="event-reg-modal__location-address">${escapeHtml(location)}</p>
+      </div>
+      <div class="event-reg-modal__map-wrap">
+        <div id="event-reg-map" class="event-reg-modal__map" role="img" aria-label="Event location map"></div>
+      </div>
+      <p id="event-reg-map-hint" class="event-reg-modal__map-hint"></p>
+      <a id="event-reg-directions" class="event-reg-modal__directions" href="#" target="_blank" rel="noopener noreferrer">
+        Get directions ↗
+      </a>`
+    : '';
+
+  return `
+    <div class="event-reg-modal__when">
+      <div class="event-reg-modal__date-badge" aria-hidden="true">
+        <span class="event-reg-modal__date-month">${escapeHtml(dateParts.month)}</span>
+        <span class="event-reg-modal__date-day">${escapeHtml(String(dateParts.day))}</span>
+      </div>
+      <div>
+        <p class="event-reg-modal__when-primary">${escapeHtml(dateParts.weekdayDate)}</p>
+        ${timeRange ? `<p class="event-reg-modal__when-secondary">${escapeHtml(timeRange)}</p>` : ''}
+      </div>
+    </div>
+    ${locationSection}`;
+}
+
+function renderRegistrationForm(event) {
+  return `
+    <div class="event-reg-modal__divider"></div>
+    <h3 class="event-reg-modal__form-title">Complete your registration</h3>
+    <form id="event-registration-form">
+      <input type="hidden" name="occurrence_date" value="${escapeHtml(event.occurrence_date)}" />
+      <div class="event-reg-modal__field">
+        <label for="event-reg-name">Name *</label>
+        <input id="event-reg-name" name="guest_name" required autocomplete="name" />
+      </div>
+      <div class="event-reg-modal__field-row">
+        <div class="event-reg-modal__field">
+          <label for="event-reg-email">Email *</label>
+          <input id="event-reg-email" name="guest_email" type="email" required autocomplete="email" />
+        </div>
+        <div class="event-reg-modal__field">
+          <label for="event-reg-phone">Phone</label>
+          <input id="event-reg-phone" name="guest_phone" type="tel" autocomplete="tel" />
+        </div>
+      </div>
+      <div class="event-reg-modal__field-row">
+        <div class="event-reg-modal__field">
+          <label for="event-reg-org">Organization</label>
+          <input id="event-reg-org" name="organization" autocomplete="organization" />
+        </div>
+        <div class="event-reg-modal__field">
+          <label for="event-reg-spots">Number of spots *</label>
+          <input id="event-reg-spots" name="spot_count" type="number" min="1" value="1" required />
+        </div>
+      </div>
+      <div class="event-reg-modal__field">
+        <label for="event-reg-notes">Notes</label>
+        <textarea id="event-reg-notes" name="notes" rows="3" placeholder="Optional questions or accessibility needs"></textarea>
+      </div>
+      <p id="event-registration-error" class="event-reg-modal__error"></p>
+      <div class="event-reg-modal__actions">
+        <button type="submit" class="btn btn-primary">Register</button>
+        <button type="button" class="btn btn-secondary" id="event-registration-cancel">Cancel</button>
+      </div>
+    </form>`;
+}
+
+function showRegistrationSuccess(data) {
+  const body = document.getElementById('event-modal-body');
+  const reg = data.registration;
+  destroyRegistrationMap();
+  body.innerHTML = `
+    <div class="event-reg-modal__success">
+      <div class="event-reg-modal__success-icon" aria-hidden="true">✓</div>
+      <h2>You're registered!</h2>
+      <p><strong>${escapeHtml(reg.event_title)}</strong></p>
+      <p>${escapeHtml(formatEventDate(reg.starts_at))}</p>
+      <p>${escapeHtml(formatEventTime(reg.starts_at))}</p>
+      ${reg.location ? `<p>${escapeHtml(reg.location)}</p>` : ''}
+      <p>${escapeHtml(reg.guest_name)} · <strong>${reg.spot_count}</strong> spot${reg.spot_count > 1 ? 's' : ''}</p>
+      <p style="font-size:0.9rem;">${
+        reg.email_sent
+          ? `A confirmation email has been sent to ${escapeHtml(reg.guest_email || 'your email')}.`
+          : 'Registration saved. (Confirmation email could not be sent.)'
+      }</p>
+      <button type="button" class="btn btn-primary" id="event-modal-done" style="margin-top:1.25rem;">Done</button>
+    </div>`;
+  document.getElementById('event-modal-done').addEventListener('click', closeRegistrationModal);
+}
+
+async function refreshActiveCalendar() {
+  const active = document.querySelector('[data-events-container][data-events-active="true"]');
+  if (active) {
+    await renderEventsCalendar(active, { preserveView: true });
+    return;
+  }
+  const container = document.querySelector('[data-events-container]');
+  if (container) await renderEventsCalendar(container, { preserveView: true });
+}
+
+async function showRegistrationModal(seriesId, occurrenceDate, eventTitle, sourceContainer) {
+  if (sourceContainer) {
+    document.querySelectorAll('[data-events-container]').forEach((el) => {
+      el.removeAttribute('data-events-active');
+    });
+    sourceContainer.setAttribute('data-events-active', 'true');
+  }
+
+  const event =
+    findEventOccurrence(seriesId, occurrenceDate) || {
+      title: eventTitle,
+      occurrence_date: occurrenceDate,
+      series_id: seriesId,
+      starts_at: occurrenceDate,
+      ends_at: null,
+      location: null,
+      description: null,
+      category: 'general',
+    };
+
+  const modal = ensureRegistrationModal();
+  const body = document.getElementById('event-modal-body');
+  const categoryLabel = event.category === 'training' ? 'Training' : 'Event';
+
+  body.innerHTML = `
+    <div class="event-reg-modal__hero">
+      <span class="event-reg-modal__category">${escapeHtml(categoryLabel)}</span>
+      <h2 id="event-modal-title" class="event-reg-modal__title">${escapeHtml(event.title)}</h2>
+      ${event.description ? `<p class="event-reg-modal__description">${escapeHtml(event.description)}</p>` : ''}
+    </div>
+    <div class="event-reg-modal__body">
+      ${renderEventMetaSection(event)}
+      ${renderRegistrationForm(event)}
+    </div>`;
+
+  document.getElementById('event-registration-cancel').addEventListener('click', closeRegistrationModal);
+  document.getElementById('event-registration-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const form = e.target;
+    const errEl = document.getElementById('event-registration-error');
+    errEl.style.display = 'none';
+    const payload = {
+      occurrence_date: form.occurrence_date.value,
+      guest_name: form.guest_name.value,
+      guest_email: form.guest_email.value,
+      guest_phone: form.guest_phone.value,
+      organization: form.organization.value,
+      spot_count: Number(form.spot_count.value),
+      notes: form.notes.value,
+    };
+    try {
+      const data = await window.NRCGA_API.post(`/events/${encodeURIComponent(seriesId)}/register`, payload);
+      if (!data.success) {
+        errEl.textContent = data.error || 'Registration failed.';
+        errEl.style.display = 'block';
+        return;
+      }
+      data.registration.guest_email = payload.guest_email;
+      showRegistrationSuccess(data);
+      await refreshActiveCalendar();
+    } catch (err) {
+      errEl.textContent = err.message || 'Registration failed. Please try again.';
+      errEl.style.display = 'block';
+    }
+  });
+
+  modal.style.display = 'flex';
+
+  if (event.location?.trim()) {
+    try {
+      await initEventLocationMap(event.location, {
+        latitude: event.latitude,
+        longitude: event.longitude,
+      });
+    } catch (err) {
+      console.warn('Map initialization failed:', err);
+    }
+  }
+}
+
+async function buildRegisterButton(event) {
+  const cancelled = event.cancelled;
+  const seriesId = event.series_id || event.id.split(':')[0];
+  if (!event.registration_enabled || cancelled) return '';
+
+  try {
+    const avail = await fetchAvailability(seriesId, event.occurrence_date);
+    if (!avail.isFull && !avail.cancelled) {
+      return `<button type="button" class="btn btn-primary event-register-btn" data-series-id="${escapeHtml(seriesId)}" data-occurrence="${escapeHtml(event.occurrence_date)}" data-title="${escapeHtml(event.title)}">Register</button>`;
+    }
+    if (avail.isFull) return '<span style="color:#999;">Full</span>';
+  } catch {
+    return `<button type="button" class="btn btn-primary event-register-btn" data-series-id="${escapeHtml(seriesId)}" data-occurrence="${escapeHtml(event.occurrence_date)}" data-title="${escapeHtml(event.title)}">Register</button>`;
+  }
+  return '';
+}
+
+async function buildAvailabilityHtml(event) {
+  if (!event.registration_enabled || event.cancelled) return '';
+  const seriesId = event.series_id || event.id.split(':')[0];
+  try {
+    const avail = await fetchAvailability(seriesId, event.occurrence_date);
+    if (avail.capacity != null) {
+      return `<span style="color:var(--text-secondary);">${avail.registered} / ${avail.capacity} registered</span>`;
+    }
+  } catch {
+    return '';
+  }
+  return '';
+}
+
+async function buildEventCard(event) {
+  const cancelled = event.cancelled;
+  const dateLabel = formatEventDate(event.starts_at);
+  const timeLabel = formatEventTime(event.starts_at);
+  const [availabilityHtml, registerBtn] = await Promise.all([
+    buildAvailabilityHtml(event),
+    buildRegisterButton(event),
+  ]);
+  const categoryBadge =
+    event.category === 'training'
+      ? '<span class="events-calendar-category-badge events-calendar-category-badge--training">Training</span>'
+      : '';
+
+  let thumbHtml = '<div class="event-card-thumb event-card-thumb-fallback" aria-hidden="true"></div>';
+  if (event.image_r2_key) {
+    const apiBase = (window.NRCGA_API && window.NRCGA_API.baseUrl) || '';
+    const src = `${apiBase}/api/v1/media/${encodeURIComponent(event.image_r2_key)}`;
+    thumbHtml = `<img class="event-card-thumb" src="${escapeHtml(src)}" alt="" loading="lazy" decoding="async">`;
+  } else if (event.latitude != null && event.longitude != null && Number.isFinite(Number(event.latitude)) && Number.isFinite(Number(event.longitude))) {
+    thumbHtml = `<div class="event-card-thumb event-card-map-thumb" data-event-map-thumb data-lat="${Number(event.latitude)}" data-lng="${Number(event.longitude)}" aria-hidden="true"></div>`;
+  }
+
+  return `
+    <div class="event-card nrcga-event-card">
+      ${thumbHtml}
+      <div class="event-card-body">
+        <div style="display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;align-items:flex-start;">
+          <div>
+            <h3 style="margin:0 0 0.5rem;display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
+              ${escapeHtml(event.title)}${cancelled ? ' <span style="color:#b42318;">(Cancelled)</span>' : ''}
+              ${categoryBadge}
+            </h3>
+            <p style="margin:0;color:var(--text-secondary);">${escapeHtml(dateLabel)}${timeLabel ? ` · ${escapeHtml(timeLabel)}` : ''}</p>
+            ${event.location ? `<p style="margin:0.25rem 0 0;">${escapeHtml(event.location)}</p>` : ''}
+            ${event.description ? `<p style="margin:0.75rem 0 0;">${escapeHtml(event.description)}</p>` : ''}
+            ${availabilityHtml ? `<p style="margin:0.5rem 0 0;">${availabilityHtml}</p>` : ''}
+          </div>
+          <div>${registerBtn}</div>
+        </div>
+      </div>
+    </div>`;
+}
+
+function bindRegisterButtons(root, container) {
+  root.querySelectorAll('.event-register-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      showRegistrationModal(btn.dataset.seriesId, btn.dataset.occurrence, btn.dataset.title, container);
+    });
+  });
+}
+
+function renderToolbar(container, state) {
+  const scope = container.dataset.eventsScope || 'all';
+  const showCategoryFilter = scope === 'all';
+  const searchValue = escapeHtml(state.searchQuery || '');
+  const searchPlaceholder = scope === 'training' ? 'Search training…' : 'Search events…';
+
+  const filterButtons = showCategoryFilter
+    ? `
+      <div class="events-calendar-filters" role="group" aria-label="Event category filter">
+        <button type="button" class="btn btn-secondary events-calendar-filter-btn${state.categoryFilter === 'all' ? ' active' : ''}" data-filter="all">All</button>
+        <button type="button" class="btn btn-secondary events-calendar-filter-btn${state.categoryFilter === 'training' ? ' active' : ''}" data-filter="training">Training</button>
+      </div>`
+    : '';
+
+  return `
+    <div class="events-calendar-toolbar">
+      <div class="events-calendar-toolbar-start">
+        ${filterButtons}
+        <div class="events-calendar-search">
+          <input type="search" class="events-calendar-search-input" value="${searchValue}" placeholder="${escapeHtml(searchPlaceholder)}" aria-label="${escapeHtml(searchPlaceholder)}" autocomplete="off" spellcheck="false">
+        </div>
+      </div>
+      <div class="events-calendar-views" role="group" aria-label="Calendar view">
+        <button type="button" class="btn btn-secondary calendar-view-btn events-calendar-view-btn${state.view === 'list' ? ' active' : ''}" data-view="list">List</button>
+        <button type="button" class="btn btn-secondary calendar-view-btn events-calendar-view-btn${state.view === 'month' ? ' active' : ''}" data-view="month">Month</button>
+      </div>
+    </div>`;
+}
+
+function renderPagination(currentPage, totalPages) {
+  if (totalPages <= 1) return '';
+  return `
+    <div class="events-calendar-pagination">
+      <button type="button" class="btn btn-secondary events-calendar-page-btn" data-page="${currentPage - 1}"${currentPage <= 1 ? ' disabled' : ''}>Previous</button>
+      <span class="events-calendar-page-label">Page ${currentPage} of ${totalPages}</span>
+      <button type="button" class="btn btn-secondary events-calendar-page-btn" data-page="${currentPage + 1}"${currentPage >= totalPages ? ' disabled' : ''}>Next</button>
+    </div>`;
+}
+
+function getFilteredEvents(state) {
+  return filterEventsBySearch(
+    filterEventsByCategory(state.events, state.categoryFilter),
+    state.searchQuery,
+  );
+}
+
+function getEventsForMonth(events, monthDate) {
+  const year = monthDate.getFullYear();
+  const month = monthDate.getMonth();
+  const gridStart = new Date(year, month, 1);
+  gridStart.setDate(gridStart.getDate() - gridStart.getDay());
+  const gridEnd = new Date(gridStart);
+  gridEnd.setDate(gridEnd.getDate() + 41);
+  const startKey = toDateParam(gridStart);
+  const endKey = toDateParam(gridEnd);
+
+  return events.filter((event) => {
+    const key = eventDateKey(event);
+    return key >= startKey && key <= endKey;
+  });
+}
+
+function renderMonthDayEvents(dayEvents) {
+  const maxVisible = 2;
+  const visible = dayEvents.slice(0, maxVisible);
+  const hiddenCount = dayEvents.length - visible.length;
+
+  let html = visible
+    .map((event) => {
+      const classes = [
+        'events-calendar-day-event',
+        event.category === 'training' ? 'events-calendar-day-event--training' : '',
+        event.cancelled ? 'events-calendar-day-event--cancelled' : '',
+      ]
+        .filter(Boolean)
+        .join(' ');
+      const seriesId = event.series_id || event.id.split(':')[0];
+      return `<button type="button" class="${classes}" title="${escapeHtml(event.title)}" data-series-id="${escapeHtml(seriesId)}" data-occurrence="${escapeHtml(event.occurrence_date)}" data-title="${escapeHtml(event.title)}" data-registerable="${event.registration_enabled && !event.cancelled ? '1' : '0'}">${escapeHtml(event.title)}</button>`;
+    })
+    .join('');
+
+  if (hiddenCount > 0) {
+    html += `<div class="events-calendar-day-more">+${hiddenCount} more</div>`;
+  }
+  return html;
+}
+
+function renderMonthView(events, monthDate) {
+  const todayKey = nevadaTodayKey();
+  const year = monthDate.getFullYear();
+  const month = monthDate.getMonth();
+  const firstWeekday = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const daysInPrevMonth = new Date(year, month, 0).getDate();
+
+  const eventsByDate = new Map();
+  for (const event of events) {
+    const key = eventDateKey(event);
+    if (!eventsByDate.has(key)) eventsByDate.set(key, []);
+    eventsByDate.get(key).push(event);
+  }
+
+  let cells = WEEKDAY_LABELS.map(
+    (label) => `<div class="events-calendar-weekday">${label}</div>`,
+  ).join('');
+
+  const totalCells = Math.ceil((firstWeekday + daysInMonth) / 7) * 7;
+  for (let i = 0; i < totalCells; i += 1) {
+    let dayNum;
+    let cellDate;
+    let outside = false;
+
+    if (i < firstWeekday) {
+      dayNum = daysInPrevMonth - firstWeekday + i + 1;
+      cellDate = new Date(year, month - 1, dayNum);
+      outside = true;
+    } else if (i >= firstWeekday + daysInMonth) {
+      dayNum = i - firstWeekday - daysInMonth + 1;
+      cellDate = new Date(year, month + 1, dayNum);
+      outside = true;
+    } else {
+      dayNum = i - firstWeekday + 1;
+      cellDate = new Date(year, month, dayNum);
+    }
+
+    const dateKey = toDateParam(cellDate);
+    const dayEvents = eventsByDate.get(dateKey) || [];
+    const todayClass = dateKey === todayKey ? ' events-calendar-day--today' : '';
+    const outsideClass = outside ? ' events-calendar-day--outside' : '';
+
+    cells += `
+      <div class="events-calendar-day${todayClass}${outsideClass}">
+        <div class="events-calendar-day-num">${dayNum}</div>
+        ${renderMonthDayEvents(dayEvents)}
+      </div>`;
+  }
+
+  return `
+    <div class="events-calendar-month">
+      <div class="events-calendar-month-header">
+        <button type="button" class="btn btn-secondary events-calendar-month-nav" data-month-delta="-1" aria-label="Previous month">←</button>
+        <h3 class="events-calendar-month-title">${MONTH_LABELS[month]} ${year}</h3>
+        <button type="button" class="btn btn-secondary events-calendar-month-nav" data-month-delta="1" aria-label="Next month">→</button>
+      </div>
+      <div class="events-calendar-month-grid">${cells}</div>
+    </div>`;
+}
+
+async function renderListView(container, state) {
+  const events = getFilteredEvents(state);
+  const totalPages = Math.max(1, Math.ceil(events.length / EVENTS_PAGE_SIZE));
+  const page = Math.min(state.listPage, totalPages);
+  state.listPage = page;
+
+  const start = (page - 1) * EVENTS_PAGE_SIZE;
+  const pageEvents = events.slice(start, start + EVENTS_PAGE_SIZE);
+
+  if (!pageEvents.length) {
+    const emptyMessage = normalizeSearchText(state.searchQuery)
+      ? 'No events match your search.'
+      : 'No upcoming events scheduled.';
+    return `<p class="events-calendar-empty">${emptyMessage}</p>`;
+  }
+
+  const cards = await Promise.all(pageEvents.map((event) => buildEventCard(event)));
+  return `
+    <div class="events-calendar-list">
+      ${cards.join('')}
+      ${renderPagination(page, totalPages)}
+    </div>`;
+}
+
+function restoreSearchFocus(container, state) {
+  const input = container.querySelector('.events-calendar-search-input');
+  if (!input) return;
+  input.focus({ preventScroll: true });
+  const selection = state.searchSelection;
+  const fallback = input.value.length;
+  const start = Number.isInteger(selection?.[0]) ? selection[0] : fallback;
+  const end = Number.isInteger(selection?.[1]) ? selection[1] : fallback;
+  try {
+    input.setSelectionRange(start, end);
+  } catch {
+    /* some browsers reject setSelectionRange on type=search */
+  }
+}
+
+function bindSearchInput(container, state) {
+  const input = container.querySelector('.events-calendar-search-input');
+  if (!input) return;
+
+  const applySearch = () => {
+    const liveInput = container.querySelector('.events-calendar-search-input') || input;
+    const nextQuery = liveInput.value;
+    state.searchQuery = nextQuery;
+    state.searchSelection = [liveInput.selectionStart, liveInput.selectionEnd];
+    if (nextQuery === state.appliedSearchQuery) return;
+    state.listPage = 1;
+    renderEventsCalendar(container, { preserveView: true, restoreSearchFocus: true });
+  };
+
+  input.addEventListener('input', () => {
+    state.searchQuery = input.value;
+    state.searchSelection = [input.selectionStart, input.selectionEnd];
+    clearTimeout(state.searchTimer);
+    state.searchTimer = setTimeout(applySearch, 200);
+  });
+
+  input.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      clearTimeout(state.searchTimer);
+      applySearch();
+    }
+  });
+
+  input.addEventListener('search', () => {
+    clearTimeout(state.searchTimer);
+    applySearch();
+  });
+}
+
+function bindCalendarControls(container, state) {
+  bindSearchInput(container, state);
+
+  container.querySelectorAll('.events-calendar-filter-btn').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      state.categoryFilter = btn.dataset.filter;
+      state.listPage = 1;
+      await renderEventsCalendar(container, { preserveView: true });
+    });
+  });
+
+  container.querySelectorAll('.events-calendar-view-btn').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      state.view = btn.dataset.view;
+      await renderEventsCalendar(container, { preserveView: true });
+    });
+  });
+
+  container.querySelectorAll('.events-calendar-page-btn').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      if (btn.disabled) return;
+      state.listPage = Number(btn.dataset.page);
+      await renderEventsCalendar(container, { preserveView: true });
+    });
+  });
+
+  container.querySelectorAll('.events-calendar-month-nav').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      state.monthDate = addMonths(state.monthDate, Number(btn.dataset.monthDelta));
+      await renderEventsCalendar(container, { preserveView: true });
+    });
+  });
+
+  bindRegisterButtons(container, container);
+
+  container.querySelectorAll('.events-calendar-day-event').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      if (btn.dataset.registerable === '1') {
+        showRegistrationModal(btn.dataset.seriesId, btn.dataset.occurrence, btn.dataset.title, container);
+      }
+    });
+  });
+}
+
+async function renderEventsCalendar(container, options = {}) {
+  const state = getCalendarState(container);
+  if (!options.preserveView) {
+    state.view = 'list';
+    state.listPage = 1;
+  }
+
+  const renderGen = (state.renderGen || 0) + 1;
+  state.renderGen = renderGen;
+
+  const needsFetch = !state.events.length || options.reload;
+  if (needsFetch) {
+    container.innerHTML = '<p class="events-calendar-loading">Loading events…</p>';
+  }
+
+  try {
+    const scope = container.dataset.eventsScope || 'all';
+    if (needsFetch) {
+      state.events = await fetchEvents(scope === 'training' ? 'training' : undefined);
+    }
+
+    let content = '';
+    const queryUsed = state.searchQuery;
+    if (state.view === 'month') {
+      const monthEvents = getEventsForMonth(getFilteredEvents(state), state.monthDate);
+      content = renderMonthView(monthEvents, state.monthDate);
+    } else {
+      content = await renderListView(container, state);
+    }
+
+    if (state.renderGen !== renderGen) return;
+
+    const toolbar = renderToolbar(container, state);
+    container.innerHTML = `<div class="events-calendar-widget">${toolbar}${content}</div>`;
+    state.appliedSearchQuery = queryUsed;
+    bindCalendarControls(container, state);
+    if (options.restoreSearchFocus) restoreSearchFocus(container, state);
+    if (state.view === 'list') {
+      try {
+        await ensureEventMapThumbs();
+        if (state.renderGen !== renderGen) return;
+        if (window.initEventMapThumbs) window.initEventMapThumbs(container);
+      } catch (err) {
+        console.warn('Event map thumbnails unavailable', err);
+      }
+    }
+  } catch (err) {
+    if (state.renderGen !== renderGen) return;
+    console.error(err);
+    container.innerHTML =
+      '<p class="events-calendar-empty">Unable to load events. Please try again later.</p>';
+  }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
-    // Home page - show next 2 weeks
-    if (document.getElementById('upcoming-events-list')) {
-        displayEvents('upcoming-events-list');
-    }
-    
-    // Calendar/Training pages - show all upcoming events
-    if (document.getElementById('calendar-events')) {
-        // Check if we're on training page
-        const isTrainingPage = window.location.pathname.includes('training.html');
-        displayEvents('calendar-events', isTrainingPage ? 'training' : null);
-    }
+  document.querySelectorAll('[data-events-container]').forEach((el) => {
+    renderEventsCalendar(el);
+  });
 });
-
-// Make functions globally accessible
-window.switchCalendarView = switchCalendarView;
-window.navigateCalendar = navigateCalendar;
-window.showEventDetails = showEventDetails;
-window.isRegistrationOpen = isRegistrationOpen;
-window.fetchEventAvailability = fetchEventAvailability;
-

@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
-<body>
+<body data-page-slug="training">
     <div id="nav-placeholder"></div>
 
     <!-- Page Header -->
@@ -21,6 +21,7 @@
         </div>
     </section>
 
+    <div id="page-body">
     <!-- Hero Image Background -->
     <section style="position: relative; height: 50vh; min-height: 350px; background-image: url('assets/images/programs/education/OutsideTraining.jpg'); background-size: cover; background-position: center; background-attachment: fixed; background-repeat: no-repeat;">
         <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.3);"></div>
@@ -94,24 +95,32 @@
         </div>
     </section>
 
+    <!-- Get Involved CTA -->
+    <section class="content-section bg-light">
+        <div class="container">
+            <div class="cta-content" style="text-align: center;">
+                <h2>Get Involved</h2>
+                <p>Click here to view your committee enrollment.</p>
+                <div style="display: flex; justify-content: center; gap: 1.5rem; margin-top: 3rem; flex-wrap: wrap;">
+                    <a href="committee-enrollment.html" class="btn btn-primary">Committee Enrollment</a>
+                </div>
+                <br>
+                <p>Interested in participating in this committee?</p>
+                <div style="display: flex; justify-content: center; gap: 1.5rem; margin-top: 3rem; flex-wrap: wrap;">
+                    <a href="contact.html" class="btn btn-primary">Contact Us</a>
+                </div>
+            </div>
+        </div>
+    </section>
+    </div>
+
     <!-- Training Schedule Section -->
-    <section class="content-section">
+    <section id="schedule" class="content-section">
         <div class="container">
             <div class="section-header">
                 <h2 class="section-title">Training Schedule</h2>
             </div>
-            <div style="display: flex; justify-content: center; align-items: center; width: 100%; overflow-x: auto; margin-top: 2rem;">
-                <iframe
-                    src="https://luma.com/embed/calendar/cal-9DDWMhenRIXr0U5/events?compact=true"
-                    width="600"
-                    height="450"
-                    frameborder="0"
-                    style="border: 1px solid #bfcbda88; border-radius: 4px;"
-                    allowfullscreen=""
-                    aria-hidden="false"
-                    tabindex="0"
-                ></iframe>
-            </div>
+            <div id="training-events" data-events-container data-events-scope="training" style="margin-top: 2rem;"></div>
         </div>
     </section>
 
@@ -123,46 +132,50 @@
              </div>
 
              <div class="contact-form-wrapper" style="max-width: 700px; margin: 0 auto;">
-                <!-- Mobile Button (hidden on desktop) -->
-                <div class="training-form-mobile-button" style="display: none; text-align: center; margin: 2rem 0;">
-                    <p style="margin-bottom: 1.5rem; color: var(--text-secondary); line-height: 1.7; font-size: 1rem;">
-                        Unable to attend our scheduled training sessions? Request a trainer to come to your location. We can arrange on-site training for groups when standard training schedules don't work for your team.
-                    </p>
-                    <a href="https://forms.office.com/Pages/ResponsePage.aspx?id=l_bTl4Fr-UGCMvL2nXpxRyBVFANpJf9BgeFLspJ7BSZUMldFOUxIVDQzS1FQMVlQQTUzUThSMktTRi4u" target="_blank" rel="noopener noreferrer" class="btn btn-primary" style="font-size: 1.125rem; padding: 1rem 2.5rem;">
-                        Open Training Request Form
-                    </a>
-                </div>
-                <!-- Desktop Iframe (hidden on mobile) -->
-                <div class="training-form-iframe" style="display: flex; justify-content: center; align-items: flex-start; width: 100%;">
-                    <iframe width="640px" src="https://forms.office.com/Pages/ResponsePage.aspx?id=l_bTl4Fr-UGCMvL2nXpxRyBVFANpJf9BgeFLspJ7BSZUMldFOUxIVDQzS1FQMVlQQTUzUThSMktTRi4u&embed=true" frameborder="0" marginwidth="0" marginheight="0" style="border: none; max-width:100%; min-height: 1950px;" allowfullscreen webkitallowfullscreen mozallowfullscreen msallowfullscreen> </iframe>
-                </div>
+                <p style="margin-bottom: 1.5rem; color: var(--text-secondary); line-height: 1.7;">
+                    Unable to attend our scheduled training sessions? Request a trainer to come to your location.
+                </p>
+                <form class="nrcga-form" data-nrcga-form="training_registration">
+                    <div style="position:absolute;left:-9999px;" aria-hidden="true">
+                        <input type="text" name="website_url" tabindex="-1" autocomplete="off">
+                    </div>
+                    <div class="form-group" style="margin-bottom:1rem;">
+                        <label for="tr-name">Name *</label>
+                        <input id="tr-name" name="name" required style="width:100%;padding:0.75rem;border-radius:8px;border:1px solid var(--border);">
+                    </div>
+                    <div class="form-group" style="margin-bottom:1rem;">
+                        <label for="tr-email">Email *</label>
+                        <input id="tr-email" name="email" type="email" required style="width:100%;padding:0.75rem;border-radius:8px;border:1px solid var(--border);">
+                    </div>
+                    <div class="form-group" style="margin-bottom:1rem;">
+                        <label for="tr-phone">Phone</label>
+                        <input id="tr-phone" name="phone" style="width:100%;padding:0.75rem;border-radius:8px;border:1px solid var(--border);">
+                    </div>
+                    <div class="form-group" style="margin-bottom:1rem;">
+                        <label for="tr-org">Organization / Company</label>
+                        <input id="tr-org" name="organization" style="width:100%;padding:0.75rem;border-radius:8px;border:1px solid var(--border);">
+                    </div>
+                    <div class="form-group" style="margin-bottom:1rem;">
+                        <label for="tr-notes">Notes / preferred dates</label>
+                        <textarea id="tr-notes" name="notes" rows="4" style="width:100%;padding:0.75rem;border-radius:8px;border:1px solid var(--border);"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Request Training</button>
+                    <p data-form-status></p>
+                </form>
             </div>
         </div>
     </section>
 
-    <!-- Get Involved CTA -->
-<section class="content-section bg-light">
-    <div class="container">
-        <div class="cta-content" style="text-align: center;">
-            <h2>Get Involved</h2>
-            <p>Click here to view your committee enrollment.</p>
-            <div style="display: flex; justify-content: center; gap: 1.5rem; margin-top: 3rem; flex-wrap: wrap;">
-                <a href="committee-enrollment.html" class="btn btn-primary">Committee Enrollment</a>
-            </div>
-            <br>
-            <p>Interested in participating in this committee?</p>
-            <div style="display: flex; justify-content: center; gap: 1.5rem; margin-top: 3rem; flex-wrap: wrap;">
-                <a href="contact.html" class="btn btn-primary">Contact Us</a>
-            </div>
-        </div>
-    </div>
-</section>
-
-    
     <div id="footer-placeholder"></div>
 
     <script src="js/nav-config.js"></script>
+    <script src="js/api-client.js"></script>
     <script src="js/components.js"></script>
+    <script src="js/nevada-time.js"></script>
+    <script src="js/events-loader.js"></script>
+    <script src="js/page-blocks-render.js"></script>
+    <script src="js/page-loader.js"></script>
+    <script src="js/native-forms.js"></script>
     <script src="js/script.js"></script>
 </body>
 </html>
