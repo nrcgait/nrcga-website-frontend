@@ -19,7 +19,7 @@ function getStaffPortalUrl() {
         return 'http://localhost:8787/admin';
     }
     if (isStagingHost(host)) {
-        return 'https://nrcga-api-staging.thefieldmappinggroup.workers.dev/admin';
+        return 'https://nrcga-api-staging.nrcga-it.workers.dev/admin';
     }
     return 'https://api.nrcga.org/admin';
 }

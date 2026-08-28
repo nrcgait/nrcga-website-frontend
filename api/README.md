@@ -23,6 +23,8 @@ npm run dev
 
 ## Deploy
 
+All Workers, D1, and R2 resources live under the **Nrcga.it@gmail.com** Cloudflare account (`account_id` in [`wrangler.jsonc`](wrangler.jsonc)).
+
 ### Staging (test environment)
 
 ```bash
@@ -31,22 +33,25 @@ npx wrangler d1 migrations apply nrcga-cms-staging --remote --env staging
 npm run seed:staging
 npm run deploy:staging
 cd ..
-npx wrangler pages deploy . --project-name nrcga-website-staging --branch feature/cloudflare-cms-backend --commit-dirty=true
+npx wrangler pages deploy . --project-name nrcga-website-staging --branch main --commit-dirty=true
 ```
 
-- **API:** https://nrcga-api-staging.thefieldmappinggroup.workers.dev
-- **Admin:** https://nrcga-api-staging.thefieldmappinggroup.workers.dev/admin
+- **API:** https://nrcga-api-staging.nrcga-it.workers.dev
+- **Admin:** https://nrcga-api-staging.nrcga-it.workers.dev/admin
 - **Frontend:** https://nrcga-website-staging.pages.dev (latest preview URL shown after `pages deploy`)
 
-## Production
+### Production
 
-1. Create D1 database `nrcga-cms` and R2 bucket `nrcga-media` in the Cloudflare dashboard (or `npx wrangler d1 create nrcga-cms`).
-2. Put the real `database_id` in [`wrangler.jsonc`](wrangler.jsonc) (replace `local-dev-placeholder`).
-3. Set secrets: `npx wrangler secret put JWT_SECRET` and `npx wrangler secret put ADMIN_PASSWORD`.
-4. Route `api.nrcga.org/*` to this Worker.
-5. `npx wrangler d1 migrations apply nrcga-cms --remote`
-6. `npm run seed` against remote (or seed staging first, then promote).
-7. `npm run deploy`
+1. D1 `nrcga-cms` and R2 `nrcga-media` are configured in [`wrangler.jsonc`](wrangler.jsonc).
+2. Secrets: `npx wrangler secret put JWT_SECRET --env=""` and `npx wrangler secret put ADMIN_PASSWORD --env=""`.
+3. Route `api.nrcga.org/*` to the Worker (Cloudflare dashboard → Workers → `nrcga-api` → Custom domains).
+4. `npx wrangler d1 migrations apply nrcga-cms --remote`
+5. `node scripts/seed-from-repo.mjs --remote`
+6. `npm run deploy` (or `wrangler deploy --env=""`)
+
+- **API (workers.dev):** https://nrcga-api.nrcga-it.workers.dev
+- **API (production hostname):** https://api.nrcga.org (after custom domain is attached)
+- **Admin:** `/admin` on either hostname above
 
 Public JSON GETs send `Cache-Control: public, max-age=60` (no KV cache layer — fine for chapter traffic).
 

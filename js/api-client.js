@@ -19,7 +19,7 @@
       return 'http://localhost:8787';
     }
     if (isStagingHost(host)) {
-      return 'https://nrcga-api-staging.thefieldmappinggroup.workers.dev';
+      return 'https://nrcga-api-staging.nrcga-it.workers.dev';
     }
     return 'https://api.nrcga.org';
   })();
