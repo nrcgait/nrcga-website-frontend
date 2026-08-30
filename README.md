@@ -20,7 +20,7 @@ Public pages load `js/api-client.js` and entity loaders. If the API is down, man
 - Form inboxes (contact, applications, training, newsletter CSV export)
 - Profile password change
 
-See **`api/README.md`** for local Worker setup and deploy. See **`MANAGEMENT.md`** for ops notes (CSV fallback still documented).
+See **`api/README.md`** for local Worker setup, Git-connected Cloudflare deploys, and manual CLI deploy. See **`MANAGEMENT.md`** for ops notes (CSV fallback still documented).
 
 ## Local development
 
@@ -55,5 +55,5 @@ Create a page in admin with **Custom page** checked. Public URL: `page.html?slug
 
 1. Create production D1 + R2; set `database_id` in [`api/wrangler.jsonc`](api/wrangler.jsonc)
 2. Secrets: `JWT_SECRET`, `ADMIN_PASSWORD`
-3. Apply migrations + seed + `npm run deploy` in `api/`
+3. Connect the repo to Cloudflare for automatic Worker deploys on `main` (see **`api/README.md`**), or apply migrations + seed + `npm run deploy` in `api/` manually
 4. Point `api.nrcga.org` at the Worker; deploy Pages for the static site
