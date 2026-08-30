@@ -8,9 +8,7 @@
     "types": "wrangler types",
     "check": "tsc --noEmit",
     "seed": "node scripts/seed-from-repo.mjs",
-    "seed:pages": "node scripts/generate-page-seeds.mjs",
-    "seed:staging": "node scripts/seed-from-repo.mjs --remote --env staging",
-    "deploy:staging": "wrangler deploy --env staging"
+    "seed:pages": "node scripts/generate-page-seeds.mjs"
   },
   "dependencies": {
     "hono": "^4.7.7"

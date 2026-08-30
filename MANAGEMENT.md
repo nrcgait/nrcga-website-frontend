@@ -2,7 +2,7 @@
 
 ## Cloudflare CMS (staff portal)
 
-NRCGA content is managed primarily through the **Cloudflare Worker CMS** in `api/`. Staff sign in at **`/admin`** on the API host (staging or `https://api.nrcga.org/admin`).
+NRCGA content is managed primarily through the **Cloudflare Worker CMS** in `api/`. Staff sign in at **`https://api.nrcga.org/admin`** (or the workers.dev hostname).
 
 ### Roles
 

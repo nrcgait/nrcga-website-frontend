@@ -87,10 +87,8 @@ function loadNavConfig() {
 }
 
 const remote = process.argv.includes('--remote')
-const envFlag = process.argv.includes('--env') ? process.argv[process.argv.indexOf('--env') + 1] : null
-const dbName = envFlag === 'staging' ? 'nrcga-cms-staging' : 'nrcga-cms'
-const wranglerEnv = envFlag ? ` --env ${envFlag}` : ''
-const target = remote ? `--remote${wranglerEnv}` : '--local'
+const dbName = 'nrcga-cms'
+const target = remote ? '--remote' : '--local'
 
 const statements = []
 

@@ -47,46 +47,5 @@
       "namespace_id": "7102",
       "simple": { "limit": 20, "period": 60 }
     }
-  ],
-  "env": {
-    "staging": {
-      "account_id": "6db8ebe299a73699b27d68963817b84b",
-      "name": "nrcga-api-staging",
-      "vars": {
-        "ADMIN_EMAIL": "info@nrcga.org",
-        "PUBLIC_SITE_ORIGIN": "https://nrcga.ayowerks.com"
-      },
-      "ratelimits": [
-        {
-          "name": "LOGIN_RATE_LIMITER",
-          "namespace_id": "7201",
-          "simple": { "limit": 8, "period": 60 }
-        },
-        {
-          "name": "PUBLIC_WRITE_RATE_LIMITER",
-          "namespace_id": "7202",
-          "simple": { "limit": 20, "period": 60 }
-        }
-      ],
-      "d1_databases": [
-        {
-          "binding": "DB",
-          "database_name": "nrcga-cms-staging",
-          "database_id": "c8c7c0a2-79ea-446e-8b4f-38f985ebf0c1",
-          "migrations_dir": "migrations"
-        }
-      ],
-      "r2_buckets": [
-        {
-          "binding": "R2",
-          "bucket_name": "nrcga-media-staging"
-        }
-      ],
-      "send_email": [
-        {
-          "name": "EMAIL"
-        }
-      ]
-    }
-  }
+  ]
 }
