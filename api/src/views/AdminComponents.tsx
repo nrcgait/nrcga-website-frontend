@@ -16,11 +16,18 @@ export function CommitteeSelect({
     ? committees.filter((c) => allowedSlugs.includes(String(c.slug)))
     : committees
 
+  const noneSelected = !selectedSlug
+  const selectAttrs = required ? { name: 'committee_slug' as const, required: true } : { name: 'committee_slug' as const }
+
   return (
     <label>
       Committee
-      <select name="committee_slug" required={required}>
-        {allowedSlugs === null ? <option value="">None / site-wide</option> : null}
+      <select {...selectAttrs}>
+        {allowedSlugs === null ? (
+          <option value="" selected={noneSelected}>
+            None / site-wide
+          </option>
+        ) : null}
         {options.map((c) => (
           <option value={String(c.slug)} selected={selectedSlug === c.slug}>
             {c.name}

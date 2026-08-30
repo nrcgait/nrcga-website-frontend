@@ -68,7 +68,7 @@ export function validateEventAssignment(
   category: 'general' | 'training',
 ): string | null {
   if (!committeeSlug) {
-    if (canManageAllEvents(ctx.user.role)) return null
+    if (ctx.user.role === 'admin') return null
     return 'A committee is required.'
   }
   if (ctx.user.role === 'chair' && !ctx.chairCommittees.includes(committeeSlug)) {
