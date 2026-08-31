@@ -24,6 +24,7 @@ const NEVADA_BBOX = '-120.0,35.0,-114.0,42.0';
 let registrationMap = null;
 let registrationMarker = null;
 let leafletLoadPromise = null;
+let modalOpenGen = 0;
 
 function formatEventDate(isoString) {
   try {
@@ -502,6 +503,8 @@ async function refreshActiveCalendar() {
 }
 
 async function showRegistrationModal(seriesId, occurrenceDate, eventTitle, sourceContainer) {
+  const openGen = ++modalOpenGen;
+
   if (sourceContainer) {
     document.querySelectorAll('[data-events-container]').forEach((el) => {
       el.removeAttribute('data-events-active');
@@ -524,7 +527,6 @@ async function showRegistrationModal(seriesId, occurrenceDate, eventTitle, sourc
   const modal = ensureRegistrationModal();
   const body = document.getElementById('event-modal-body');
   const categoryLabel = event.category === 'training' ? 'Training' : 'Event';
-  const registrationSection = await buildRegistrationSection(event, seriesId);
 
   body.innerHTML = `
     <div class="event-reg-modal__hero">
@@ -534,15 +536,23 @@ async function showRegistrationModal(seriesId, occurrenceDate, eventTitle, sourc
     </div>
     <div class="event-reg-modal__body">
       ${renderEventMetaSection(event)}
-      ${registrationSection}
+      <p class="event-reg-modal__loading" id="event-registration-loading">Loading registration…</p>
     </div>`;
+
+  modal.style.display = 'flex';
+
+  const registrationSection = await buildRegistrationSection(event, seriesId);
+  if (openGen !== modalOpenGen) return;
+
+  const loadingEl = document.getElementById('event-registration-loading');
+  if (loadingEl) loadingEl.remove();
+  body.querySelector('.event-reg-modal__body')?.insertAdjacentHTML('beforeend', registrationSection);
 
   const cancelBtn = document.getElementById('event-registration-cancel');
   if (cancelBtn) cancelBtn.addEventListener('click', closeRegistrationModal);
 
   const registrationForm = document.getElementById('event-registration-form');
   if (!registrationForm) {
-    modal.style.display = 'flex';
     if (event.location?.trim()) {
       try {
         await initEventLocationMap(event.location, {
@@ -585,8 +595,6 @@ async function showRegistrationModal(seriesId, occurrenceDate, eventTitle, sourc
       errEl.style.display = 'block';
     }
   });
-
-  modal.style.display = 'flex';
 
   if (event.location?.trim()) {
     try {

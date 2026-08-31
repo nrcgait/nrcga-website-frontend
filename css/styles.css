@@ -4224,6 +4224,12 @@ body {
   font-weight: 500;
 }
 
+.event-reg-modal__loading {
+  margin: 1rem 0 0;
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+}
+
 @media (max-width: 640px) {
   .nrcga-event-card {
     grid-template-columns: 1fr;
