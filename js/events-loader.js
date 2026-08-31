@@ -409,6 +409,23 @@ function renderEventMetaSection(event) {
     ${locationSection}`;
 }
 
+async function buildRegistrationSection(event, seriesId) {
+  if (!event.registration_enabled || event.cancelled) return '';
+
+  try {
+    const avail = await fetchAvailability(seriesId, event.occurrence_date);
+    if (avail.cancelled) return '';
+    if (avail.isFull) {
+      return `
+        <div class="event-reg-modal__divider"></div>
+        <p class="event-reg-modal__full">This event is full.</p>`;
+    }
+    return renderRegistrationForm(event);
+  } catch {
+    return renderRegistrationForm(event);
+  }
+}
+
 function renderRegistrationForm(event) {
   return `
     <div class="event-reg-modal__divider"></div>
@@ -507,6 +524,7 @@ async function showRegistrationModal(seriesId, occurrenceDate, eventTitle, sourc
   const modal = ensureRegistrationModal();
   const body = document.getElementById('event-modal-body');
   const categoryLabel = event.category === 'training' ? 'Training' : 'Event';
+  const registrationSection = await buildRegistrationSection(event, seriesId);
 
   body.innerHTML = `
     <div class="event-reg-modal__hero">
@@ -516,11 +534,29 @@ async function showRegistrationModal(seriesId, occurrenceDate, eventTitle, sourc
     </div>
     <div class="event-reg-modal__body">
       ${renderEventMetaSection(event)}
-      ${renderRegistrationForm(event)}
+      ${registrationSection}
     </div>`;
 
-  document.getElementById('event-registration-cancel').addEventListener('click', closeRegistrationModal);
-  document.getElementById('event-registration-form').addEventListener('submit', async (e) => {
+  const cancelBtn = document.getElementById('event-registration-cancel');
+  if (cancelBtn) cancelBtn.addEventListener('click', closeRegistrationModal);
+
+  const registrationForm = document.getElementById('event-registration-form');
+  if (!registrationForm) {
+    modal.style.display = 'flex';
+    if (event.location?.trim()) {
+      try {
+        await initEventLocationMap(event.location, {
+          latitude: event.latitude,
+          longitude: event.longitude,
+        });
+      } catch (err) {
+        console.warn('Map initialization failed:', err);
+      }
+    }
+    return;
+  }
+
+  registrationForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const form = e.target;
     const errEl = document.getElementById('event-registration-error');
@@ -597,6 +633,7 @@ async function buildAvailabilityHtml(event) {
 
 async function buildEventCard(event) {
   const cancelled = event.cancelled;
+  const seriesId = event.series_id || event.id.split(':')[0];
   const dateLabel = formatEventDate(event.starts_at);
   const timeLabel = formatEventTime(event.starts_at);
   const [availabilityHtml, registerBtn] = await Promise.all([
@@ -617,31 +654,72 @@ async function buildEventCard(event) {
     thumbHtml = `<div class="event-card-thumb event-card-map-thumb" data-event-map-thumb data-lat="${Number(event.latitude)}" data-lng="${Number(event.longitude)}" aria-hidden="true"></div>`;
   }
 
+  const timeHtml = timeLabel
+    ? `<span class="event-card-time"> · ${escapeHtml(timeLabel)}</span>`
+    : '';
+
   return `
-    <div class="event-card nrcga-event-card">
+    <div class="event-card nrcga-event-card"
+         data-series-id="${escapeHtml(seriesId)}"
+         data-occurrence="${escapeHtml(event.occurrence_date)}"
+         data-title="${escapeHtml(event.title)}">
       ${thumbHtml}
       <div class="event-card-body">
-        <div style="display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;align-items:flex-start;">
-          <div>
-            <h3 style="margin:0 0 0.5rem;display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
-              ${escapeHtml(event.title)}${cancelled ? ' <span style="color:#b42318;">(Cancelled)</span>' : ''}
+        <div class="event-card-header">
+          <div class="event-card-info">
+            <h3 class="event-card-title">
+              ${escapeHtml(event.title)}${cancelled ? ' <span class="event-card-cancelled">(Cancelled)</span>' : ''}
               ${categoryBadge}
             </h3>
-            <p style="margin:0;color:var(--text-secondary);">${escapeHtml(dateLabel)}${timeLabel ? ` · ${escapeHtml(timeLabel)}` : ''}</p>
-            ${event.location ? `<p style="margin:0.25rem 0 0;">${escapeHtml(event.location)}</p>` : ''}
-            ${event.description ? `<p style="margin:0.75rem 0 0;">${escapeHtml(event.description)}</p>` : ''}
-            ${availabilityHtml ? `<p style="margin:0.5rem 0 0;">${availabilityHtml}</p>` : ''}
+            <p class="event-card-datetime">
+              <span class="event-card-date">${escapeHtml(dateLabel)}</span>${timeHtml}
+            </p>
+            ${event.location ? `<p class="event-card-location">${escapeHtml(event.location)}</p>` : ''}
+            ${event.description ? `<p class="event-card-description">${escapeHtml(event.description)}</p>` : ''}
+            ${availabilityHtml ? `<p class="event-card-availability">${availabilityHtml}</p>` : ''}
           </div>
-          <div>${registerBtn}</div>
+          <div class="event-card-actions">${registerBtn}</div>
         </div>
       </div>
     </div>`;
 }
 
+function isMobileEventList() {
+  return window.matchMedia('(max-width: 640px)').matches;
+}
+
 function bindRegisterButtons(root, container) {
   root.querySelectorAll('.event-register-btn').forEach((btn) => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
       showRegistrationModal(btn.dataset.seriesId, btn.dataset.occurrence, btn.dataset.title, container);
+    });
+  });
+}
+
+function bindEventCardClicks(root, container) {
+  root.querySelectorAll('.nrcga-event-card[data-series-id]').forEach((card) => {
+    const openModal = () => {
+      showRegistrationModal(card.dataset.seriesId, card.dataset.occurrence, card.dataset.title, container);
+    };
+
+    if (isMobileEventList()) {
+      card.tabIndex = 0;
+      card.setAttribute('role', 'button');
+      card.setAttribute('aria-label', `View details for ${card.dataset.title || 'event'}`);
+    }
+
+    card.addEventListener('click', () => {
+      if (!isMobileEventList()) return;
+      openModal();
+    });
+
+    card.addEventListener('keydown', (e) => {
+      if (!isMobileEventList()) return;
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        openModal();
+      }
     });
   });
 }
@@ -902,6 +980,7 @@ function bindCalendarControls(container, state) {
   });
 
   bindRegisterButtons(container, container);
+  bindEventCardClicks(container, container);
 
   container.querySelectorAll('.events-calendar-day-event').forEach((btn) => {
     btn.addEventListener('click', () => {
