@@ -281,6 +281,11 @@ function renderBreakingNewsItem(index) {
         }
     }
 
+    const card = document.querySelector('#breaking-news-popup .breaking-news-card');
+    if (card) {
+        card.classList.toggle('breaking-news-card--no-image', !breakingNews.image_url);
+    }
+
     if (readMoreBtn) {
         if (breakingNews.read_more_url) {
             readMoreBtn.style.display = 'inline-block';

@@ -120,28 +120,30 @@
     </section>
 
     <!-- Breaking News Popup -->
-    <div id="breaking-news-popup" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 10000; align-items: center; justify-content: center; padding: 1rem; box-sizing: border-box; overflow-y: auto;">
-        <div class="breaking-news-card" style="background: var(--bg-primary); border-radius: 12px; width: 100%; padding: 1.5rem; box-shadow: 0 10px 40px rgba(0,0,0,0.3); position: relative; text-align: center; box-sizing: border-box; margin: auto;">
-            <button id="close-popup" style="position: absolute; top: 0.75rem; right: 0.75rem; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-secondary); padding: 0.25rem; line-height: 1; z-index: 1;">&times;</button>
-            <h2 id="popup-title" style="margin-top: 0; color: var(--primary); text-align: center; padding-right: 2rem; word-wrap: break-word;">Breaking News!</h2>
-            <div id="popup-image-container" style="margin: 0.75rem 0; text-align: center; max-width: 100%; overflow: hidden;">
-                <img class="breaking-news-flyer" src="" alt="" style="display: none;">
+    <div id="breaking-news-popup" class="breaking-news-popup">
+        <div class="breaking-news-card">
+            <button type="button" id="close-popup" class="breaking-news-close">&times;</button>
+            <div class="breaking-news-media" id="popup-image-container"></div>
+            <div class="breaking-news-copy">
+                <div class="breaking-news-copy-scroll">
+                    <h2 id="popup-title" class="breaking-news-title">Breaking News!</h2>
+                    <p id="popup-content" class="breaking-news-body"></p>
+                    <div id="popup-news-nav" class="breaking-news-nav" hidden>
+                        <button type="button" id="popup-news-prev" class="btn btn-outline btn-sm" aria-label="Previous announcement">Previous</button>
+                        <span id="popup-news-counter" class="breaking-news-counter">1 of 1</span>
+                        <button type="button" id="popup-news-next" class="btn btn-outline btn-sm" aria-label="Next announcement">Next</button>
+                    </div>
+                </div>
+                <div class="breaking-news-actions">
+                    <button id="popup-read-more" class="btn btn-primary" style="display: none;">See More</button>
+                    <a id="popup-past-news" href="archive.html?type=historical-document" class="btn btn-outline">Past News</a>
+                    <button id="popup-dismiss" class="btn btn-outline">Dismiss</button>
+                </div>
+                <label class="breaking-news-dismiss-again">
+                    <input type="checkbox" id="dont-show-again">
+                    <span>Don't show this again</span>
+                </label>
             </div>
-            <p id="popup-content" style="margin: 1rem 0; line-height: 1.6; text-align: center; word-wrap: break-word; overflow-wrap: break-word;"></p>
-            <div id="popup-news-nav" class="breaking-news-nav" hidden>
-                <button type="button" id="popup-news-prev" class="btn btn-outline btn-sm" aria-label="Previous announcement">Previous</button>
-                <span id="popup-news-counter" class="breaking-news-counter">1 of 1</span>
-                <button type="button" id="popup-news-next" class="btn btn-outline btn-sm" aria-label="Next announcement">Next</button>
-            </div>
-            <div style="display: flex; gap: 1rem; margin-top: 1.5rem; flex-wrap: wrap; justify-content: center;">
-                <button id="popup-read-more" class="btn btn-primary" style="display: none;">See More</button>
-                <a id="popup-past-news" href="archive.html?type=historical-document" class="btn btn-outline">Past News</a>
-                <button id="popup-dismiss" class="btn btn-outline">Dismiss</button>
-            </div>
-            <label style="display: flex; align-items: center; margin-top: 1rem; cursor: pointer; justify-content: center; flex-wrap: wrap;">
-                <input type="checkbox" id="dont-show-again" style="margin-right: 0.5rem; flex-shrink: 0;">
-                <span style="font-size: 0.9rem; color: var(--text-secondary); word-wrap: break-word;">Don't show this again</span>
-            </label>
         </div>
     </div>
 
