@@ -191,6 +191,7 @@ export async function sendRegistrationConfirmation(
     occurrenceDate: string
     startsAt: string
     location: string
+    meetingUrl?: string
     guestName: string
     spotCount: number
   },
@@ -210,6 +211,7 @@ export async function sendRegistrationConfirmation(
         `Date: ${dateLabel}`,
         `Time: ${timeLabel}`,
         data.location ? `Location: ${data.location}` : '',
+        data.meetingUrl ? `Join: ${data.meetingUrl}` : '',
         `Spots booked: ${data.spotCount}`,
         '',
         `Questions? Contact ${contact.email}`,
@@ -231,6 +233,7 @@ export async function sendCancellationNotifications(
     occurrenceDate: string
     startsAt: string
     location: string
+    meetingUrl?: string
     message?: string
   },
 ): Promise<void> {
@@ -255,6 +258,7 @@ export async function sendCancellationNotifications(
           `Date: ${dateLabel}`,
           `Time: ${timeLabel}`,
           data.location ? `Location: ${data.location}` : '',
+          data.meetingUrl ? `Join: ${data.meetingUrl}` : '',
           `Spots you had booked: ${guest.spotCount}`,
           data.message ? `\n${data.message}` : '',
           '',

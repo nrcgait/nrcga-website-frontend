@@ -170,6 +170,7 @@ export async function registerGuest(
     occurrenceDate,
     startsAt: occurrenceStartInstant(event, occurrenceDate)?.toISOString() ?? event.starts_at,
     location: event.location ?? '',
+    meetingUrl: event.meeting_url ?? '',
     guestName: input.guest_name.trim(),
     spotCount,
   })

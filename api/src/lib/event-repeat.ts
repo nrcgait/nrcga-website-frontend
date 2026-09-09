@@ -14,6 +14,7 @@ export type EventRecord = {
   starts_at: string
   ends_at: string | null
   location: string | null
+  meeting_url: string | null
   description: string | null
   category: 'general' | 'training'
   committee_slug: string | null
@@ -83,6 +84,11 @@ function eventDurationMs(event: EventRecord): number {
   return end - start
 }
 
+function occurrenceFilterEnd(occurrenceStart: Date, durationMs: number): Date {
+  if (durationMs > 0) return new Date(occurrenceStart.getTime() + durationMs)
+  return nevadaEndOfDay(nevadaDateParam(occurrenceStart)) ?? occurrenceStart
+}
+
 function repeatHorizonEnd(event: EventRecord, fallback: Date): Date {
   if (event.repeat_until) return nevadaEndOfDay(event.repeat_until) ?? fallback
   return fallback
@@ -129,8 +135,7 @@ export function expandEventOccurrences(
     if (!seriesStart) continue
 
     if (!rule) {
-      const occurrenceEnd =
-        durationMs > 0 ? new Date(seriesStart.getTime() + durationMs) : new Date(seriesStart.getTime())
+      const occurrenceEnd = occurrenceFilterEnd(seriesStart, durationMs)
       if (upcomingOnly && occurrenceEnd < now) continue
       if (seriesStart > to || occurrenceEnd < from) continue
       occurrences.push(makeOccurrence(event, seriesStart, durationMs, cancelledDates))
@@ -143,8 +148,7 @@ export function expandEventOccurrences(
 
     while (current <= repeatEnd && current <= to && guard < 500) {
       guard += 1
-      const occurrenceEnd =
-        durationMs > 0 ? new Date(current.getTime() + durationMs) : new Date(current.getTime())
+      const occurrenceEnd = occurrenceFilterEnd(current, durationMs)
       const inRange = current <= to && occurrenceEnd >= from
       const isUpcoming = occurrenceEnd >= now
       if (inRange && (!upcomingOnly || isUpcoming)) {

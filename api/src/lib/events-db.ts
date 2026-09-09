@@ -30,6 +30,7 @@ export type EventInput = {
   starts_at: string
   ends_at?: string | null
   location?: string | null
+  meeting_url?: string | null
   description?: string | null
   category?: 'general' | 'training'
   committee_slug?: string | null
@@ -95,11 +96,11 @@ export async function createEvent(db: D1Database, input: EventInput): Promise<st
   await db
     .prepare(
       `INSERT INTO events (
-        id, title, starts_at, ends_at, location, description, category, committee_slug, image_r2_key,
+        id, title, starts_at, ends_at, location, meeting_url, description, category, committee_slug, image_r2_key,
         latitude, longitude, published,
         repeat_rule, repeat_interval_days, repeat_until, registration_enabled, capacity,
         capacity_scope, registration_cutoff_hours
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     )
     .bind(
       id,
@@ -107,6 +108,7 @@ export async function createEvent(db: D1Database, input: EventInput): Promise<st
       input.starts_at,
       input.ends_at ?? null,
       input.location ?? null,
+      input.meeting_url ?? null,
       input.description ?? null,
       input.category ?? 'general',
       input.committee_slug ?? null,
@@ -130,7 +132,7 @@ export async function updateEvent(db: D1Database, id: string, input: EventInput)
   await db
     .prepare(
       `UPDATE events SET
-        title = ?, starts_at = ?, ends_at = ?, location = ?, description = ?, category = ?, committee_slug = ?,
+        title = ?, starts_at = ?, ends_at = ?, location = ?, meeting_url = ?, description = ?, category = ?, committee_slug = ?,
         image_r2_key = ?, latitude = ?, longitude = ?, published = ?, repeat_rule = ?, repeat_interval_days = ?,
         repeat_until = ?, registration_enabled = ?, capacity = ?, capacity_scope = ?, registration_cutoff_hours = ?,
         updated_at = datetime('now')
@@ -141,6 +143,7 @@ export async function updateEvent(db: D1Database, id: string, input: EventInput)
       input.starts_at,
       input.ends_at ?? null,
       input.location ?? null,
+      input.meeting_url ?? null,
       input.description ?? null,
       input.category ?? 'general',
       input.committee_slug ?? null,

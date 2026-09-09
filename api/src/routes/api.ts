@@ -287,6 +287,7 @@ export async function notifyCancelledGuests(
       occurrenceDate: occurrenceDate ?? 'Series',
       startsAt: occurrenceStart?.toISOString() ?? event.starts_at,
       location: event.location ?? '',
+      meetingUrl: event.meeting_url ?? '',
       message,
     },
   )

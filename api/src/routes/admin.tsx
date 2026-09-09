@@ -24,6 +24,7 @@ import {
   USER_SORT_COLUMNS,
 } from '../lib/auth'
 import { loadAdminContext, escapeHtml, type AdminContext } from '../lib/admin-context'
+import { sanitizeHttpUrl } from '../lib/http-url'
 import {
   checkBoardMemberConflict,
   checkOfficerConflicts,
@@ -220,16 +221,31 @@ async function memberValidationError(
   return undefined
 }
 
+function parseMeetingUrlField(body: Record<string, string | File>): {
+  meeting_url: string | null
+  error?: string
+} {
+  const raw = String(body.meeting_url ?? '').trim()
+  if (!raw) return { meeting_url: null }
+  const meeting_url = sanitizeHttpUrl(raw)
+  if (!meeting_url) {
+    return { meeting_url: null, error: 'Meeting URL must be a valid http or https link.' }
+  }
+  return { meeting_url }
+}
+
 function parseEventForm(body: Record<string, string | File>) {
   const starts_at = combineDateTime(String(body.start_date ?? ''), String(body.start_time ?? ''))
   const endDate = String(body.end_date ?? '')
   const ends_at = endDate ? combineDateTime(endDate, String(body.end_time ?? '')) : null
+  const { meeting_url } = parseMeetingUrlField(body)
 
   return {
     title: String(body.title ?? ''),
     starts_at,
     ends_at,
     location: body.location ? String(body.location) : null,
+    meeting_url,
     description: body.description ? String(body.description) : null,
     category: (body.category === 'training' ? 'training' : 'general') as 'general' | 'training',
     published: body.published === '1' ? 1 : 0,
@@ -271,6 +287,7 @@ function buildEventInput(
     starts_at: parsed.starts_at,
     ends_at: parsed.ends_at,
     location: parsed.location,
+    meeting_url: parsed.meeting_url,
     description: parsed.description,
     category,
     committee_slug: committee_slug || null,
@@ -671,7 +688,10 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>) {
       const body = await c.req.parseBody()
       const coords = await resolveCoordsFromBody(body as Record<string, string | File>)
       const input = buildEventInput(ctx, body as Record<string, string | File>, coords)
-      error = validateEventAssignment(ctx, String(input.committee_slug ?? ''), input.category) ?? undefined
+      error =
+        parseMeetingUrlField(body as Record<string, string | File>).error ??
+        validateEventAssignment(ctx, String(input.committee_slug ?? ''), input.category) ??
+        undefined
       if (!error) {
         await createEvent(c.env.DB, input)
         return redirect(c, '/admin/events')
@@ -700,7 +720,10 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>) {
       }
       const coords = await resolveCoordsFromBody(body as Record<string, string | File>, event)
       const input = buildEventInput(ctx, body as Record<string, string | File>, coords)
-      error = validateEventAssignment(ctx, String(input.committee_slug ?? ''), input.category) ?? undefined
+      error =
+        parseMeetingUrlField(body as Record<string, string | File>).error ??
+        validateEventAssignment(ctx, String(input.committee_slug ?? ''), input.category) ??
+        undefined
       if (!error) {
         await updateEvent(c.env.DB, event.id, input)
         return redirect(c, '/admin/events')
@@ -1396,6 +1419,17 @@ function EventForm({
             : ''}
         </p>
       </div>
+
+      <label>Meeting URL (optional)</label>
+      <input
+        name="meeting_url"
+        type="text"
+        inputmode="url"
+        autocomplete="url"
+        value={event?.meeting_url ?? ''}
+        placeholder="https://zoom.us/j/…"
+      />
+      <p class="muted">Zoom, Teams, Google Meet, or any join link. Shown as a Join meeting button on the calendar.</p>
 
       <label>Description</label>
       <textarea name="description">{event?.description ?? ''}</textarea>

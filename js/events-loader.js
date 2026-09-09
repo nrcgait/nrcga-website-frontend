@@ -237,6 +237,32 @@ function escapeHtml(text) {
     .replace(/"/g, '&quot;');
 }
 
+function isSafeHttpUrl(value) {
+  try {
+    const url = new URL(String(value || '').trim());
+    return url.protocol === 'http:' || url.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
+function linkifyText(text) {
+  const escaped = escapeHtml(text);
+  return escaped.replace(/\bhttps?:\/\/[^\s<]+/gi, (match) => {
+    const trailing = match.match(/[.,;:!?)]+$/);
+    const url = trailing ? match.slice(0, -trailing[0].length) : match;
+    const suffix = trailing ? trailing[0] : '';
+    if (!isSafeHttpUrl(url)) return match;
+    return `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>${suffix}`;
+  });
+}
+
+function joinMeetingLink(url, className) {
+  const trimmed = String(url || '').trim();
+  if (!isSafeHttpUrl(trimmed)) return '';
+  return `<a class="${className}" href="${escapeHtml(trimmed)}" target="_blank" rel="noopener noreferrer">Join meeting ↗</a>`;
+}
+
 function getCalendarState(container) {
   if (!calendarStates.has(container)) {
     const scope = container.dataset.eventsScope || 'all';
@@ -407,6 +433,7 @@ function renderEventMetaSection(event) {
         ${timeRange ? `<p class="event-reg-modal__when-secondary">${escapeHtml(timeRange)}</p>` : ''}
       </div>
     </div>
+    ${joinMeetingLink(event.meeting_url, 'event-reg-modal__join')}
     ${locationSection}`;
 }
 
@@ -520,6 +547,7 @@ async function showRegistrationModal(seriesId, occurrenceDate, eventTitle, sourc
       starts_at: occurrenceDate,
       ends_at: null,
       location: null,
+      meeting_url: null,
       description: null,
       category: 'general',
     };
@@ -527,16 +555,17 @@ async function showRegistrationModal(seriesId, occurrenceDate, eventTitle, sourc
   const modal = ensureRegistrationModal();
   const body = document.getElementById('event-modal-body');
   const categoryLabel = event.category === 'training' ? 'Training' : 'Event';
+  const canRegister = Boolean(event.registration_enabled) && !event.cancelled;
 
   body.innerHTML = `
     <div class="event-reg-modal__hero">
       <span class="event-reg-modal__category">${escapeHtml(categoryLabel)}</span>
       <h2 id="event-modal-title" class="event-reg-modal__title">${escapeHtml(event.title)}</h2>
-      ${event.description ? `<p class="event-reg-modal__description">${escapeHtml(event.description)}</p>` : ''}
+      ${event.description ? `<p class="event-reg-modal__description">${linkifyText(event.description)}</p>` : ''}
     </div>
     <div class="event-reg-modal__body">
       ${renderEventMetaSection(event)}
-      <p class="event-reg-modal__loading" id="event-registration-loading">Loading registration…</p>
+      ${canRegister ? '<p class="event-reg-modal__loading" id="event-registration-loading">Loading registration…</p>' : ''}
     </div>`;
 
   modal.style.display = 'flex';
@@ -683,10 +712,10 @@ async function buildEventCard(event) {
               <span class="event-card-date">${escapeHtml(dateLabel)}</span>${timeHtml}
             </p>
             ${event.location ? `<p class="event-card-location">${escapeHtml(event.location)}</p>` : ''}
-            ${event.description ? `<p class="event-card-description">${escapeHtml(event.description)}</p>` : ''}
+            ${event.description ? `<p class="event-card-description">${linkifyText(event.description)}</p>` : ''}
             ${availabilityHtml ? `<p class="event-card-availability">${availabilityHtml}</p>` : ''}
           </div>
-          <div class="event-card-actions">${registerBtn}</div>
+          <div class="event-card-actions">${[joinMeetingLink(event.meeting_url, 'btn btn-outline event-join-meeting'), registerBtn].filter(Boolean).join('')}</div>
         </div>
       </div>
     </div>`;
@@ -694,6 +723,15 @@ async function buildEventCard(event) {
 
 function isMobileEventList() {
   return window.matchMedia('(max-width: 640px)').matches;
+}
+
+function bindEventActionLinks(root) {
+  root.querySelectorAll('.event-join-meeting').forEach((link) => {
+    link.addEventListener('click', (e) => e.stopPropagation());
+  });
+  root.querySelectorAll('.event-card-description a').forEach((link) => {
+    link.addEventListener('click', (e) => e.stopPropagation());
+  });
 }
 
 function bindRegisterButtons(root, container) {
@@ -988,13 +1026,12 @@ function bindCalendarControls(container, state) {
   });
 
   bindRegisterButtons(container, container);
+  bindEventActionLinks(container);
   bindEventCardClicks(container, container);
 
   container.querySelectorAll('.events-calendar-day-event').forEach((btn) => {
     btn.addEventListener('click', () => {
-      if (btn.dataset.registerable === '1') {
-        showRegistrationModal(btn.dataset.seriesId, btn.dataset.occurrence, btn.dataset.title, container);
-      }
+      showRegistrationModal(btn.dataset.seriesId, btn.dataset.occurrence, btn.dataset.title, container);
     });
   });
 }

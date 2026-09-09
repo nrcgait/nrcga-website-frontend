@@ -271,10 +271,13 @@ function renderBreakingNewsItem(index) {
     if (dontShowCheckbox) dontShowCheckbox.checked = false;
 
     if (imageContainer) {
+        imageContainer.replaceChildren();
         if (breakingNews.image_url) {
-            imageContainer.innerHTML = `<img src="${breakingNews.image_url}" alt="${breakingNews.title || 'Breaking news image'}" style="max-width: 100%; height: auto; border-radius: 8px;">`;
-        } else {
-            imageContainer.innerHTML = '';
+            const img = document.createElement('img');
+            img.className = 'breaking-news-flyer';
+            img.src = breakingNews.image_url;
+            img.alt = breakingNews.title || 'Breaking news image';
+            imageContainer.appendChild(img);
         }
     }
 

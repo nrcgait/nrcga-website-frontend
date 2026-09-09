@@ -1,5 +1,14 @@
 // Navigation Component
 // Reads configuration from nav-config.js
+
+try {
+    const storedTextSize = localStorage.getItem('textSize');
+    const initialTextSize = ['sm', 'md', 'lg', 'xl'].includes(storedTextSize) ? storedTextSize : 'md';
+    document.documentElement.setAttribute('data-text-size', initialTextSize);
+} catch {
+    document.documentElement.setAttribute('data-text-size', 'md');
+}
+
 function isStagingHost(host) {
     return (
         host === 'nrcga-website-staging.pages.dev' ||
@@ -91,9 +100,27 @@ function renderNavigation() {
                 </ul>
                 <div class="nav-actions">
                     ${renderStaffPortalLink()}
-                    <button class="theme-toggle" aria-label="Toggle dark mode" title="Toggle dark mode">
-                        <span class="theme-toggle-icon">🌙</span>
-                    </button>
+                    <div class="display-settings">
+                        <button type="button" class="display-settings-toggle" aria-label="Display settings" title="Display settings" aria-haspopup="true" aria-expanded="false" aria-controls="display-settings-menu">
+                            <svg class="display-settings-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <circle cx="12" cy="12" r="3"></circle>
+                                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                            </svg>
+                        </button>
+                        <div id="display-settings-menu" class="display-settings-menu" hidden>
+                            <p class="display-settings-heading">Appearance</p>
+                            <div class="display-settings-row" role="group" aria-label="Appearance">
+                                <button type="button" class="display-settings-option" data-theme-value="light">Light</button>
+                                <button type="button" class="display-settings-option" data-theme-value="dark">Dark</button>
+                            </div>
+                            <p class="display-settings-heading">Text size</p>
+                            <div class="display-settings-row text-size-controls" role="group" aria-label="Text size">
+                                <button type="button" class="text-size-btn text-size-decrease" aria-label="Decrease text size" title="Decrease text size">A−</button>
+                                <span class="text-size-current" aria-live="polite">Medium</span>
+                                <button type="button" class="text-size-btn text-size-increase" aria-label="Increase text size" title="Increase text size">A+</button>
+                            </div>
+                        </div>
+                    </div>
                     <button class="nav-toggle" aria-label="Toggle navigation">
                         <span></span>
                         <span></span>
@@ -152,7 +179,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     // Initialize navigation functionality after injection
     initializeNavigation();
-    initializeThemeToggle();
+    initializeDisplaySettings();
 });
 
 async function applyRemoteSiteConfig() {
@@ -217,32 +244,134 @@ function initializeNavigation() {
     });
 }
 
-// Initialize theme toggle
-function initializeThemeToggle() {
-    const themeToggle = document.querySelector('.theme-toggle');
-    const themeIcon = document.querySelector('.theme-toggle-icon');
+const TEXT_SIZE_STEPS = ['sm', 'md', 'lg', 'xl'];
+const TEXT_SIZE_DEFAULT = 'md';
+const TEXT_SIZE_LABELS = {
+    sm: 'Small',
+    md: 'Medium',
+    lg: 'Large',
+    xl: 'Extra large',
+};
 
-    // Check for saved theme preference or default to light mode
-    const currentTheme = localStorage.getItem('theme') || 'light';
-    document.documentElement.setAttribute('data-theme', currentTheme);
-
-    if (currentTheme === 'dark' && themeIcon) {
-        themeIcon.textContent = '☀️';
+function getStoredTextSize() {
+    try {
+        const value = localStorage.getItem('textSize');
+        return TEXT_SIZE_STEPS.includes(value) ? value : TEXT_SIZE_DEFAULT;
+    } catch {
+        return TEXT_SIZE_DEFAULT;
     }
+}
 
-    if (themeToggle) {
-        themeToggle.addEventListener('click', () => {
-            const theme = document.documentElement.getAttribute('data-theme');
-            const newTheme = theme === 'dark' ? 'light' : 'dark';
-            
-            document.documentElement.setAttribute('data-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
-            
-            if (themeIcon) {
-                themeIcon.textContent = newTheme === 'dark' ? '☀️' : '🌙';
-            }
+function getCurrentTheme() {
+    return document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+}
+
+function applyTheme(theme, persist) {
+    const next = theme === 'dark' ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', next);
+    if (persist) {
+        try {
+            localStorage.setItem('theme', next);
+        } catch {
+            /* ignore quota */
+        }
+    }
+    updateThemeButtons();
+}
+
+function updateThemeButtons() {
+    const current = getCurrentTheme();
+    document.querySelectorAll('[data-theme-value]').forEach((btn) => {
+        const selected = btn.dataset.themeValue === current;
+        btn.classList.toggle('active', selected);
+        btn.setAttribute('aria-pressed', selected ? 'true' : 'false');
+    });
+}
+
+function updateTextSizeButtons() {
+    const current = document.documentElement.getAttribute('data-text-size') || TEXT_SIZE_DEFAULT;
+    const index = TEXT_SIZE_STEPS.indexOf(current);
+    const decrease = document.querySelector('.text-size-decrease');
+    const increase = document.querySelector('.text-size-increase');
+    const label = document.querySelector('.text-size-current');
+    if (decrease) decrease.disabled = index <= 0;
+    if (increase) increase.disabled = index < 0 || index >= TEXT_SIZE_STEPS.length - 1;
+    if (label) label.textContent = TEXT_SIZE_LABELS[current] || TEXT_SIZE_LABELS[TEXT_SIZE_DEFAULT];
+}
+
+function applyTextSize(size, persist) {
+    const next = TEXT_SIZE_STEPS.includes(size) ? size : TEXT_SIZE_DEFAULT;
+    document.documentElement.setAttribute('data-text-size', next);
+    if (persist) {
+        try {
+            localStorage.setItem('textSize', next);
+        } catch {
+            /* ignore quota */
+        }
+    }
+    updateTextSizeButtons();
+}
+
+function setDisplaySettingsOpen(open) {
+    const root = document.querySelector('.display-settings');
+    const toggle = document.querySelector('.display-settings-toggle');
+    const menu = document.getElementById('display-settings-menu');
+    if (!root || !toggle || !menu) return;
+    root.classList.toggle('open', open);
+    toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    menu.hidden = !open;
+}
+
+function initializeDisplaySettings() {
+    let storedTheme = 'light';
+    try {
+        storedTheme = localStorage.getItem('theme') || 'light';
+    } catch {
+        storedTheme = 'light';
+    }
+    applyTheme(storedTheme, false);
+    applyTextSize(getStoredTextSize(), false);
+
+    const root = document.querySelector('.display-settings');
+    const toggle = document.querySelector('.display-settings-toggle');
+    const menu = document.getElementById('display-settings-menu');
+    if (!root || !toggle || !menu) return;
+
+    toggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        setDisplaySettingsOpen(menu.hidden);
+    });
+
+    document.querySelectorAll('[data-theme-value]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            applyTheme(btn.dataset.themeValue, true);
+        });
+    });
+
+    const decrease = document.querySelector('.text-size-decrease');
+    const increase = document.querySelector('.text-size-increase');
+    if (decrease) {
+        decrease.addEventListener('click', () => {
+            const current = document.documentElement.getAttribute('data-text-size') || TEXT_SIZE_DEFAULT;
+            const index = TEXT_SIZE_STEPS.indexOf(current);
+            if (index > 0) applyTextSize(TEXT_SIZE_STEPS[index - 1], true);
         });
     }
+    if (increase) {
+        increase.addEventListener('click', () => {
+            const current = document.documentElement.getAttribute('data-text-size') || TEXT_SIZE_DEFAULT;
+            const index = Math.max(0, TEXT_SIZE_STEPS.indexOf(current));
+            if (index < TEXT_SIZE_STEPS.length - 1) applyTextSize(TEXT_SIZE_STEPS[index + 1], true);
+        });
+    }
+
+    document.addEventListener('click', (e) => {
+        if (!root.contains(e.target)) setDisplaySettingsOpen(false);
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') setDisplaySettingsOpen(false);
+    });
 }
 
 
