@@ -49,12 +49,40 @@ import {
   uncancelEventSeries,
 } from '../lib/events-db'
 import { getAvailability, listRegistrations, registerGuest } from '../lib/event-registrations'
-import { instantOnNevadaDate, parseToInstant } from '../lib/nevada-time'
+import { fromNevadaParts, instantOnNevadaDate, nevadaEndOfDay, parseToInstant } from '../lib/nevada-time'
 import { withCors, corsHeaders, PUBLIC_JSON_CACHE } from '../lib/cors'
 import { clientIp, consumeRateLimit, RATE_LIMIT_MESSAGE, rateLimitHeaders } from '../lib/rate-limit'
 
 function cachedJson(c: Parameters<typeof withCors>[0], body: unknown, status = 200) {
   return withCors(c, body, status, PUBLIC_JSON_CACHE)
+}
+
+const DATE_PARAM = /^(\d{4})-(\d{2})-(\d{2})$/
+
+function parseUpcomingOnlyQuery(value: string | undefined): boolean {
+  if (value == null || value === '') return true
+  return !['0', 'false', 'no'].includes(value.trim().toLowerCase())
+}
+
+function parseInclusiveNevadaDateRange(
+  fromParam?: string,
+  toParam?: string,
+): { from?: Date; to?: Date } {
+  const fromMatch = fromParam?.match(DATE_PARAM)
+  const toMatch = toParam?.match(DATE_PARAM)
+  const from = fromMatch
+    ? fromNevadaParts({
+        year: Number(fromMatch[1]),
+        month: Number(fromMatch[2]),
+        day: Number(fromMatch[3]),
+        hour: 0,
+        minute: 0,
+        second: 0,
+      })
+    : undefined
+  const to = toMatch ? (nevadaEndOfDay(toMatch[0]) ?? undefined) : undefined
+  if (from && to && from > to) return {}
+  return { from, to }
 }
 
 export function registerPublicApiRoutes(app: Hono<{ Bindings: Env }>) {
@@ -125,7 +153,9 @@ export function registerPublicApiRoutes(app: Hono<{ Bindings: Env }>) {
 
   app.get('/api/v1/events', async (c) => {
     const category = c.req.query('category') ?? undefined
-    const events = await listExpandedPublishedEvents(c.env.DB, category, true)
+    const upcomingOnly = parseUpcomingOnlyQuery(c.req.query('upcoming_only'))
+    const range = parseInclusiveNevadaDateRange(c.req.query('from'), c.req.query('to'))
+    const events = await listExpandedPublishedEvents(c.env.DB, category, upcomingOnly, range)
     return cachedJson(c, { events })
   })
 

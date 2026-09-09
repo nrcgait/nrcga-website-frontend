@@ -183,12 +183,13 @@ export async function listExpandedPublishedEvents(
   db: D1Database,
   category?: string,
   upcomingOnly = true,
+  range?: { from?: Date; to?: Date },
 ): Promise<ReturnType<typeof expandEventOccurrences>> {
   const [events, cancelled] = await Promise.all([
     listPublishedEvents(db, category),
     getCancelledOccurrenceMap(db),
   ])
-  return expandEventOccurrences(events, cancelled, { upcomingOnly })
+  return expandEventOccurrences(events, cancelled, { upcomingOnly, ...range })
 }
 
 export async function cancelEventSeries(

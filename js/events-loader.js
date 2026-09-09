@@ -86,11 +86,15 @@ function formatEventTimeRange(startsAt, endsAt) {
 
 function findEventOccurrence(seriesId, occurrenceDate) {
   for (const state of calendarStates.values()) {
-    const match = state.events.find((event) => {
-      const sid = event.series_id || event.id.split(':')[0];
-      return sid === seriesId && event.occurrence_date === occurrenceDate;
-    });
-    if (match) return match;
+    const pools = [state.events, state.monthEvents];
+    for (const events of pools) {
+      if (!events?.length) continue;
+      const match = events.find((event) => {
+        const sid = event.series_id || event.id.split(':')[0];
+        return sid === seriesId && event.occurrence_date === occurrenceDate;
+      });
+      if (match) return match;
+    }
   }
   return null;
 }
@@ -277,6 +281,8 @@ function getCalendarState(container) {
       renderGen: 0,
       listPage: 1,
       monthDate: startOfNevadaMonth(),
+      monthEvents: [],
+      monthEventsKey: '',
       loading: false,
       activeContainer: container,
     });
@@ -315,12 +321,17 @@ function nevadaTodayKey() {
   return toDateParam(new Date());
 }
 
-async function fetchEvents(category) {
+async function fetchEvents(category, options = {}) {
   if (!window.NRCGA_API) {
     console.warn('NRCGA_API not loaded');
     return [];
   }
-  const query = category ? `?category=${encodeURIComponent(category)}` : '';
+  const params = new URLSearchParams();
+  if (category) params.set('category', category);
+  if (options.upcomingOnly === false) params.set('upcoming_only', '0');
+  if (options.from) params.set('from', options.from);
+  if (options.to) params.set('to', options.to);
+  const query = params.toString() ? `?${params.toString()}` : '';
   const data = await window.NRCGA_API.get(`/events${query}`);
   return data.events || [];
 }
@@ -816,16 +827,22 @@ function getFilteredEvents(state) {
   );
 }
 
-function getEventsForMonth(events, monthDate) {
+function getMonthGridBounds(monthDate) {
   const year = monthDate.getFullYear();
   const month = monthDate.getMonth();
-  const gridStart = new Date(year, month, 1);
-  gridStart.setDate(gridStart.getDate() - gridStart.getDay());
-  const gridEnd = new Date(gridStart);
-  gridEnd.setDate(gridEnd.getDate() + 41);
-  const startKey = toDateParam(gridStart);
-  const endKey = toDateParam(gridEnd);
+  const firstWeekday = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const totalCells = Math.ceil((firstWeekday + daysInMonth) / 7) * 7;
+  const start = new Date(year, month, 1 - firstWeekday);
+  const end = new Date(year, month, 1 - firstWeekday + totalCells - 1);
+  return {
+    startKey: toDateParam(start),
+    endKey: toDateParam(end),
+  };
+}
 
+function getEventsForMonth(events, monthDate) {
+  const { startKey, endKey } = getMonthGridBounds(monthDate);
   return events.filter((event) => {
     const key = eventDateKey(event);
     return key >= startKey && key <= endKey;
@@ -1060,7 +1077,25 @@ async function renderEventsCalendar(container, options = {}) {
     let content = '';
     const queryUsed = state.searchQuery;
     if (state.view === 'month') {
-      const monthEvents = getEventsForMonth(getFilteredEvents(state), state.monthDate);
+      const bounds = getMonthGridBounds(state.monthDate);
+      const monthKey = `${bounds.startKey}:${bounds.endKey}:${scope}`;
+      if (options.reload || state.monthEventsKey !== monthKey) {
+        const fetchedMonthEvents = await fetchEvents(scope === 'training' ? 'training' : undefined, {
+          upcomingOnly: false,
+          from: bounds.startKey,
+          to: bounds.endKey,
+        });
+        if (state.renderGen !== renderGen) return;
+        state.monthEvents = fetchedMonthEvents;
+        state.monthEventsKey = monthKey;
+      }
+      const monthEvents = getEventsForMonth(
+        filterEventsBySearch(
+          filterEventsByCategory(state.monthEvents, state.categoryFilter),
+          state.searchQuery,
+        ),
+        state.monthDate,
+      );
       content = renderMonthView(monthEvents, state.monthDate);
     } else {
       content = await renderListView(container, state);
