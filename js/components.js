@@ -45,17 +45,27 @@ function renderStaffPortalLink() {
     `;
 }
 
+function getNavConfig() {
+    if (window.navConfig && window.navConfig.logo) {
+        return window.navConfig;
+    }
+    if (typeof navConfig !== 'undefined') {
+        return navConfig;
+    }
+    return null;
+}
+
 function renderNavigation() {
     const currentPage = window.location.pathname.split('/').pop() || 'index.html';
-    
-    // Use navConfig from nav-config.js (must be loaded before this file)
-    if (typeof navConfig === 'undefined') {
+    const config = getNavConfig();
+
+    if (!config) {
         console.error('navConfig not found. Make sure nav-config.js is loaded before components.js');
         return '<nav class="navbar"><div class="nav-container"><p>Navigation configuration error</p></div></nav>';
     }
     
     // Build logo HTML
-    const logo = navConfig.logo;
+    const logo = config.logo;
     const logoHTML = `
         <div class="logo">
             <a href="${logo.link}" class="logo-link">
@@ -67,7 +77,7 @@ function renderNavigation() {
     
     // Build menu items HTML
     let menuItemsHTML = '';
-    navConfig.menuItems.forEach(item => {
+    config.menuItems.forEach(item => {
         if (item.type === 'dropdown') {
             // Build dropdown menu
             let dropdownItemsHTML = '';
@@ -184,14 +194,18 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 async function applyRemoteSiteConfig() {
     if (!window.NRCGA_API) return;
+
     try {
-        const [navData, settings] = await Promise.all([
-            window.NRCGA_API.get('/navigation'),
-            window.NRCGA_API.get('/settings'),
-        ]);
+        const navData = await window.NRCGA_API.get('/navigation');
         if (navData && typeof navData === 'object' && navData.logo) {
             window.navConfig = navData;
         }
+    } catch (err) {
+        console.warn('Navigation API unavailable, using local nav-config.js', err);
+    }
+
+    try {
+        const settings = await window.NRCGA_API.get('/settings');
         if (settings && settings.footer) {
             window.nrcgaFooterSettings = settings.footer;
         }
@@ -207,7 +221,7 @@ async function applyRemoteSiteConfig() {
             if (settings.theme.accent) root.style.setProperty('--accent', settings.theme.accent);
         }
     } catch (err) {
-        console.warn('Site config API unavailable, using local nav-config.js', err);
+        console.warn('Settings API unavailable, using local defaults', err);
     }
 }
 
