@@ -6,8 +6,8 @@ import {
   getFooterInfo,
   getNavigation,
   getThemeSettings,
-  sendCancellationNotifications,
 } from '../lib/site-settings'
+import { sendCancellationNotifications, sendFormSubmissionNotifications } from '../lib/email'
 import {
   listArchiveFeed,
   listCarouselSlides,
@@ -266,20 +266,13 @@ export function registerPublicApiRoutes(app: Hono<{ Bindings: Env }>) {
 
     const id = await createFormSubmission(c.env.DB, formType, validated.payload)
 
-    // Best-effort notify org contact for non-newsletter forms
-    if (formType !== 'newsletter' && c.env.EMAIL) {
-      try {
-        const contact = await getContactInfo(c.env.DB)
-        const to = notifyEmail || contact.email
-        await c.env.EMAIL.send({
-          to,
-          from: `NRCGA <noreply@${new URL(c.env.PUBLIC_SITE_ORIGIN).hostname}>`,
-          subject: `New ${formType.replace(/_/g, ' ')} submission`,
-          text: `A new ${formType} submission was received (id ${id}).\n\n${JSON.stringify(validated.payload, null, 2)}`,
-        })
-      } catch {
-        /* non-fatal */
-      }
+    if (formType !== 'newsletter') {
+      await sendFormSubmissionNotifications(c.env, {
+        formType,
+        submissionId: id,
+        payload: validated.payload,
+        inboxNotifyEmail: notifyEmail,
+      })
     }
 
     return withCors(c, { success: true, id, message: successMessage })

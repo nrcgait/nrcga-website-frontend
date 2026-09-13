@@ -1524,8 +1524,9 @@ function InboxForm({ item }: { item?: Record<string, unknown> }) {
         name="notify_email"
         type="email"
         value={String(item?.notify_email ?? '')}
-        placeholder="Defaults to site contact email"
+        placeholder="Defaults to site notification email"
       />
+      <p class="muted">If blank, form alerts go to the default notification email in Site settings.</p>
       <label>Submit button label</label>
       <input name="submit_label" value={String(item?.submit_label ?? 'Submit')} />
       <label>Success message</label>

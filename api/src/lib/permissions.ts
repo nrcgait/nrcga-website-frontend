@@ -8,9 +8,10 @@ import {
 import {
   canAccessEventsSection,
   canManageAllContent,
-  canManageAllEvents,
+  type UserRole,
 } from '../config/roles'
 import type { AdminContext } from './admin-context'
+import type { EventListFilter } from './events-db'
 import { inboxKeyForFormType } from './inbox-access'
 
 type EventLike = {
@@ -35,14 +36,26 @@ export function canViewEvents(ctx: AdminContext): boolean {
   return canAccessEventsSection(ctx.user.role, ctx.chairCommittees)
 }
 
-export function canEditEvent(ctx: AdminContext, event: EventLike): boolean {
-  if (canManageAllEvents(ctx.user.role)) return true
-  if (ctx.user.role === 'trainer') return event.category === 'training'
-  if (ctx.user.role === 'chair') {
-    const slug = event.committee_slug
-    return Boolean(slug && ctx.chairCommittees.includes(slug))
-  }
+export function eventsFilterForUser(role: UserRole, chairCommittees: string[]): EventListFilter | undefined {
+  if (role === 'admin') return undefined
+  if (role === 'trainer') return { category: 'training' }
+  if (role === 'chair') return { committeeSlugs: chairCommittees }
+  return undefined
+}
+
+export function userCanAccessEvent(
+  role: UserRole,
+  chairCommittees: string[],
+  event: EventLike,
+): boolean {
+  if (role === 'admin') return true
+  if (role === 'trainer') return event.category === 'training'
+  if (role === 'chair') return Boolean(event.committee_slug && chairCommittees.includes(event.committee_slug))
   return false
+}
+
+export function canEditEvent(ctx: AdminContext, event: EventLike): boolean {
+  return userCanAccessEvent(ctx.user.role, ctx.chairCommittees, event)
 }
 
 export function assignableCommitteesForEvents(ctx: AdminContext): string[] {

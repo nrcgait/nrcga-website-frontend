@@ -897,6 +897,36 @@
   font-size: 0.95rem;
 }
 
+.login-extra {
+  margin: 1rem 0 0;
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+.login-extra a {
+  color: var(--admin-accent);
+}
+
+.admin-checkbox-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin: 0.75rem 0 0;
+  max-height: 22rem;
+  overflow: auto;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius);
+  background: var(--admin-bg);
+}
+
+.admin-checkbox-list label {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.45rem;
+  font-weight: 400;
+}
+
 .login-brand-mark {
   width: 48px;
   height: 48px;

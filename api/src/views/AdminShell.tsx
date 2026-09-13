@@ -132,34 +132,122 @@ export function AdminShell({
   )
 }
 
-export function LoginPage({ error }: { error?: string }) {
+function AuthCard({
+  title,
+  subtitle,
+  error,
+  success,
+  children,
+}: {
+  title: string
+  subtitle: string
+  error?: string
+  success?: string
+  children: unknown
+}) {
   return (
     <html lang="en">
       <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Sign in — NRCGA Staff Portal</title>
+        <title>{title} — NRCGA Staff Portal</title>
         <link rel="stylesheet" href="/admin.css" />
       </head>
       <body class="login-wrap">
         <div class="login-card">
           <div class="login-brand-mark">N</div>
-          <h1>Staff Portal</h1>
-          <p>Sign in to manage website content.</p>
+          <h1>{title}</h1>
+          <p>{subtitle}</p>
           {error ? <div class="error">{escapeHtml(error)}</div> : null}
-          <form method="post" action="/admin/login" class="admin-form">
-            <label>Email</label>
-            <input type="email" name="email" required autoComplete="email" />
-            <label>Password</label>
-            <input type="password" name="password" required autoComplete="current-password" />
-            <div class="admin-actions">
-              <button type="submit" class="btn btn-primary">
-                Sign in
-              </button>
-            </div>
-          </form>
+          {success ? <div class="success">{escapeHtml(success)}</div> : null}
+          {children}
         </div>
       </body>
     </html>
+  )
+}
+
+export function LoginPage({ error, success }: { error?: string; success?: string }) {
+  return (
+    <AuthCard title="Staff Portal" subtitle="Sign in to manage website content." error={error} success={success}>
+      <form method="post" action="/admin/login" class="admin-form">
+        <label>Email</label>
+        <input type="email" name="email" required autoComplete="email" />
+        <label>Password</label>
+        <input type="password" name="password" required autoComplete="current-password" />
+        <div class="admin-actions">
+          <button type="submit" class="btn btn-primary">
+            Sign in
+          </button>
+        </div>
+      </form>
+      <p class="login-extra">
+        <a href="/admin/forgot-password">Forgot password?</a>
+      </p>
+    </AuthCard>
+  )
+}
+
+export function ForgotPasswordPage({ error, success }: { error?: string; success?: string }) {
+  return (
+    <AuthCard
+      title="Forgot password"
+      subtitle="Enter your staff portal email. If we have an account for it, we will send a reset link."
+      error={error}
+      success={success}
+    >
+      <form method="post" action="/admin/forgot-password" class="admin-form">
+        <label>Email</label>
+        <input type="email" name="email" required autoComplete="email" />
+        <div class="admin-actions">
+          <button type="submit" class="btn btn-primary">
+            Send reset link
+          </button>
+        </div>
+      </form>
+      <p class="login-extra">
+        <a href="/admin/login">Back to sign in</a>
+      </p>
+    </AuthCard>
+  )
+}
+
+export function ResetPasswordPage({
+  token,
+  error,
+  invalid,
+}: {
+  token?: string
+  error?: string
+  invalid?: boolean
+}) {
+  return (
+    <AuthCard
+      title="Reset password"
+      subtitle={invalid ? 'This reset link is invalid or has expired.' : 'Choose a new password for your staff portal account.'}
+      error={error}
+    >
+      {invalid ? (
+        <p class="login-extra">
+          <a href="/admin/forgot-password">Request a new reset link</a>
+        </p>
+      ) : (
+        <form method="post" action="/admin/reset-password" class="admin-form">
+          <input type="hidden" name="token" value={token ?? ''} />
+          <label>New password</label>
+          <input type="password" name="password" required minlength={8} autoComplete="new-password" />
+          <label>Confirm new password</label>
+          <input type="password" name="confirm_password" required minlength={8} autoComplete="new-password" />
+          <div class="admin-actions">
+            <button type="submit" class="btn btn-primary">
+              Save new password
+            </button>
+          </div>
+        </form>
+      )}
+      <p class="login-extra">
+        <a href="/admin/login">Back to sign in</a>
+      </p>
+    </AuthCard>
   )
 }

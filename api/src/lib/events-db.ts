@@ -70,6 +70,15 @@ export const EVENT_SORT_COLUMNS: SortColumnSql = {
   registration: 'registration_enabled',
 }
 
+export async function listAllEvents(db: D1Database, filter?: EventListFilter): Promise<EventRecord[]> {
+  const { sql: where, binds } = eventWhereClause(filter)
+  const stmt = db.prepare(`SELECT * FROM events ${where} ORDER BY starts_at DESC`)
+  const { results } = binds.length
+    ? await stmt.bind(...binds).all<EventRecord>()
+    : await stmt.all<EventRecord>()
+  return results ?? []
+}
+
 export async function listAllEventsPaginated(
   db: D1Database,
   page: number,

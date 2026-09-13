@@ -1,5 +1,10 @@
-import type { Env } from '../env'
-import { formatInNevada, formatNevadaDateParam } from './nevada-time'
+export type EmailSettings = {
+  default_notify_email: string
+  registration_confirmation: {
+    subject: string
+    body: string
+  }
+}
 
 export type ContactInfo = {
   organization_name: string
@@ -122,6 +127,43 @@ const DEFAULT_THEME: ThemeSettings = {
   accent: '#ff6b35',
 }
 
+export const DEFAULT_EMAIL_SETTINGS: EmailSettings = {
+  default_notify_email: 'info@nrcga.org',
+  registration_confirmation: {
+    subject: 'Registration confirmed: {{eventTitle}}',
+    body: [
+      'Hello {{guestName}},',
+      '',
+      'You are registered for {{eventTitle}}.',
+      'Date: {{date}}',
+      'Time: {{time}}',
+      '{{location}}',
+      '{{meetingUrl}}',
+      'Spots booked: {{spotCount}}',
+      '',
+      'Questions? Contact {{contactEmail}}',
+    ].join('\n'),
+  },
+}
+
+function normalizeEmailSettings(raw: unknown): EmailSettings {
+  const obj = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {}
+  const confirmation =
+    obj.registration_confirmation && typeof obj.registration_confirmation === 'object'
+      ? (obj.registration_confirmation as Record<string, unknown>)
+      : {}
+  const notify = String(obj.default_notify_email ?? '').trim()
+  const subject = String(confirmation.subject ?? '').trim()
+  const body = String(confirmation.body ?? '').trim()
+  return {
+    default_notify_email: notify.includes('@') ? notify : DEFAULT_EMAIL_SETTINGS.default_notify_email,
+    registration_confirmation: {
+      subject: subject || DEFAULT_EMAIL_SETTINGS.registration_confirmation.subject,
+      body: body || DEFAULT_EMAIL_SETTINGS.registration_confirmation.body,
+    },
+  }
+}
+
 async function getSetting<T>(db: D1Database, key: string, fallback: T): Promise<T> {
   const row = await db
     .prepare('SELECT value_json FROM site_settings WHERE key = ?')
@@ -171,104 +213,7 @@ export async function getThemeSettings(db: D1Database): Promise<ThemeSettings> {
   return getSetting(db, 'theme', DEFAULT_THEME)
 }
 
-function formatEventEmailWhen(occurrenceDate: string, startsAt: string): { dateLabel: string; timeLabel: string } {
-  const dateLabel = /^\d{4}-\d{2}-\d{2}$/.test(occurrenceDate)
-    ? formatNevadaDateParam(occurrenceDate)
-    : occurrenceDate
-  const timeLabel = formatInNevada(startsAt, {
-    hour: 'numeric',
-    minute: '2-digit',
-    timeZoneName: 'short',
-  })
-  return { dateLabel, timeLabel: timeLabel || startsAt }
-}
-
-export async function sendRegistrationConfirmation(
-  env: Env,
-  data: {
-    to: string
-    eventTitle: string
-    occurrenceDate: string
-    startsAt: string
-    location: string
-    meetingUrl?: string
-    guestName: string
-    spotCount: number
-  },
-): Promise<boolean> {
-  if (!env.EMAIL) return false
-  const contact = await getContactInfo(env.DB)
-  const { dateLabel, timeLabel } = formatEventEmailWhen(data.occurrenceDate, data.startsAt)
-  try {
-    await env.EMAIL.send({
-      to: data.to,
-      from: `NRCGA <noreply@${new URL(env.PUBLIC_SITE_ORIGIN).hostname}>`,
-      subject: `Registration confirmed: ${data.eventTitle}`,
-      text: [
-        `Hello ${data.guestName},`,
-        '',
-        `You are registered for ${data.eventTitle}.`,
-        `Date: ${dateLabel}`,
-        `Time: ${timeLabel}`,
-        data.location ? `Location: ${data.location}` : '',
-        data.meetingUrl ? `Join: ${data.meetingUrl}` : '',
-        `Spots booked: ${data.spotCount}`,
-        '',
-        `Questions? Contact ${contact.email}`,
-      ]
-        .filter(Boolean)
-        .join('\n'),
-    })
-    return true
-  } catch {
-    return false
-  }
-}
-
-export async function sendCancellationNotifications(
-  env: Env,
-  guests: Array<{ email: string; name: string; spotCount: number }>,
-  data: {
-    eventTitle: string
-    occurrenceDate: string
-    startsAt: string
-    location: string
-    meetingUrl?: string
-    message?: string
-  },
-): Promise<void> {
-  if (!env.EMAIL) return
-  const contact = await getContactInfo(env.DB)
-  const { dateLabel, timeLabel } = formatEventEmailWhen(data.occurrenceDate, data.startsAt)
-  const seen = new Set<string>()
-  for (const guest of guests) {
-    const key = guest.email.toLowerCase()
-    if (seen.has(key)) continue
-    seen.add(key)
-    try {
-      await env.EMAIL.send({
-        to: guest.email,
-        from: `NRCGA <noreply@${new URL(env.PUBLIC_SITE_ORIGIN).hostname}>`,
-        subject: `Event cancelled: ${data.eventTitle}`,
-        text: [
-          `Hello ${guest.name},`,
-          '',
-          `The following event has been cancelled:`,
-          data.eventTitle,
-          `Date: ${dateLabel}`,
-          `Time: ${timeLabel}`,
-          data.location ? `Location: ${data.location}` : '',
-          data.meetingUrl ? `Join: ${data.meetingUrl}` : '',
-          `Spots you had booked: ${guest.spotCount}`,
-          data.message ? `\n${data.message}` : '',
-          '',
-          `Questions? Contact ${contact.email}`,
-        ]
-          .filter(Boolean)
-          .join('\n'),
-      })
-    } catch {
-      /* non-fatal */
-    }
-  }
+export async function getEmailSettings(db: D1Database): Promise<EmailSettings> {
+  const raw = await getSetting<unknown>(db, 'email', DEFAULT_EMAIL_SETTINGS)
+  return normalizeEmailSettings(raw)
 }

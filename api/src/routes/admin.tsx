@@ -42,6 +42,7 @@ import {
   createEvent,
   deleteEvent,
   getEventById,
+  listAllEvents,
   listAllEventsPaginated,
   listCancelledOccurrences,
   uncancelEventOccurrence,
@@ -55,6 +56,7 @@ import {
   canEditEvent,
   canViewEvents,
   defaultCategoryForNewEvent,
+  eventsFilterForUser,
   resolveEventCategory,
   validateEventAssignment,
 } from '../lib/permissions'
@@ -63,6 +65,7 @@ import { deleteRegistration, listRegistrationsPaginated, REGISTRATION_SORT_COLUM
 import {
   getBreakingNews,
   getContactInfo,
+  getEmailSettings,
   getFooterInfo,
   getNavigation,
   getThemeSettings,
@@ -70,6 +73,16 @@ import {
   type BreakingNewsItem,
   type BreakingNewsSettings,
 } from '../lib/site-settings'
+import { emailSettingsHelpText } from '../lib/email'
+import { peekPasswordResetToken, requestPasswordReset, consumePasswordResetToken } from '../lib/password-reset'
+import {
+  canReceiveStaffNotifications,
+  getNotificationPrefs,
+  inboxOptionsForUser,
+  saveNotificationPrefs,
+  type NotifyMode,
+} from '../lib/notification-prefs'
+import { listFormInboxes } from '../lib/forms-db'
 import { notifyCancelledGuests } from './api'
 import { registerAdminContentRoutes } from './admin-content'
 import { registerAdminParityRoutes } from './admin-parity'
@@ -95,7 +108,7 @@ import {
   LOGIN_RATE_LIMIT_MESSAGE,
   rateLimitHeaders,
 } from '../lib/rate-limit'
-import { AdminShell, LoginPage } from '../views/AdminShell'
+import { AdminShell, ForgotPasswordPage, LoginPage, ResetPasswordPage } from '../views/AdminShell'
 import { AssetUrlField, Pagination, CommitteeSelect, ListSearch, SortableHead } from '../views/AdminComponents'
 import { MemberForm, UserForm } from '../views/MemberForm'
 
@@ -268,10 +281,13 @@ function parseCommitteeSlugs(value: unknown): string[] {
 }
 
 function eventListFilter(ctx: AdminContext): EventListFilter | undefined {
-  if (ctx.user.role === 'admin') return undefined
-  if (ctx.user.role === 'trainer') return { category: 'training' }
-  if (ctx.user.role === 'chair') return { committeeSlugs: ctx.chairCommittees }
-  return undefined
+  return eventsFilterForUser(ctx.user.role, ctx.chairCommittees)
+}
+
+function formStringList(value: unknown): string[] {
+  if (Array.isArray(value)) return value.filter((v): v is string => typeof v === 'string' && v.length > 0)
+  if (typeof value === 'string' && value) return [value]
+  return []
 }
 
 function buildEventInput(
@@ -367,7 +383,60 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>) {
     })
   })
 
-  app.get('/admin/login', async (c) => c.html(<LoginPage />))
+  app.get('/admin/login', async (c) =>
+    c.html(<LoginPage success={c.req.query('reset') === '1' ? 'Password updated. Sign in with your new password.' : undefined} />),
+  )
+
+  app.get('/admin/forgot-password', async (c) => c.html(<ForgotPasswordPage />))
+
+  app.post('/admin/forgot-password', async (c) => {
+    await ensureBootstrapAdmin(c.env)
+    const body = await c.req.parseBody()
+    const email = typeof body.email === 'string' ? body.email : ''
+    const keys = [`ip:${clientIp(c)}`]
+    const normalizedEmail = email.toLowerCase().trim()
+    if (normalizedEmail) keys.push(`email:${normalizedEmail}`)
+    const allowed = await consumeRateLimits(c.env.LOGIN_RATE_LIMITER, keys)
+    if (!allowed) {
+      return c.html(<ForgotPasswordPage error={LOGIN_RATE_LIMIT_MESSAGE} />, 429, rateLimitHeaders())
+    }
+    const success = await requestPasswordReset(c.env, email, (token) => {
+      const url = new URL('/admin/reset-password', c.req.url)
+      url.searchParams.set('token', token)
+      return url.toString()
+    })
+    return c.html(<ForgotPasswordPage success={success} />)
+  })
+
+  app.get('/admin/reset-password', async (c) => {
+    const token = c.req.query('token') ?? ''
+    const valid = await peekPasswordResetToken(c.env.DB, token)
+    return c.html(<ResetPasswordPage token={token} invalid={!valid} />)
+  })
+
+  app.post('/admin/reset-password', async (c) => {
+    await ensureBootstrapAdmin(c.env)
+    const body = await c.req.parseBody()
+    const token = typeof body.token === 'string' ? body.token : ''
+    const password = typeof body.password === 'string' ? body.password : ''
+    const confirm = typeof body.confirm_password === 'string' ? body.confirm_password : ''
+    const allowed = await consumeRateLimits(c.env.LOGIN_RATE_LIMITER, [`ip:${clientIp(c)}`])
+    if (!allowed) {
+      return c.html(<ResetPasswordPage token={token} error={LOGIN_RATE_LIMIT_MESSAGE} />, 429, rateLimitHeaders())
+    }
+    if (password.length < 8) {
+      return c.html(<ResetPasswordPage token={token} error="New password must be at least 8 characters." />)
+    }
+    if (password !== confirm) {
+      return c.html(<ResetPasswordPage token={token} error="New password and confirmation do not match." />)
+    }
+    const userId = await consumePasswordResetToken(c.env.DB, token)
+    if (!userId) {
+      return c.html(<ResetPasswordPage token={token} invalid />)
+    }
+    await updateUser(c.env.DB, userId, { password })
+    return redirect(c, '/admin/login?reset=1')
+  })
 
   app.post('/admin/login', async (c) => {
     await ensureBootstrapAdmin(c.env)
@@ -472,7 +541,7 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>) {
           ) : null}
           <a class="admin-card" href="/admin/profile">
             <h3>My profile</h3>
-            <p>Change your password</p>
+            <p>Password and email notifications</p>
           </a>
         </div>
       </AdminShell>,
@@ -968,11 +1037,12 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>) {
   app.all('/admin/content/settings', async (c) => {
     const ctx = await requireAdmin(c)
     if (!ctx || ctx.user.role !== 'admin') return redirect(c, '/admin/login')
-    const [contact, footer, breaking, theme] = await Promise.all([
+    const [contact, footer, breaking, theme, emailSettings] = await Promise.all([
       getContactInfo(c.env.DB),
       getFooterInfo(c.env.DB),
       getBreakingNews(c.env.DB),
       getThemeSettings(c.env.DB),
+      getEmailSettings(c.env.DB),
     ])
     if (c.req.method === 'POST') {
       const body = await c.req.parseBody()
@@ -994,6 +1064,14 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>) {
         primary_dark: body.theme_primary_dark || '#0052a3',
         secondary: body.theme_secondary || '#00a86b',
         accent: body.theme_accent || '#ff6b35',
+      })
+      const notify = String(body.default_notify_email ?? '').trim()
+      await setSetting(c.env.DB, 'email', {
+        default_notify_email: notify.includes('@') ? notify : emailSettings.default_notify_email,
+        registration_confirmation: {
+          subject: String(body.registration_subject ?? ''),
+          body: String(body.registration_body ?? ''),
+        },
       })
       return redirect(c, '/admin/content/settings')
     }
@@ -1024,11 +1102,24 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>) {
           <input name="theme_secondary" type="color" value={theme.secondary} />
           <label>Accent</label>
           <input name="theme_accent" type="color" value={theme.accent} />
+          <h3>Email</h3>
+          <p class="admin-muted">
+            The default notification address receives form alerts when an inbox does not set its own notify
+            email. This is separate from the public contact email shown on the website.
+          </p>
+          <label>Default notification email</label>
+          <input name="default_notify_email" type="email" value={emailSettings.default_notify_email} required />
+          <label>Registration confirmation subject</label>
+          <input name="registration_subject" value={emailSettings.registration_confirmation.subject} />
+          <label>Registration confirmation body</label>
+          <textarea name="registration_body" rows={12}>{emailSettings.registration_confirmation.body}</textarea>
+          <p class="admin-muted">{emailSettingsHelpText()}</p>
           <h3>Contact</h3>
           <label>Organization</label>
           <input name="organization_name" value={contact.organization_name} />
           <label>Email</label>
           <input name="email" value={contact.email} />
+          <p class="admin-muted">Public website contact address. Form alerts use the default notification email above unless an inbox overrides it.</p>
           <label>Phone</label>
           <input name="phone" value={contact.phone} />
           <label>Address</label>
@@ -1085,27 +1176,50 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>) {
     if (!ctx) return redirect(c, '/admin/login')
     let error = ''
     let success = ''
+    const showNotify = canReceiveStaffNotifications(ctx.user.role)
+    let prefs = showNotify ? await getNotificationPrefs(c.env.DB, ctx.user.id) : null
     if (c.req.method === 'POST') {
       const body = await c.req.parseBody()
-      const current = typeof body.current_password === 'string' ? body.current_password : ''
-      const next = typeof body.new_password === 'string' ? body.new_password : ''
-      const confirm = typeof body.confirm_password === 'string' ? body.confirm_password : ''
-      if (!current || !next) {
-        error = 'Current and new password are required.'
-      } else if (next.length < 8) {
-        error = 'New password must be at least 8 characters.'
-      } else if (next !== confirm) {
-        error = 'New password and confirmation do not match.'
+      const action = String(body._action ?? 'password')
+      if (action === 'notifications' && showNotify) {
+        const eventMode = String(body.event_mode ?? 'none') as NotifyMode
+        const formMode = String(body.form_mode ?? 'none') as NotifyMode
+        await saveNotificationPrefs(c.env.DB, ctx.user.id, {
+          event_mode: eventMode,
+          form_mode: formMode,
+          event_ids: formStringList(body.event_ids),
+          inbox_keys: formStringList(body.inbox_keys),
+        })
+        prefs = await getNotificationPrefs(c.env.DB, ctx.user.id)
+        success = 'Notification preferences saved.'
       } else {
-        const ok = await verifyUserLogin(c.env, ctx.user.email, current)
-        if (!ok) {
-          error = 'Current password is incorrect.'
+        const current = typeof body.current_password === 'string' ? body.current_password : ''
+        const next = typeof body.new_password === 'string' ? body.new_password : ''
+        const confirm = typeof body.confirm_password === 'string' ? body.confirm_password : ''
+        if (!current || !next) {
+          error = 'Current and new password are required.'
+        } else if (next.length < 8) {
+          error = 'New password must be at least 8 characters.'
+        } else if (next !== confirm) {
+          error = 'New password and confirmation do not match.'
         } else {
-          await updateUser(c.env.DB, ctx.user.id, { password: next })
-          success = 'Password updated.'
+          const ok = await verifyUserLogin(c.env, ctx.user.email, current)
+          if (!ok) {
+            error = 'Current password is incorrect.'
+          } else {
+            await updateUser(c.env.DB, ctx.user.id, { password: next })
+            success = 'Password updated.'
+          }
         }
       }
     }
+    const events = showNotify ? await listAllEvents(c.env.DB, eventListFilter(ctx)) : []
+    const customInboxes = showNotify ? await listFormInboxes(c.env.DB) : []
+    const inboxOptions = showNotify
+      ? inboxOptionsForUser(ctx.user, ctx.assignedInboxKeys, customInboxes)
+      : []
+    const selectedEvents = new Set(prefs?.event_ids ?? [])
+    const selectedInboxes = new Set(prefs?.inbox_keys ?? [])
     return c.html(
       <AdminShell ctx={ctx} title="My profile" activePath="/admin/profile" publicSiteOrigin={c.env.PUBLIC_SITE_ORIGIN}>
         {error ? <div class="error">{escapeHtml(error)}</div> : null}
@@ -1114,6 +1228,8 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>) {
           Signed in as <strong>{escapeHtml(ctx.user.email)}</strong>
         </p>
         <form method="post" class="admin-form">
+          <input type="hidden" name="_action" value="password" />
+          <h3>Change password</h3>
           <label>Current password</label>
           <input type="password" name="current_password" required autoComplete="current-password" />
           <label>New password</label>
@@ -1126,6 +1242,87 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>) {
             </button>
           </div>
         </form>
+        {showNotify && prefs ? (
+          <form method="post" class="admin-form">
+            <input type="hidden" name="_action" value="notifications" />
+            <h3>Notification emails</h3>
+            <p class="admin-muted">
+              Choose which emails you want. You can only subscribe to events and inboxes you can already open.
+            </p>
+            <fieldset class="admin-fieldset">
+              <legend>Event registrations</legend>
+              <label>
+                <input type="radio" name="event_mode" value="none" checked={prefs.event_mode === 'none'} /> None
+              </label>
+              <label>
+                <input type="radio" name="event_mode" value="all" checked={prefs.event_mode === 'all'} /> All
+                events I can access
+              </label>
+              <label>
+                <input type="radio" name="event_mode" value="selected" checked={prefs.event_mode === 'selected'} />{' '}
+                Selected events
+              </label>
+              {events.length === 0 ? (
+                <p class="muted">No events you can access.</p>
+              ) : (
+                <div class="admin-checkbox-list">
+                  {events.map((event) => (
+                    <label>
+                      <input
+                        type="checkbox"
+                        name="event_ids"
+                        value={event.id}
+                        checked={selectedEvents.has(event.id)}
+                      />{' '}
+                      {escapeHtml(event.title)}
+                      <span class="muted">
+                        {' '}
+                        · {escapeHtml(formatEventDateTime(event.starts_at))}
+                        {event.cancelled_at ? ' (Cancelled)' : ''}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              )}
+            </fieldset>
+            <fieldset class="admin-fieldset">
+              <legend>Form submissions</legend>
+              <label>
+                <input type="radio" name="form_mode" value="none" checked={prefs.form_mode === 'none'} /> None
+              </label>
+              <label>
+                <input type="radio" name="form_mode" value="all" checked={prefs.form_mode === 'all'} /> All
+                inboxes I can access
+              </label>
+              <label>
+                <input type="radio" name="form_mode" value="selected" checked={prefs.form_mode === 'selected'} />{' '}
+                Selected inboxes
+              </label>
+              {inboxOptions.length === 0 ? (
+                <p class="muted">No inboxes you can access.</p>
+              ) : (
+                <div class="admin-checkbox-list">
+                  {inboxOptions.map((inbox) => (
+                    <label>
+                      <input
+                        type="checkbox"
+                        name="inbox_keys"
+                        value={inbox.key}
+                        checked={selectedInboxes.has(inbox.key)}
+                      />{' '}
+                      {escapeHtml(inbox.label)}
+                    </label>
+                  ))}
+                </div>
+              )}
+            </fieldset>
+            <div class="admin-actions">
+              <button class="btn btn-primary" type="submit">
+                Save notification preferences
+              </button>
+            </div>
+          </form>
+        ) : null}
       </AdminShell>,
     )
   })

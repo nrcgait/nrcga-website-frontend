@@ -3,7 +3,7 @@ import type { EventRecord } from './event-repeat'
 import { expandEventOccurrences } from './event-repeat'
 import { getCancelledOccurrenceMap } from './events-db'
 import { instantOnNevadaDate, parseToInstant } from './nevada-time'
-import { sendRegistrationConfirmation } from './site-settings'
+import { sendRegistrationConfirmation, sendStaffRegistrationNotices } from './email'
 
 export type RegistrationInput = {
   guest_name: string
@@ -164,15 +164,26 @@ export async function registerGuest(
   }
 
   const updatedAvailability = await getAvailability(env.DB, event, occurrenceDate)
+  const startsAt = occurrenceStartInstant(event, occurrenceDate)?.toISOString() ?? event.starts_at
   const emailSent = await sendRegistrationConfirmation(env, {
     to: email,
     eventTitle: event.title,
     occurrenceDate,
-    startsAt: occurrenceStartInstant(event, occurrenceDate)?.toISOString() ?? event.starts_at,
+    startsAt,
     location: event.location ?? '',
     meetingUrl: event.meeting_url ?? '',
     guestName: input.guest_name.trim(),
     spotCount,
+  })
+  await sendStaffRegistrationNotices(env, event, {
+    guestName: input.guest_name.trim(),
+    guestEmail: email,
+    occurrenceDate,
+    startsAt,
+    location: event.location ?? '',
+    meetingUrl: event.meeting_url ?? '',
+    spotCount,
+    organization: input.organization?.trim(),
   })
 
   return { ok: true, registrationId, emailSent, availability: updatedAvailability }
