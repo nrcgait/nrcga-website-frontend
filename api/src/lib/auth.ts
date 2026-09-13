@@ -214,3 +214,20 @@ export async function findUserLinkedToMember(db: D1Database, memberId: string, e
   const row = await db.prepare(query).bind(...binds).first<UserRow>()
   return row ? mapUser(row) : null
 }
+
+export async function countUsersByRole(db: D1Database, role: UserRole): Promise<number> {
+  const row = await db.prepare('SELECT COUNT(*) as c FROM users WHERE role = ?').bind(role).first<{ c: number }>()
+  return row?.c ?? 0
+}
+
+export async function deleteUser(db: D1Database, userId: string): Promise<void> {
+  await db.batch([
+    db.prepare('DELETE FROM chair_committee_assignments WHERE user_id = ?').bind(userId),
+    db.prepare('DELETE FROM inbox_user_assignments WHERE user_id = ?').bind(userId),
+    db.prepare('DELETE FROM password_reset_tokens WHERE user_id = ?').bind(userId),
+    db.prepare('DELETE FROM user_event_notification_subs WHERE user_id = ?').bind(userId),
+    db.prepare('DELETE FROM user_inbox_notification_subs WHERE user_id = ?').bind(userId),
+    db.prepare('DELETE FROM user_notification_prefs WHERE user_id = ?').bind(userId),
+    db.prepare('DELETE FROM users WHERE id = ?').bind(userId),
+  ])
+}

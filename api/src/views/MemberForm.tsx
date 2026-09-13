@@ -1,5 +1,7 @@
 import { STAKEHOLDER_GROUPS } from '../config/stakeholder-groups'
 import { escapeHtml } from '../lib/admin-context'
+import { formatEventDateTime } from '../lib/event-datetime'
+import type { NotificationPrefs } from '../lib/notification-prefs'
 
 export function MemberForm({
   member,
@@ -103,12 +105,105 @@ function OfficerPositionFields({ member }: { member?: Record<string, unknown> })
   )
 }
 
+export function NotificationPrefsFields({
+  prefs,
+  events,
+  inboxOptions,
+  description,
+  forSelf = false,
+}: {
+  prefs: NotificationPrefs
+  events: Array<{ id: string; title: string; starts_at: string; cancelled_at: string | null }>
+  inboxOptions: Array<{ key: string; label: string }>
+  description: string
+  forSelf?: boolean
+}) {
+  const selectedEvents = new Set(prefs.event_ids)
+  const selectedInboxes = new Set(prefs.inbox_keys)
+  const allEventsLabel = forSelf ? 'All events I can access' : 'All events they can access'
+  const allInboxesLabel = forSelf ? 'All inboxes I can access' : 'All inboxes they can access'
+  const emptyEvents = forSelf ? 'No events you can access.' : 'No events available.'
+  const emptyInboxes = forSelf ? 'No inboxes you can access.' : 'No inboxes available.'
+  return (
+    <>
+      <p class="admin-muted">{description}</p>
+      <fieldset class="admin-fieldset">
+        <legend>Event registrations</legend>
+        <label>
+          <input type="radio" name="event_mode" value="none" checked={prefs.event_mode === 'none'} /> None
+        </label>
+        <label>
+          <input type="radio" name="event_mode" value="all" checked={prefs.event_mode === 'all'} /> {allEventsLabel}
+        </label>
+        <label>
+          <input type="radio" name="event_mode" value="selected" checked={prefs.event_mode === 'selected'} />{' '}
+          Selected events
+        </label>
+        {events.length === 0 ? (
+          <p class="muted">{emptyEvents}</p>
+        ) : (
+          <div class="admin-checkbox-list">
+            {events.map((event) => (
+              <label>
+                <input
+                  type="checkbox"
+                  name="event_ids"
+                  value={event.id}
+                  checked={selectedEvents.has(event.id)}
+                />{' '}
+                {escapeHtml(event.title)}
+                <span class="muted">
+                  {' '}
+                  · {escapeHtml(formatEventDateTime(event.starts_at))}
+                  {event.cancelled_at ? ' (Cancelled)' : ''}
+                </span>
+              </label>
+            ))}
+          </div>
+        )}
+      </fieldset>
+      <fieldset class="admin-fieldset">
+        <legend>Form submissions</legend>
+        <label>
+          <input type="radio" name="form_mode" value="none" checked={prefs.form_mode === 'none'} /> None
+        </label>
+        <label>
+          <input type="radio" name="form_mode" value="all" checked={prefs.form_mode === 'all'} /> {allInboxesLabel}
+        </label>
+        <label>
+          <input type="radio" name="form_mode" value="selected" checked={prefs.form_mode === 'selected'} />{' '}
+          Selected inboxes
+        </label>
+        {inboxOptions.length === 0 ? (
+          <p class="muted">{emptyInboxes}</p>
+        ) : (
+          <div class="admin-checkbox-list">
+            {inboxOptions.map((inbox) => (
+              <label>
+                <input
+                  type="checkbox"
+                  name="inbox_keys"
+                  value={inbox.key}
+                  checked={selectedInboxes.has(inbox.key)}
+                />{' '}
+                {escapeHtml(inbox.label)}
+              </label>
+            ))}
+          </div>
+        )}
+      </fieldset>
+    </>
+  )
+}
+
 export function UserForm({
   user,
   committees,
   stakeholderMembers,
   selectedCommittees,
   error,
+  canDelete,
+  notifications,
 }: {
   user?: {
     email: string
@@ -120,6 +215,12 @@ export function UserForm({
   stakeholderMembers: Array<{ id: string; company_name: string }>
   selectedCommittees: string[]
   error?: string
+  canDelete?: boolean
+  notifications?: {
+    prefs: NotificationPrefs
+    events: Array<{ id: string; title: string; starts_at: string; cancelled_at: string | null }>
+    inboxOptions: Array<{ key: string; label: string }>
+  }
 }) {
   const isEdit = Boolean(user)
   return (
@@ -133,7 +234,7 @@ export function UserForm({
       <input name="display_name" value={user?.display_name ?? ''} />
       <label>Role</label>
       <select name="role" data-user-role>
-        <option value="user" selected={user?.role === 'user'}>
+        <option value="user" selected={user?.role === 'user' || !user}>
           User
         </option>
         <option value="trainer" selected={user?.role === 'trainer'}>
@@ -152,6 +253,17 @@ export function UserForm({
       </div>
       <label>Linked member organization (admin only)</label>
       <MemberOrgPickerInline members={stakeholderMembers} selectedId={user?.member_id ?? null} />
+      {notifications ? (
+        <div data-notify-fields hidden={user ? user.role === 'user' : true}>
+          <h3>Email notifications</h3>
+          <NotificationPrefsFields
+            prefs={notifications.prefs}
+            events={notifications.events}
+            inboxOptions={notifications.inboxOptions}
+            description="Choose which emails this user should receive. “All” follows their role and assignments."
+          />
+        </div>
+      ) : null}
       <div class="admin-actions">
         <button class="btn btn-primary" type="submit">
           {isEdit ? 'Save user' : 'Create user'}
@@ -159,6 +271,17 @@ export function UserForm({
         <a class="btn btn-secondary" href="/admin/users">
           Cancel
         </a>
+        {canDelete ? (
+          <button
+            class="btn btn-danger"
+            name="_action"
+            value="delete"
+            type="submit"
+            onclick="return confirm('Delete this user? This cannot be undone.')"
+          >
+            Delete user
+          </button>
+        ) : null}
       </div>
     </form>
   )

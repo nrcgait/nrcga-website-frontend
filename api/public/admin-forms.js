@@ -28,10 +28,12 @@ function initCollapsibleForms() {
 function initRoleFields() {
   const roleSelect = document.querySelector('[data-user-role]')
   const chairFields = document.querySelector('[data-chair-fields]')
-  if (!roleSelect || !chairFields) return
+  const notifyFields = document.querySelector('[data-notify-fields]')
+  if (!roleSelect) return
 
   const sync = () => {
-    chairFields.hidden = roleSelect.value !== 'chair'
+    if (chairFields) chairFields.hidden = roleSelect.value !== 'chair'
+    if (notifyFields) notifyFields.hidden = !['admin', 'chair', 'trainer'].includes(roleSelect.value)
   }
   roleSelect.addEventListener('change', sync)
   sync()

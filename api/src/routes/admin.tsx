@@ -14,7 +14,9 @@ import {
 } from '../config/roles'
 import {
   assignChairCommittees,
+  countUsersByRole,
   createUser,
+  deleteUser,
   ensureBootstrapAdmin,
   findUserLinkedToMember,
   listChairCommittees,
@@ -77,9 +79,12 @@ import { emailSettingsHelpText } from '../lib/email'
 import { peekPasswordResetToken, requestPasswordReset, consumePasswordResetToken } from '../lib/password-reset'
 import {
   canReceiveStaffNotifications,
+  DEFAULT_NOTIFICATION_PREFS,
   getNotificationPrefs,
   inboxOptionsForUser,
   saveNotificationPrefs,
+  staffInboxOptions,
+  type NotificationPrefs,
   type NotifyMode,
 } from '../lib/notification-prefs'
 import { listFormInboxes } from '../lib/forms-db'
@@ -110,7 +115,7 @@ import {
 } from '../lib/rate-limit'
 import { AdminShell, ForgotPasswordPage, LoginPage, ResetPasswordPage } from '../views/AdminShell'
 import { AssetUrlField, Pagination, CommitteeSelect, ListSearch, SortableHead } from '../views/AdminComponents'
-import { MemberForm, UserForm } from '../views/MemberForm'
+import { MemberForm, NotificationPrefsFields, UserForm } from '../views/MemberForm'
 
 async function requireAdmin(c: { env: Env; req: { header: (name: string) => string | undefined } }) {
   await ensureBootstrapAdmin(c.env)
@@ -288,6 +293,33 @@ function formStringList(value: unknown): string[] {
   if (Array.isArray(value)) return value.filter((v): v is string => typeof v === 'string' && v.length > 0)
   if (typeof value === 'string' && value) return [value]
   return []
+}
+
+function prefsFromBody(body: { event_mode?: unknown; form_mode?: unknown; event_ids?: unknown; inbox_keys?: unknown }): NotificationPrefs {
+  return {
+    event_mode: String(body.event_mode ?? 'none') as NotifyMode,
+    form_mode: String(body.form_mode ?? 'none') as NotifyMode,
+    event_ids: formStringList(body.event_ids),
+    inbox_keys: formStringList(body.inbox_keys),
+  }
+}
+
+async function saveManagedNotificationPrefs(
+  db: D1Database,
+  userId: string,
+  role: UserRole,
+  body: { event_mode?: unknown; form_mode?: unknown; event_ids?: unknown; inbox_keys?: unknown },
+): Promise<void> {
+  await saveNotificationPrefs(
+    db,
+    userId,
+    canReceiveStaffNotifications(role) ? prefsFromBody(body) : DEFAULT_NOTIFICATION_PREFS,
+  )
+}
+
+async function adminNotificationOptions(db: D1Database) {
+  const [events, customInboxes] = await Promise.all([listAllEvents(db), listFormInboxes(db)])
+  return { events, inboxOptions: staffInboxOptions(customInboxes) }
 }
 
 function buildEventInput(
@@ -1182,14 +1214,7 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>) {
       const body = await c.req.parseBody()
       const action = String(body._action ?? 'password')
       if (action === 'notifications' && showNotify) {
-        const eventMode = String(body.event_mode ?? 'none') as NotifyMode
-        const formMode = String(body.form_mode ?? 'none') as NotifyMode
-        await saveNotificationPrefs(c.env.DB, ctx.user.id, {
-          event_mode: eventMode,
-          form_mode: formMode,
-          event_ids: formStringList(body.event_ids),
-          inbox_keys: formStringList(body.inbox_keys),
-        })
+        await saveNotificationPrefs(c.env.DB, ctx.user.id, prefsFromBody(body))
         prefs = await getNotificationPrefs(c.env.DB, ctx.user.id)
         success = 'Notification preferences saved.'
       } else {
@@ -1218,8 +1243,6 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>) {
     const inboxOptions = showNotify
       ? inboxOptionsForUser(ctx.user, ctx.assignedInboxKeys, customInboxes)
       : []
-    const selectedEvents = new Set(prefs?.event_ids ?? [])
-    const selectedInboxes = new Set(prefs?.inbox_keys ?? [])
     return c.html(
       <AdminShell ctx={ctx} title="My profile" activePath="/admin/profile" publicSiteOrigin={c.env.PUBLIC_SITE_ORIGIN}>
         {error ? <div class="error">{escapeHtml(error)}</div> : null}
@@ -1246,76 +1269,13 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>) {
           <form method="post" class="admin-form">
             <input type="hidden" name="_action" value="notifications" />
             <h3>Notification emails</h3>
-            <p class="admin-muted">
-              Choose which emails you want. You can only subscribe to events and inboxes you can already open.
-            </p>
-            <fieldset class="admin-fieldset">
-              <legend>Event registrations</legend>
-              <label>
-                <input type="radio" name="event_mode" value="none" checked={prefs.event_mode === 'none'} /> None
-              </label>
-              <label>
-                <input type="radio" name="event_mode" value="all" checked={prefs.event_mode === 'all'} /> All
-                events I can access
-              </label>
-              <label>
-                <input type="radio" name="event_mode" value="selected" checked={prefs.event_mode === 'selected'} />{' '}
-                Selected events
-              </label>
-              {events.length === 0 ? (
-                <p class="muted">No events you can access.</p>
-              ) : (
-                <div class="admin-checkbox-list">
-                  {events.map((event) => (
-                    <label>
-                      <input
-                        type="checkbox"
-                        name="event_ids"
-                        value={event.id}
-                        checked={selectedEvents.has(event.id)}
-                      />{' '}
-                      {escapeHtml(event.title)}
-                      <span class="muted">
-                        {' '}
-                        · {escapeHtml(formatEventDateTime(event.starts_at))}
-                        {event.cancelled_at ? ' (Cancelled)' : ''}
-                      </span>
-                    </label>
-                  ))}
-                </div>
-              )}
-            </fieldset>
-            <fieldset class="admin-fieldset">
-              <legend>Form submissions</legend>
-              <label>
-                <input type="radio" name="form_mode" value="none" checked={prefs.form_mode === 'none'} /> None
-              </label>
-              <label>
-                <input type="radio" name="form_mode" value="all" checked={prefs.form_mode === 'all'} /> All
-                inboxes I can access
-              </label>
-              <label>
-                <input type="radio" name="form_mode" value="selected" checked={prefs.form_mode === 'selected'} />{' '}
-                Selected inboxes
-              </label>
-              {inboxOptions.length === 0 ? (
-                <p class="muted">No inboxes you can access.</p>
-              ) : (
-                <div class="admin-checkbox-list">
-                  {inboxOptions.map((inbox) => (
-                    <label>
-                      <input
-                        type="checkbox"
-                        name="inbox_keys"
-                        value={inbox.key}
-                        checked={selectedInboxes.has(inbox.key)}
-                      />{' '}
-                      {escapeHtml(inbox.label)}
-                    </label>
-                  ))}
-                </div>
-              )}
-            </fieldset>
+            <NotificationPrefsFields
+              prefs={prefs}
+              events={events}
+              inboxOptions={inboxOptions}
+              forSelf
+              description="Choose which emails you want. You can only subscribe to events and inboxes you can already open."
+            />
             <div class="admin-actions">
               <button class="btn btn-primary" type="submit">
                 Save notification preferences
@@ -1413,6 +1373,22 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>) {
                   <td>{u.member_id ? escapeHtml(u.member_name ?? '—') : '—'}</td>
                   <td>
                     <a href={`/admin/users/${u.id}/edit`}>Edit</a>
+                    {u.id !== ctx.user.id ? (
+                      <>
+                        {' · '}
+                        <form method="post" action={`/admin/users/${u.id}/edit`} class="admin-inline-form">
+                          <button
+                            class="btn-link"
+                            name="_action"
+                            value="delete"
+                            type="submit"
+                            onclick="return confirm('Delete this user? This cannot be undone.')"
+                          >
+                            Delete
+                          </button>
+                        </form>
+                      </>
+                    ) : null}
                   </td>
                 </tr>
               ))
@@ -1436,6 +1412,7 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>) {
     if (!ctx || !canManageUsers(ctx.user.role)) return redirect(c, '/admin/login')
     const committees = await listCommittees(c.env.DB)
     const stakeholderMembers = await listStakeholderMembers(c.env.DB)
+    const notifyOptions = await adminNotificationOptions(c.env.DB)
     let error: string | undefined
     if (c.req.method === 'POST') {
       const body = await c.req.parseBody()
@@ -1445,17 +1422,19 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>) {
         if (linked) error = `${linked.email} is already linked to that member organization.`
       }
       if (!error) {
+        const role = (body.role as UserRole) ?? 'user'
         const userId = await createUser(
           c.env.DB,
           String(body.email ?? ''),
           String(body.password ?? ''),
-          (body.role as UserRole) ?? 'user',
+          role,
           String(body.display_name ?? ''),
           memberId,
         )
-        if (body.role === 'chair') {
+        if (role === 'chair') {
           await assignChairCommittees(c.env.DB, userId, parseCommitteeSlugs(body.committees))
         }
+        await saveManagedNotificationPrefs(c.env.DB, userId, role, body)
         return redirect(c, '/admin/users')
       }
     }
@@ -1466,6 +1445,7 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>) {
           stakeholderMembers={stakeholderMembers as Array<{ id: string; company_name: string }>}
           selectedCommittees={[]}
           error={error}
+          notifications={{ prefs: DEFAULT_NOTIFICATION_PREFS, ...notifyOptions }}
         />
       </AdminShell>,
     )
@@ -1482,28 +1462,43 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>) {
     const committees = await listCommittees(c.env.DB)
     const stakeholderMembers = await listStakeholderMembers(c.env.DB)
     const selectedCommittees = await listChairCommittees(c.env.DB, userId)
+    const notifyOptions = await adminNotificationOptions(c.env.DB)
+    let prefs = await getNotificationPrefs(c.env.DB, userId)
     let error: string | undefined
     if (c.req.method === 'POST') {
       const body = await c.req.parseBody()
-      const memberId = String(body.member_id ?? '') || null
-      if (memberId) {
-        const linked = await findUserLinkedToMember(c.env.DB, memberId, userId)
-        if (linked) error = `${linked.email} is already linked to that member organization.`
-      }
-      if (!error) {
-        await updateUser(c.env.DB, userId, {
-          email: String(body.email ?? ''),
-          role: (body.role as UserRole) ?? user.role,
-          display_name: String(body.display_name ?? ''),
-          member_id: memberId,
-          password: typeof body.password === 'string' && body.password ? body.password : undefined,
-        })
-        if (body.role === 'chair') {
-          await assignChairCommittees(c.env.DB, userId, parseCommitteeSlugs(body.committees))
+      if (body._action === 'delete') {
+        if (userId === ctx.user.id) {
+          error = 'You cannot delete your own account.'
+        } else if (user.role === 'admin' && (await countUsersByRole(c.env.DB, 'admin')) <= 1) {
+          error = 'Cannot delete the last admin account.'
         } else {
-          await assignChairCommittees(c.env.DB, userId, [])
+          await deleteUser(c.env.DB, userId)
+          return redirect(c, '/admin/users')
         }
-        return redirect(c, '/admin/users')
+      } else {
+        const memberId = String(body.member_id ?? '') || null
+        if (memberId) {
+          const linked = await findUserLinkedToMember(c.env.DB, memberId, userId)
+          if (linked) error = `${linked.email} is already linked to that member organization.`
+        }
+        if (!error) {
+          const role = (body.role as UserRole) ?? user.role
+          await updateUser(c.env.DB, userId, {
+            email: String(body.email ?? ''),
+            role,
+            display_name: String(body.display_name ?? ''),
+            member_id: memberId,
+            password: typeof body.password === 'string' && body.password ? body.password : undefined,
+          })
+          if (role === 'chair') {
+            await assignChairCommittees(c.env.DB, userId, parseCommitteeSlugs(body.committees))
+          } else {
+            await assignChairCommittees(c.env.DB, userId, [])
+          }
+          await saveManagedNotificationPrefs(c.env.DB, userId, role, body)
+          return redirect(c, '/admin/users')
+        }
       }
     }
     return c.html(
@@ -1514,6 +1509,8 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>) {
           stakeholderMembers={stakeholderMembers as Array<{ id: string; company_name: string }>}
           selectedCommittees={selectedCommittees}
           error={error}
+          canDelete={userId !== ctx.user.id}
+          notifications={{ prefs, ...notifyOptions }}
         />
       </AdminShell>,
     )

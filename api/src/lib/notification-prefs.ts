@@ -173,6 +173,16 @@ export async function listStaffEmailsForInbox(db: D1Database, inboxKey: string):
   return [...new Set(emails)]
 }
 
+export function staffInboxOptions(
+  customInboxes: Array<{ slug?: unknown; title?: unknown }>,
+): Array<{ key: string; label: string }> {
+  return inboxOptionsForUser(
+    { id: '', email: '', role: 'admin', display_name: null, member_id: null },
+    [],
+    customInboxes,
+  )
+}
+
 export function inboxOptionsForUser(
   user: User,
   assignedInboxKeys: string[],
