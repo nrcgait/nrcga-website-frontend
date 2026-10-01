@@ -30,14 +30,14 @@ export function securityHeaders(mode: SecurityHeaderMode, isHttps = true): Recor
     headers['X-Frame-Options'] = 'DENY'
     headers['Content-Security-Policy'] = [
       "default-src 'self'",
-      "script-src 'self'",
-      "style-src 'self' 'unsafe-inline'",
+      "script-src 'self' https://unpkg.com",
+      "style-src 'self' 'unsafe-inline' https://unpkg.com",
       "img-src 'self' data: https:",
       `frame-src ${embedFrameSrcCsp()}`,
       "form-action 'self'",
       "base-uri 'self'",
       "frame-ancestors 'none'",
-      "connect-src 'self'",
+      "connect-src 'self' https://*.openstreetmap.org https://unpkg.com",
     ].join('; ')
   }
   return headers

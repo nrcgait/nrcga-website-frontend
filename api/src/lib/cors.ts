@@ -16,6 +16,7 @@ export function isAllowedCorsOrigin(origin: string, env: Env): boolean {
   ])
   if (allowed.has(origin)) return true
   if (/^https:\/\/[a-z0-9-]+\.nrcga-website-staging\.pages\.dev$/i.test(origin)) return true
+  if (/^https:\/\/([a-z0-9-]+\.)?nrcga-website-frontend\.pages\.dev$/i.test(origin)) return true
   if (/^https:\/\/([a-z0-9-]+\.)?ayowerks\.com$/i.test(origin)) return true
   if (/^https:\/\/(www\.)?nrcga\.org$/i.test(origin)) return true
   return false

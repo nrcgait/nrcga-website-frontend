@@ -4,6 +4,8 @@ import { sanitizeCmsHtml, isAllowedIframeSrc, isAllowedResourceUrl } from './htm
 import { normalizeMediaKey } from './media-response'
 import { isValidEmailAddress } from './email-address'
 import { rejectOversizedFormBody } from './forms-db'
+import { isTurnstileConfigured } from './turnstile'
+import { sessionCookieHeader, readSessionCookie, SECURE_COOKIE_NAME, DEV_COOKIE_NAME } from './session'
 
 const env = {
   PUBLIC_SITE_ORIGIN: 'https://nrcga.org',
@@ -15,6 +17,9 @@ describe('cors', () => {
   })
   it('rejects arbitrary pages.dev', () => {
     expect(isAllowedCorsOrigin('https://evil.pages.dev', env as never)).toBe(false)
+  })
+  it('allows branch preview origin', () => {
+    expect(isAllowedCorsOrigin('https://security-audit-fixes.nrcga-website-frontend.pages.dev', env as never)).toBe(true)
   })
 })
 
@@ -65,5 +70,28 @@ describe('forms', () => {
   it('rejects oversized fields', () => {
     const result = rejectOversizedFormBody({ message: 'x'.repeat(20_000) })
     expect(result?.ok).toBe(false)
+  })
+})
+
+describe('turnstile', () => {
+  it('is unconfigured without secret', () => {
+    expect(isTurnstileConfigured({ TURNSTILE_SECRET: '' } as never)).toBe(false)
+  })
+  it('is configured with secret', () => {
+    expect(isTurnstileConfigured({ TURNSTILE_SECRET: 'secret' } as never)).toBe(true)
+  })
+})
+
+describe('session cookies', () => {
+  it('uses dev cookie name over http', () => {
+    const header = sessionCookieHeader('tok', false)
+    expect(header).toContain(`${DEV_COOKIE_NAME}=tok`)
+    expect(header).not.toContain('Secure')
+  })
+  it('reads secure or dev cookie', () => {
+    const cookie = `${SECURE_COOKIE_NAME}=abc; other=1`
+    expect(readSessionCookie(cookie)).toBe('abc')
+    const devCookie = `${DEV_COOKIE_NAME}=xyz`
+    expect(readSessionCookie(devCookie)).toBe('xyz')
   })
 })

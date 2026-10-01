@@ -194,8 +194,8 @@
             <div style="max-width: 900px; margin: 0 auto;">
                 <!-- View Toggle -->
                 <div class="view-toggle">
-                    <button id="view-by-person-btn" class="active" onclick="switchView('person')">View by Person</button>
-                    <button id="view-by-committee-btn" onclick="switchView('committee')">View by Committee</button>
+                    <button id="view-by-person-btn" class="active" type="button">View by Person</button>
+                    <button id="view-by-committee-btn" type="button">View by Committee</button>
                 </div>
 
                 <!-- View by Person Section -->
@@ -525,6 +525,9 @@
             
             populatePersonSelector();
             populateCommitteeSelector();
+
+            document.getElementById('view-by-person-btn')?.addEventListener('click', () => switchView('person'));
+            document.getElementById('view-by-committee-btn')?.addEventListener('click', () => switchView('committee'));
             
             const personSelect = document.getElementById('person-select');
             personSelect.addEventListener('change', (e) => {

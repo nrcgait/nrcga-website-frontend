@@ -5,11 +5,27 @@
  * Schema-driven mounts: data-nrcga-form-mount="<slug>" — fetches GET /forms/:slug and renders fields.
  */
 (function () {
+  let turnstileHelperPromise = null;
+
   function sd() {
     return window.NRCGA_safeDom || {
       escapeHtml: (v) => String(v ?? ''),
       isSafeHttpUrl: () => false,
     };
+  }
+
+  function loadTurnstileHelper() {
+    if (window.NRCGA_turnstile) return Promise.resolve();
+    if (turnstileHelperPromise) return turnstileHelperPromise;
+    turnstileHelperPromise = new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = 'js/turnstile.js';
+      script.async = true;
+      script.onload = () => resolve();
+      script.onerror = () => reject(new Error('Could not load Turnstile helper'));
+      document.head.appendChild(script);
+    });
+    return turnstileHelperPromise;
   }
 
   function serializeForm(form) {
@@ -32,6 +48,11 @@
 
   async function ensureTurnstileOnForm(form) {
     if (!form || form.querySelector('[data-turnstile-widget]')) return;
+    try {
+      await loadTurnstileHelper();
+    } catch {
+      return;
+    }
     if (!window.NRCGA_turnstile) return;
     const siteKey = await window.NRCGA_turnstile.getSiteKey();
     if (!siteKey) return;

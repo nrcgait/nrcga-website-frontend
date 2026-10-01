@@ -100,6 +100,7 @@ import {
   sessionCookieHeader,
   verifySessionToken,
 } from '../lib/session'
+import { isHttpsRequest } from '../lib/security-headers'
 import { combineDateTime, formatEventDateTime, splitDateTime, toDateInputValue } from '../lib/event-datetime'
 import { parsePageParam, parseSearchParam } from '../lib/pagination'
 import { parseSortParam, sortParams } from '../lib/sort'
@@ -491,18 +492,20 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>) {
     const sv = await getUserSessionVersion(c.env.DB, user.id)
     if (!sv) return c.html(<LoginPage error="Invalid email or password." />)
     const token = await createSessionToken(user.id, user.role, sv, c.env)
+    const secureCookie = isHttpsRequest(c.req.url)
     return new Response(null, {
       status: 303,
-      headers: { Location: '/admin', 'Set-Cookie': sessionCookieHeader(token) },
+      headers: { Location: '/admin', 'Set-Cookie': sessionCookieHeader(token, secureCookie) },
     })
   })
 
   app.get('/admin/logout', async (c) => redirect(c, '/admin/login'))
 
   app.post('/admin/logout', async (c) => {
+    const secureCookie = isHttpsRequest(c.req.url)
     return new Response(null, {
       status: 303,
-      headers: { Location: '/admin/login', 'Set-Cookie': clearSessionCookieHeader() },
+      headers: { Location: '/admin/login', 'Set-Cookie': clearSessionCookieHeader(secureCookie) },
     })
   })
 

@@ -2,7 +2,10 @@ import { sign, verify } from 'hono/jwt'
 import type { UserRole } from '../config/roles'
 import type { Env } from '../env'
 
-export const COOKIE_NAME = '__Host-nrcga_admin_session'
+export const SECURE_COOKIE_NAME = '__Host-nrcga_admin_session'
+export const DEV_COOKIE_NAME = 'nrcga_admin_session'
+/** @deprecated Use SECURE_COOKIE_NAME or DEV_COOKIE_NAME */
+export const COOKIE_NAME = SECURE_COOKIE_NAME
 const MAX_AGE_SEC = 60 * 60 * 24 * 7
 
 export type SessionPayload = {
@@ -41,16 +44,23 @@ export async function verifySessionToken(
   }
 }
 
-export function sessionCookieHeader(token: string): string {
-  return `${COOKIE_NAME}=${token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${MAX_AGE_SEC}`
+export function sessionCookieHeader(token: string, secure = true): string {
+  const name = secure ? SECURE_COOKIE_NAME : DEV_COOKIE_NAME
+  const securePart = secure ? '; Secure' : ''
+  return `${name}=${token}; Path=/; HttpOnly${securePart}; SameSite=Lax; Max-Age=${MAX_AGE_SEC}`
 }
 
-export function clearSessionCookieHeader(): string {
-  return `${COOKIE_NAME}=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`
+export function clearSessionCookieHeader(secure = true): string {
+  const name = secure ? SECURE_COOKIE_NAME : DEV_COOKIE_NAME
+  const securePart = secure ? '; Secure' : ''
+  return `${name}=; Path=/; HttpOnly${securePart}; SameSite=Lax; Max-Age=0`
 }
 
 export function readSessionCookie(cookieHeader: string | undefined): string | undefined {
   if (!cookieHeader) return undefined
-  const match = cookieHeader.match(new RegExp(`(?:^|;\\s*)${COOKIE_NAME}=([^;]+)`))
-  return match?.[1]
+  for (const name of [SECURE_COOKIE_NAME, DEV_COOKIE_NAME]) {
+    const match = cookieHeader.match(new RegExp(`(?:^|;\\s*)${name}=([^;]+)`))
+    if (match?.[1]) return match[1]
+  }
+  return undefined
 }
