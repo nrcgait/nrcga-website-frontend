@@ -60,7 +60,22 @@ function navEsc(value) {
 }
 
 function navSafeHref(value) {
-    return window.NRCGA_safeDom ? window.NRCGA_safeDom.safeHref(value) : '#';
+    if (window.NRCGA_safeDom) {
+        return window.NRCGA_safeDom.safeHref(value);
+    }
+    const raw = String(value || '').trim();
+    if (!raw) return '#';
+    if (raw.startsWith('/') && !raw.startsWith('//')) return raw;
+    try {
+        const url = new URL(raw);
+        if (url.protocol === 'http:' || url.protocol === 'https:') return raw;
+    } catch {
+        if (!raw.startsWith('//') && !/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(raw) && !raw.includes('..') && !/[\r\n]/.test(raw)) {
+            return raw;
+        }
+    }
+    if ((/^mailto:/i.test(raw) || /^tel:/i.test(raw)) && !/[\r\n]/.test(raw)) return raw;
+    return '#';
 }
 
 function renderNavigation() {
