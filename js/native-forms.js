@@ -5,6 +5,29 @@
  * Schema-driven mounts: data-nrcga-form-mount="<slug>" — fetches GET /forms/:slug and renders fields.
  */
 (function () {
+  let turnstileHelperPromise = null;
+
+  function sd() {
+    return window.NRCGA_safeDom || {
+      escapeHtml: (v) => String(v ?? ''),
+      isSafeHttpUrl: () => false,
+    };
+  }
+
+  function loadTurnstileHelper() {
+    if (window.NRCGA_turnstile) return Promise.resolve();
+    if (turnstileHelperPromise) return turnstileHelperPromise;
+    turnstileHelperPromise = new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = 'js/turnstile.js';
+      script.async = true;
+      script.onload = () => resolve();
+      script.onerror = () => reject(new Error('Could not load Turnstile helper'));
+      document.head.appendChild(script);
+    });
+    return turnstileHelperPromise;
+  }
+
   function serializeForm(form) {
     const data = {};
     const fd = new FormData(form);
@@ -16,15 +39,33 @@
       if (!Object.prototype.hasOwnProperty.call(data, el.name)) data[el.name] = false;
       else data[el.name] = true;
     });
+    const turnstileEl = form.querySelector('[data-turnstile-widget]');
+    if (turnstileEl && window.NRCGA_turnstile) {
+      data.turnstile_token = window.NRCGA_turnstile.readToken(turnstileEl);
+    }
     return data;
   }
 
-  function escapeHtml(value) {
-    return String(value ?? '')
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;');
+  async function ensureTurnstileOnForm(form) {
+    if (!form || form.querySelector('[data-turnstile-widget]')) return;
+    try {
+      await loadTurnstileHelper();
+    } catch {
+      return;
+    }
+    if (!window.NRCGA_turnstile) return;
+    const siteKey = await window.NRCGA_turnstile.getSiteKey();
+    if (!siteKey) return;
+    const wrap = document.createElement('div');
+    wrap.className = 'turnstile-widget-wrap';
+    wrap.setAttribute('data-turnstile-widget', '1');
+    const submit = form.querySelector('[type="submit"]');
+    if (submit && submit.parentNode) {
+      submit.parentNode.insertBefore(wrap, submit);
+    } else {
+      form.appendChild(wrap);
+    }
+    await window.NRCGA_turnstile.mountWidget(wrap);
   }
 
   async function onSubmit(event) {
@@ -45,7 +86,9 @@
     if (submitBtn) submitBtn.disabled = true;
 
     try {
-      const result = await window.NRCGA_API.post(`/forms/${encodeURIComponent(type)}`, serializeForm(form));
+      await ensureTurnstileOnForm(form);
+      const payload = serializeForm(form);
+      const result = await window.NRCGA_API.post(`/forms/${encodeURIComponent(type)}`, payload);
       if (!result.success) throw new Error(result.error || 'Submission failed');
       form.reset();
       if (statusEl) {
@@ -63,6 +106,7 @@
   }
 
   function renderField(field) {
+    const { escapeHtml } = sd();
     const required = field.required ? 'required' : '';
     const placeholder = field.placeholder
       ? `placeholder="${escapeHtml(field.placeholder)}"`
@@ -88,6 +132,7 @@
   }
 
   async function mountSchemaForm(el) {
+    const { escapeHtml } = sd();
     const slug = el.getAttribute('data-nrcga-form-mount');
     if (!slug || !window.NRCGA_API) {
       el.textContent = 'Form unavailable.';
@@ -110,10 +155,13 @@
             <label>Website<input type="text" name="website_url" tabindex="-1" autocomplete="off"></label>
           </div>
           ${fieldsHtml}
+          <div data-turnstile-widget></div>
           <button type="submit">${submitLabel}</button>
           <p class="form-status" data-form-status></p>
         </form>
       `;
+      const form = el.querySelector('form[data-nrcga-form]');
+      if (form) await ensureTurnstileOnForm(form);
     } catch (err) {
       el.innerHTML = `<p class="form-status form-status-error">${escapeHtml(err.message || 'Could not load form.')}</p>`;
     }
@@ -124,6 +172,7 @@
     if (form.dataset.nrcgaBound === '1') return;
     form.dataset.nrcgaBound = '1';
     form.addEventListener('submit', onSubmit);
+    ensureTurnstileOnForm(form);
   }
 
   async function mountDynamicForms(root) {

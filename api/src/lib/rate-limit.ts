@@ -14,15 +14,15 @@ export function rateLimitHeaders(): Record<string, string> {
   return { 'Retry-After': String(RATE_LIMIT_RETRY_AFTER_SECONDS) }
 }
 
-/** Returns false when the key has exceeded its quota. Missing/failing limiters fail open. */
+/** Returns false when the key has exceeded its quota. Missing/failing limiters fail closed. */
 export async function consumeRateLimit(limiter: RateLimiter | undefined, key: string): Promise<boolean> {
-  if (!limiter) return true
+  if (!limiter) return false
   try {
     const { success } = await limiter.limit({ key })
     return success
   } catch (err) {
     console.error('rate limit check failed', err)
-    return true
+    return false
   }
 }
 

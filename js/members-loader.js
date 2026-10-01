@@ -1,6 +1,14 @@
 // Members Data Loader
 // Loads and displays member data from local data/members.csv file
 
+function memberEsc(value) {
+    return window.NRCGA_safeDom ? window.NRCGA_safeDom.escapeHtml(value) : String(value ?? '');
+}
+
+function memberSafeHref(value) {
+    return window.NRCGA_safeDom ? window.NRCGA_safeDom.safeHref(value) : '#';
+}
+
 // Load and display members
 async function loadMembers() {
     try {
@@ -189,26 +197,23 @@ function displayStakeholderMembers(members) {
     }
     
     grid.innerHTML = members.map(member => {
-        const hasWebsite = member.Website && member.Website.trim();
-        const websiteUrl = hasWebsite ? member.Website.trim() : '#';
+        const websiteUrl = memberSafeHref(member.Website);
+        const hasWebsite = websiteUrl !== '#';
         
-        // Show contact person if available
         const contactInfo = member['Contact Person'] ? 
-            `<p class="member-contact">${member['Contact Person']}</p>` : '';
+            `<p class="member-contact">${memberEsc(member['Contact Person'])}</p>` : '';
         
-        // Build categories section
         const categoryHtml = member['Stakeholder Group'] ? 
-            `<div style="margin-top: 0.5rem; margin-bottom: 0.5rem;"><span class="member-category">${member['Stakeholder Group']}</span></div>` : '';
+            `<div style="margin-top: 0.5rem; margin-bottom: 0.5rem;"><span class="member-category">${memberEsc(member['Stakeholder Group'])}</span></div>` : '';
         
-        // Make the entire member item clickable if website exists
         const itemTag = hasWebsite ? 'a' : 'div';
         const itemAttrs = hasWebsite ? 
-            `href="${websiteUrl}" target="_blank" rel="noopener noreferrer"` : '';
+            `href="${memberEsc(websiteUrl)}" target="_blank" rel="noopener noreferrer"` : '';
         const itemClass = hasWebsite ? 'member-item member-item-link' : 'member-item';
         
         return `
             <${itemTag} class="${itemClass}" ${itemAttrs} style="${hasWebsite ? 'text-decoration: none; color: inherit; display: block;' : ''}">
-                <h4>${member['Company Name'] || ''}</h4>
+                <h4>${memberEsc(member['Company Name'] || '')}</h4>
                 ${contactInfo}
                 ${categoryHtml}
             </${itemTag}>
@@ -227,18 +232,17 @@ function displayAssociateMembers(members) {
     }
     
     grid.innerHTML = members.map(member => {
-        const hasWebsite = member.Website && member.Website.trim();
-        const websiteUrl = hasWebsite ? member.Website.trim() : '#';
+        const websiteUrl = memberSafeHref(member.Website);
+        const hasWebsite = websiteUrl !== '#';
         
-        // Make the entire member item clickable if website exists
         const itemTag = hasWebsite ? 'a' : 'div';
         const itemAttrs = hasWebsite ? 
-            `href="${websiteUrl}" target="_blank" rel="noopener noreferrer"` : '';
+            `href="${memberEsc(websiteUrl)}" target="_blank" rel="noopener noreferrer"` : '';
         const itemClass = hasWebsite ? 'member-item member-item-link' : 'member-item';
         
         return `
             <${itemTag} class="${itemClass}" ${itemAttrs} style="${hasWebsite ? 'text-decoration: none; color: inherit; display: block;' : ''}">
-                <h4>${member['Company Name'] || ''}</h4>
+                <h4>${memberEsc(member['Company Name'] || '')}</h4>
             </${itemTag}>
         `;
     }).join('');

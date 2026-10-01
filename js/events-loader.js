@@ -499,6 +499,7 @@ function renderRegistrationForm(event) {
         <label for="event-reg-notes">Notes</label>
         <textarea id="event-reg-notes" name="notes" rows="3" placeholder="Optional questions or accessibility needs"></textarea>
       </div>
+      <div data-turnstile-widget class="event-reg-modal__turnstile"></div>
       <p id="event-registration-error" class="event-reg-modal__error"></p>
       <div class="event-reg-modal__actions">
         <button type="submit" class="btn btn-primary">Register</button>
@@ -606,6 +607,11 @@ async function showRegistrationModal(seriesId, occurrenceDate, eventTitle, sourc
     return;
   }
 
+  const turnstileEl = registrationForm.querySelector('[data-turnstile-widget]');
+  if (turnstileEl && window.NRCGA_turnstile) {
+    await window.NRCGA_turnstile.mountWidget(turnstileEl);
+  }
+
   registrationForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const form = e.target;
@@ -619,6 +625,7 @@ async function showRegistrationModal(seriesId, occurrenceDate, eventTitle, sourc
       organization: form.organization.value,
       spot_count: Number(form.spot_count.value),
       notes: form.notes.value,
+      turnstile_token: window.NRCGA_turnstile ? window.NRCGA_turnstile.readToken(turnstileEl) : '',
     };
     try {
       const data = await window.NRCGA_API.post(`/events/${encodeURIComponent(seriesId)}/register`, payload);

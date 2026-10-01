@@ -34,7 +34,9 @@
   ],
   "vars": {
     "ADMIN_EMAIL": "info@nrcga.org",
-    "PUBLIC_SITE_ORIGIN": "https://nrcga.org"
+    "PUBLIC_SITE_ORIGIN": "https://nrcga.org",
+    "API_ORIGIN": "https://api.nrcga.org",
+    "TURNSTILE_SITE_KEY": "1x00000000000000000000AA"
   },
   "ratelimits": [
     {

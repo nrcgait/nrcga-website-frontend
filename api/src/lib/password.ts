@@ -20,11 +20,20 @@ export function randomSaltHex(byteLength = 16): string {
   return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('')
 }
 
+function constantTimeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false
+  let diff = 0
+  for (let i = 0; i < a.length; i++) {
+    diff |= a.charCodeAt(i) ^ b.charCodeAt(i)
+  }
+  return diff === 0
+}
+
 export async function verifyPassword(
   password: string,
   saltHex: string,
   expectedHash: string,
 ): Promise<boolean> {
   const hash = await hashPassword(password, saltHex)
-  return hash === expectedHash
+  return constantTimeEqual(hash, expectedHash)
 }

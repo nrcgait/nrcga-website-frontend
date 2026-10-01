@@ -1,6 +1,14 @@
 // Programs Data Loader
 // Loads and displays programs data from data/programs.csv
 
+function programEsc(value) {
+    return window.NRCGA_safeDom ? window.NRCGA_safeDom.escapeHtml(value) : String(value ?? '');
+}
+
+function programSafeHref(value) {
+    return window.NRCGA_safeDom ? window.NRCGA_safeDom.safeHref(value) : '#';
+}
+
 // Load and display programs
 async function loadPrograms() {
     try {
@@ -55,14 +63,15 @@ function displayPrograms(programs) {
     let html = '';
     
     programs.forEach(program => {
-        if (!program.link) return;
-        const isExternal = program.link.startsWith('http://') || program.link.startsWith('https://');
+        const href = programSafeHref(program.link);
+        if (!program.link || href === '#') return;
+        const isExternal = href.startsWith('http://') || href.startsWith('https://');
         const linkTarget = isExternal ? ' target="_blank" rel="noopener noreferrer"' : '';
         
-        html += `<a href="${program.link}" class="program-card"${linkTarget}>`;
-        html += `<div style="display: block;"><span class="program-icon">${program.icon || '📄'}</span> <strong class="program-title">${program.title || 'Program'}</strong></div>`;
+        html += `<a href="${programEsc(href)}" class="program-card"${linkTarget}>`;
+        html += `<div style="display: block;"><span class="program-icon">${programEsc(program.icon || '📄')}</span> <strong class="program-title">${programEsc(program.title || 'Program')}</strong></div>`;
         if (program.description) {
-            html += `<div style="display: block; margin-top: 0.75rem; color: var(--text-secondary);">${program.description}</div>`;
+            html += `<div style="display: block; margin-top: 0.75rem; color: var(--text-secondary);">${programEsc(program.description)}</div>`;
         }
         html += `</a>`;
     });

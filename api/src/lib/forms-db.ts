@@ -410,10 +410,29 @@ export async function deleteNewsletterSubscriber(db: D1Database, id: string) {
   await db.prepare('DELETE FROM newsletter_subscribers WHERE id = ?').bind(id).run()
 }
 
+export const PUBLIC_FORM_FIELD_MAX_LEN = 10_000
+export const PUBLIC_FORM_MAX_FIELDS = 50
+
+export function rejectOversizedFormBody(body: Record<string, unknown>): { ok: false; error: string } | null {
+  const keys = Object.keys(body)
+  if (keys.length > PUBLIC_FORM_MAX_FIELDS) {
+    return { ok: false, error: 'Too many fields.' }
+  }
+  for (const key of keys) {
+    const value = body[key]
+    if (typeof value === 'string' && value.length > PUBLIC_FORM_FIELD_MAX_LEN) {
+      return { ok: false, error: `${key} is too long.` }
+    }
+  }
+  return null
+}
+
 export function validateSchemaPayload(
   fields: FormFieldDef[],
   body: Record<string, unknown>,
 ): { ok: true; payload: Record<string, unknown> } | { ok: false; error: string } {
+  const sizeError = rejectOversizedFormBody(body)
+  if (sizeError) return sizeError
   if (body.website_url || body.honeypot) {
     return { ok: false, error: 'Rejected.' }
   }
@@ -456,6 +475,8 @@ export function validateFormPayload(
   formType: FormType,
   body: Record<string, unknown>,
 ): { ok: true; payload: Record<string, unknown> } | { ok: false; error: string } {
+  const sizeError = rejectOversizedFormBody(body)
+  if (sizeError) return sizeError
   if (body.website_url || body.honeypot) {
     return { ok: false, error: 'Rejected.' }
   }

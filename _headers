@@ -1,0 +1,6 @@
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://api.nrcga.org https://nrcga-api-staging.nrcga-it.workers.dev https://*.nrcga-it.workers.dev http://localhost:8787; frame-src 'self' https://www.youtube.com https://youtube.com https://www.youtube-nocookie.com https://forms.office.com https://forms.microsoft.com https://docs.google.com https://www.typeform.com https://typeform.com https://form.jotform.com https://www.jotform.com https://challenges.cloudflare.com https://api.nrcga.org https://nrcga-api-staging.nrcga-it.workers.dev; base-uri 'self'; form-action 'self'

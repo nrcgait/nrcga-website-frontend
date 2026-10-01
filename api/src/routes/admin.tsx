@@ -2,6 +2,7 @@ import type { Hono } from 'hono'
 import type { Env } from '../env'
 import type { UserRole } from '../config/roles'
 import {
+  USER_ROLES,
   canAccessContentSection,
   canAccessEventsSection,
   canAccessAssets,
@@ -19,6 +20,7 @@ import {
   deleteUser,
   ensureBootstrapAdmin,
   findUserLinkedToMember,
+  getUserSessionVersion,
   listChairCommittees,
   listUsersPaginated,
   updateUser,
@@ -98,6 +100,7 @@ import {
   sessionCookieHeader,
   verifySessionToken,
 } from '../lib/session'
+import { isHttpsRequest } from '../lib/security-headers'
 import { combineDateTime, formatEventDateTime, splitDateTime, toDateInputValue } from '../lib/event-datetime'
 import { parsePageParam, parseSearchParam } from '../lib/pagination'
 import { parseSortParam, sortParams } from '../lib/sort'
@@ -122,6 +125,8 @@ async function requireAdmin(c: { env: Env; req: { header: (name: string) => stri
   const token = readSessionCookie(c.req.header('Cookie'))
   const session = await verifySessionToken(token, c.env)
   if (!session) return null
+  const sessionVersion = await getUserSessionVersion(c.env.DB, session.sub)
+  if (!sessionVersion || sessionVersion !== session.sv) return null
   return loadAdminContext(c.env, session.sub)
 }
 
@@ -433,7 +438,7 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>) {
       return c.html(<ForgotPasswordPage error={LOGIN_RATE_LIMIT_MESSAGE} />, 429, rateLimitHeaders())
     }
     const success = await requestPasswordReset(c.env, email, (token) => {
-      const url = new URL('/admin/reset-password', c.req.url)
+      const url = new URL('/admin/reset-password', c.env.API_ORIGIN)
       url.searchParams.set('token', token)
       return url.toString()
     })
@@ -484,17 +489,23 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>) {
     }
     const user = await verifyUserLogin(c.env, email, password)
     if (!user) return c.html(<LoginPage error="Invalid email or password." />)
-    const token = await createSessionToken(user.id, user.role, c.env)
+    const sv = await getUserSessionVersion(c.env.DB, user.id)
+    if (!sv) return c.html(<LoginPage error="Invalid email or password." />)
+    const token = await createSessionToken(user.id, user.role, sv, c.env)
+    const secureCookie = isHttpsRequest(c.req.url)
     return new Response(null, {
       status: 303,
-      headers: { Location: '/admin', 'Set-Cookie': sessionCookieHeader(token) },
+      headers: { Location: '/admin', 'Set-Cookie': sessionCookieHeader(token, secureCookie) },
     })
   })
 
-  app.get('/admin/logout', async (c) => {
+  app.get('/admin/logout', async (c) => redirect(c, '/admin/login'))
+
+  app.post('/admin/logout', async (c) => {
+    const secureCookie = isHttpsRequest(c.req.url)
     return new Response(null, {
       status: 303,
-      headers: { Location: '/admin/login', 'Set-Cookie': clearSessionCookieHeader() },
+      headers: { Location: '/admin/login', 'Set-Cookie': clearSessionCookieHeader(secureCookie) },
     })
   })
 
@@ -1422,20 +1433,26 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>) {
         if (linked) error = `${linked.email} is already linked to that member organization.`
       }
       if (!error) {
-        const role = (body.role as UserRole) ?? 'user'
-        const userId = await createUser(
-          c.env.DB,
-          String(body.email ?? ''),
-          String(body.password ?? ''),
-          role,
-          String(body.display_name ?? ''),
-          memberId,
-        )
-        if (role === 'chair') {
-          await assignChairCommittees(c.env.DB, userId, parseCommitteeSlugs(body.committees))
+        const roleRaw = String(body.role ?? 'user')
+        const role: UserRole = (USER_ROLES as readonly string[]).includes(roleRaw) ? (roleRaw as UserRole) : 'user'
+        const password = String(body.password ?? '')
+        if (password.length < 8) {
+          error = 'Password must be at least 8 characters.'
+        } else {
+          const userId = await createUser(
+            c.env.DB,
+            String(body.email ?? ''),
+            password,
+            role,
+            String(body.display_name ?? ''),
+            memberId,
+          )
+          if (role === 'chair') {
+            await assignChairCommittees(c.env.DB, userId, parseCommitteeSlugs(body.committees))
+          }
+          await saveManagedNotificationPrefs(c.env.DB, userId, role, body)
+          return redirect(c, '/admin/users')
         }
-        await saveManagedNotificationPrefs(c.env.DB, userId, role, body)
-        return redirect(c, '/admin/users')
       }
     }
     return c.html(
@@ -1483,21 +1500,29 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>) {
           if (linked) error = `${linked.email} is already linked to that member organization.`
         }
         if (!error) {
-          const role = (body.role as UserRole) ?? user.role
-          await updateUser(c.env.DB, userId, {
-            email: String(body.email ?? ''),
-            role,
-            display_name: String(body.display_name ?? ''),
-            member_id: memberId,
-            password: typeof body.password === 'string' && body.password ? body.password : undefined,
-          })
-          if (role === 'chair') {
-            await assignChairCommittees(c.env.DB, userId, parseCommitteeSlugs(body.committees))
+          const roleRaw = String(body.role ?? user.role)
+          const role: UserRole = (USER_ROLES as readonly string[]).includes(roleRaw)
+            ? (roleRaw as UserRole)
+            : user.role
+          const newPassword = typeof body.password === 'string' && body.password ? body.password : undefined
+          if (newPassword && newPassword.length < 8) {
+            error = 'Password must be at least 8 characters.'
           } else {
-            await assignChairCommittees(c.env.DB, userId, [])
+            await updateUser(c.env.DB, userId, {
+              email: String(body.email ?? ''),
+              role,
+              display_name: String(body.display_name ?? ''),
+              member_id: memberId,
+              password: newPassword,
+            })
+            if (role === 'chair') {
+              await assignChairCommittees(c.env.DB, userId, parseCommitteeSlugs(body.committees))
+            } else {
+              await assignChairCommittees(c.env.DB, userId, [])
+            }
+            await saveManagedNotificationPrefs(c.env.DB, userId, role, body)
+            return redirect(c, '/admin/users')
           }
-          await saveManagedNotificationPrefs(c.env.DB, userId, role, body)
-          return redirect(c, '/admin/users')
         }
       }
     }

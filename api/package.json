@@ -7,16 +7,20 @@
     "deploy": "wrangler deploy",
     "types": "wrangler types",
     "check": "tsc --noEmit",
+    "test": "vitest run",
     "seed": "node scripts/seed-from-repo.mjs",
     "seed:pages": "node scripts/generate-page-seeds.mjs"
   },
   "dependencies": {
-    "hono": "^4.7.7"
+    "hono": "^4.7.7",
+    "sanitize-html": "^2.18.0"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20260722.1",
+    "@types/sanitize-html": "^2.16.2",
     "cheerio": "^1.0.0",
     "typescript": "^5.8.3",
+    "vitest": "^5.0.3",
     "wrangler": "^4.24.0"
   }
 }
