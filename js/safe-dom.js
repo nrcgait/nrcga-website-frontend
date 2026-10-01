@@ -20,11 +20,23 @@
     }
   }
 
+  function isSafeRelativePath(value) {
+    if (!value || value.startsWith('//')) return false
+    if (/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(value)) return false
+    if (value.includes('..')) return false
+    if (/[\r\n]/.test(value)) return false
+    return true
+  }
+
   function safeHref(value) {
     const raw = String(value || '').trim()
     if (!raw) return '#'
     if (raw.startsWith('/') && !raw.startsWith('//')) return raw
-    return isSafeHttpUrl(raw) ? raw : '#'
+    if (isSafeHttpUrl(raw)) return raw
+    if (/^mailto:/i.test(raw) || /^tel:/i.test(raw)) {
+      return /[\r\n]/.test(raw) ? '#' : raw
+    }
+    return isSafeRelativePath(raw) ? raw : '#'
   }
 
   function escapeAttr(value) {
