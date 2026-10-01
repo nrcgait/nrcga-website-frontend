@@ -55,6 +55,14 @@ function getNavConfig() {
     return null;
 }
 
+function navEsc(value) {
+    return window.NRCGA_safeDom ? window.NRCGA_safeDom.escapeHtml(value) : String(value ?? '');
+}
+
+function navSafeHref(value) {
+    return window.NRCGA_safeDom ? window.NRCGA_safeDom.safeHref(value) : '#';
+}
+
 function renderNavigation() {
     const currentPage = window.location.pathname.split('/').pop() || 'index.html';
     const config = getNavConfig();
@@ -68,9 +76,9 @@ function renderNavigation() {
     const logo = config.logo;
     const logoHTML = `
         <div class="logo">
-            <a href="${logo.link}" class="logo-link">
-                <img src="${logo.image}" alt="${logo.alt}" class="logo-img">
-                <span class="logo-text">${logo.text}</span>
+            <a href="${navEsc(navSafeHref(logo.link))}" class="logo-link">
+                <img src="${navEsc(logo.image)}" alt="${navEsc(logo.alt)}" class="logo-img">
+                <span class="logo-text">${navEsc(logo.text)}</span>
             </a>
         </div>
     `;
@@ -83,12 +91,12 @@ function renderNavigation() {
             let dropdownItemsHTML = '';
             item.items.forEach(subItem => {
                 const external = subItem.external ? ' target="_blank" rel="noopener noreferrer"' : '';
-                dropdownItemsHTML += `<li><a href="${subItem.href}"${external}>${subItem.text}</a></li>`;
+                dropdownItemsHTML += `<li><a href="${navEsc(navSafeHref(subItem.href))}"${external}>${navEsc(subItem.text)}</a></li>`;
             });
             
             menuItemsHTML += `
                 <li class="nav-dropdown">
-                    <a href="${item.href}" class="dropdown-toggle">${item.text} <span class="dropdown-arrow">▼</span></a>
+                    <a href="${navEsc(navSafeHref(item.href))}" class="dropdown-toggle">${navEsc(item.text)} <span class="dropdown-arrow">▼</span></a>
                     <ul class="dropdown-menu">
                         ${dropdownItemsHTML}
                     </ul>
@@ -97,7 +105,7 @@ function renderNavigation() {
         } else if (item.type === 'link') {
             // Build simple link
             const activeClass = currentPage === item.href.split('/').pop() ? 'class="active"' : '';
-            menuItemsHTML += `<li><a href="${item.href}" ${activeClass}>${item.text}</a></li>`;
+            menuItemsHTML += `<li><a href="${navEsc(navSafeHref(item.href))}" ${activeClass}>${navEsc(item.text)}</a></li>`;
         }
     });
     

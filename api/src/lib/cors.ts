@@ -1,7 +1,8 @@
 import type { Context } from 'hono'
 import type { Env } from '../env'
 
-export function corsHeaders(origin: string, env: Env): HeadersInit {
+export function isAllowedCorsOrigin(origin: string, env: Env): boolean {
+  if (!origin) return false
   const allowed = new Set([
     env.PUBLIC_SITE_ORIGIN,
     'https://nrcga.org',
@@ -13,13 +14,15 @@ export function corsHeaders(origin: string, env: Env): HeadersInit {
     'https://ayowerks.com',
     'https://www.ayowerks.com',
   ])
-  const isPagesPreview = /^https:\/\/[a-z0-9-]+\.nrcga-website-staging\.pages\.dev$/i.test(origin)
-  const isAyowerks = /^https:\/\/([a-z0-9-]+\.)?ayowerks\.com$/i.test(origin)
-  const isNrcga = /^https:\/\/(www\.)?nrcga\.org$/i.test(origin)
-  const requestOrigin =
-    origin && (allowed.has(origin) || isPagesPreview || isAyowerks || isNrcga || origin.endsWith('.pages.dev'))
-      ? origin
-      : env.PUBLIC_SITE_ORIGIN
+  if (allowed.has(origin)) return true
+  if (/^https:\/\/[a-z0-9-]+\.nrcga-website-staging\.pages\.dev$/i.test(origin)) return true
+  if (/^https:\/\/([a-z0-9-]+\.)?ayowerks\.com$/i.test(origin)) return true
+  if (/^https:\/\/(www\.)?nrcga\.org$/i.test(origin)) return true
+  return false
+}
+
+export function corsHeaders(origin: string, env: Env): HeadersInit {
+  const requestOrigin = isAllowedCorsOrigin(origin, env) ? origin : env.PUBLIC_SITE_ORIGIN
   return {
     'Access-Control-Allow-Origin': requestOrigin,
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',

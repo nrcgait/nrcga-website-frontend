@@ -2,6 +2,7 @@ import type { Hono } from 'hono'
 import type { Env } from '../env'
 import { canAccessInboxesSection, canManageAllContent, canManageInboxes, ROLE_LABELS, type UserRole } from '../config/roles'
 import { escapeHtml, type AdminContext } from '../lib/admin-context'
+import { sanitizeCmsHtml } from '../lib/html-sanitize'
 import {
   accessibleInboxKeys,
   listInboxAssigneeIds,
@@ -545,7 +546,7 @@ export function registerAdminParityRoutes(app: Hono<{ Bindings: Env }>, requireA
     if (!ctx || !canManageAllContent(ctx.user.role)) return redirect(c, '/admin/login')
     if (c.req.method === 'POST') {
       const body = await c.req.parseBody()
-      await upsertPost(c.env.DB, parsePost(body as Record<string, string | File>))
+      await upsertPost(c.env.DB, parsePost(body as Record<string, string | File>, c.env.API_ORIGIN))
       return redirect(c, '/admin/content/posts')
     }
     return c.html(
@@ -569,7 +570,7 @@ export function registerAdminParityRoutes(app: Hono<{ Bindings: Env }>, requireA
         await deletePost(c.env.DB, row.id as string)
         return redirect(c, '/admin/content/posts')
       }
-      await upsertPost(c.env.DB, parsePost(body as Record<string, string | File>), row.id as string)
+      await upsertPost(c.env.DB, parsePost(body as Record<string, string | File>, c.env.API_ORIGIN), row.id as string)
       return redirect(c, '/admin/content/posts')
     }
     return c.html(
@@ -1075,14 +1076,14 @@ function parseMemberType(body: Record<string, string | File>) {
   }
 }
 
-function parsePost(body: Record<string, string | File>) {
+function parsePost(body: Record<string, string | File>, apiOrigin: string) {
   return {
     title: String(body.title ?? ''),
     slug: body.slug ? String(body.slug) : '',
     excerpt: body.excerpt ? String(body.excerpt) : null,
     cover_url: body.cover_url ? String(body.cover_url) : null,
     cover_r2_key: body.cover_r2_key ? String(body.cover_r2_key) : null,
-    body_html: body.body_html ? String(body.body_html) : null,
+    body_html: body.body_html ? sanitizeCmsHtml(String(body.body_html), apiOrigin) : null,
     pdf_url: body.pdf_url ? String(body.pdf_url) : null,
     published: body.published === '1' ? 1 : 0,
     published_at: body.published_at ? String(body.published_at) : null,

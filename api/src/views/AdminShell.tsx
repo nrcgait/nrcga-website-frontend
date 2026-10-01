@@ -113,7 +113,9 @@ export function AdminShell({
             </ul>
             <div class="admin-sidebar-footer">
               <a href={publicSiteOrigin}>View public site</a>
-              <a href="/admin/logout">Sign out</a>
+              <form method="post" action="/admin/logout" class="admin-logout-form">
+                <button type="submit" class="admin-logout-btn">Sign out</button>
+              </form>
             </div>
           </aside>
           <main class="admin-main">

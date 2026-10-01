@@ -12,6 +12,7 @@ type UserRow = {
   role: UserRole
   display_name: string | null
   member_id: string | null
+  session_version: number
 }
 
 function mapUser(row: UserRow): User {
@@ -24,7 +25,7 @@ function mapUser(row: UserRow): User {
   }
 }
 
-const USER_SELECT = `SELECT id, email, password_hash, password_salt, role, display_name, member_id FROM users`
+const USER_SELECT = `SELECT id, email, password_hash, password_salt, role, display_name, member_id, session_version FROM users`
 
 export async function countUsers(db: D1Database): Promise<number> {
   const row = await db.prepare('SELECT COUNT(*) as c FROM users').first<{ c: number }>()
@@ -41,6 +42,18 @@ export async function findUserByEmail(db: D1Database, email: string): Promise<Us
 export async function getUserById(db: D1Database, id: string): Promise<User | null> {
   const row = await db.prepare(`${USER_SELECT} WHERE id = ?`).bind(id).first<UserRow>()
   return row ? mapUser(row) : null
+}
+
+export async function getUserSessionVersion(db: D1Database, id: string): Promise<number | null> {
+  const row = await db.prepare('SELECT session_version FROM users WHERE id = ?').bind(id).first<{ session_version: number }>()
+  return row?.session_version ?? null
+}
+
+export async function bumpSessionVersion(db: D1Database, id: string): Promise<void> {
+  await db
+    .prepare(`UPDATE users SET session_version = session_version + 1, updated_at = datetime('now') WHERE id = ?`)
+    .bind(id)
+    .run()
 }
 
 export async function createUser(
@@ -80,6 +93,7 @@ export async function updateUser(
 
   let password_hash = existing.password_hash
   let password_salt = existing.password_salt
+  const passwordChanged = Boolean(data.password)
   if (data.password) {
     password_salt = randomSaltHex()
     password_hash = await hashPassword(data.password, password_salt)
@@ -94,6 +108,7 @@ export async function updateUser(
          role = ?,
          display_name = ?,
          member_id = ?,
+         session_version = CASE WHEN ? THEN session_version + 1 ELSE session_version END,
          updated_at = datetime('now')
        WHERE id = ?`,
     )
@@ -104,6 +119,7 @@ export async function updateUser(
       data.role ?? existing.role,
       data.display_name !== undefined ? data.display_name : existing.display_name,
       data.member_id !== undefined ? data.member_id : existing.member_id,
+      passwordChanged ? 1 : 0,
       id,
     )
     .run()

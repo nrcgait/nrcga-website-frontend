@@ -11,6 +11,29 @@ export async function listMembers(db: D1Database) {
   return results ?? []
 }
 
+export async function listActiveMembers(db: D1Database) {
+  const { results } = await db
+    .prepare('SELECT * FROM members WHERE active = 1 ORDER BY type, company_name')
+    .all()
+  return results ?? []
+}
+
+export async function listPublicPagesMeta(db: D1Database) {
+  const { results } = await db
+    .prepare(
+      `SELECT slug, title, section_label FROM pages WHERE published = 1 ORDER BY slug`,
+    )
+    .all<{ slug: string; title: string; section_label: string | null }>()
+  return results ?? []
+}
+
+export async function listActiveCarouselSlides(db: D1Database) {
+  const { results } = await db
+    .prepare('SELECT * FROM carousel_slides WHERE active = 1 ORDER BY display_order, created_at')
+    .all()
+  return results ?? []
+}
+
 export const MEMBER_SORT_COLUMNS: SortColumnSql = {
   type: 'type COLLATE NOCASE',
   company: 'company_name COLLATE NOCASE',

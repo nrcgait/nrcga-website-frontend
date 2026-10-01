@@ -112,7 +112,10 @@ export async function registerGuest(
   if (isPastCutoff(event, occurrenceDate)) {
     return { ok: false, error: 'Registration is closed for this event.' }
   }
-  if (input.spot_count < 1) return { ok: false, error: 'At least one spot is required.' }
+  if (!Number.isFinite(input.spot_count) || input.spot_count < 1) {
+    return { ok: false, error: 'At least one spot is required.' }
+  }
+  if (input.spot_count > 20) return { ok: false, error: 'You can register for at most 20 spots at once.' }
 
   const spotCount = Math.floor(input.spot_count)
   if (availability.capacity != null && availability.registered + spotCount > availability.capacity) {

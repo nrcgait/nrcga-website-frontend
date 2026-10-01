@@ -169,6 +169,20 @@
   text-align: center;
 }
 
+.admin-logout-form {
+  margin: 0;
+}
+
+.admin-logout-btn {
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  padding: 0;
+  text-decoration: underline;
+}
+
 .admin-sidebar-footer {
   margin-top: auto;
   padding-top: 1.25rem;

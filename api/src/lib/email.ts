@@ -54,13 +54,16 @@ function buildRawMime(opts: {
   return `${headers.join('\r\n')}\r\n\r\n${opts.text.replace(/\n/g, '\r\n')}`
 }
 
+import { isValidEmailAddress } from './email-address'
+
 export async function sendMail(
   env: Env,
   opts: { to: string; subject: string; text: string; replyTo?: string },
 ): Promise<boolean> {
   if (!env.EMAIL) return false
   const to = opts.to.trim()
-  if (!to || !to.includes('@')) return false
+  if (!isValidEmailAddress(to)) return false
+  if (opts.replyTo && !isValidEmailAddress(opts.replyTo)) return false
   const from = mailFrom(env)
   const fromAddr = extractAddress(from)
   const raw = buildRawMime({

@@ -11,6 +11,9 @@ export type Env = {
   ADMIN_PASSWORD: string
   ADMIN_EMAIL: string
   PUBLIC_SITE_ORIGIN: string
+  API_ORIGIN: string
+  TURNSTILE_SITE_KEY: string
+  TURNSTILE_SECRET: string
   LOGIN_RATE_LIMITER: RateLimiter
   PUBLIC_WRITE_RATE_LIMITER: RateLimiter
 }

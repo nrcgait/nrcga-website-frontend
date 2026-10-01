@@ -84,7 +84,7 @@ export function registerAdminAssetRoutes(
           <input
             type="file"
             name="files"
-            accept="image/*,application/pdf,.pdf"
+            accept="image/jpeg,image/png,image/gif,image/webp,application/pdf,.pdf"
             multiple
             required
             data-assets-upload-input
@@ -226,8 +226,8 @@ export function registerAdminAssetRoutes(
   })
 
   app.get('/admin/api/assets', async (c) => {
-    const ctx = await requireAdmin(c)
-    if (!ctx) return c.json({ error: 'Unauthorized' }, 401)
+    const { ctx, denied } = await guardAssets(c, requireAdmin, redirect)
+    if (denied) return c.json({ error: 'Unauthorized' }, 401)
     const page = parsePageParam(c.req.query('page'))
     const sort = c.req.query('sort') === 'name' ? 'name' : 'date'
     const imagesOnly = c.req.query('type') === 'image'

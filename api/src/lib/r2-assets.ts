@@ -49,18 +49,51 @@ function resolveAssetSort(options: ListR2AssetsOptions): SortSpec {
 
 function isImageAsset(row: Pick<R2AssetRow, 'filename' | 'mime_type'>): boolean {
   const mime = (row.mime_type || '').toLowerCase()
-  if (mime.startsWith('image/')) return true
-  return /\.(jpe?g|png|gif|webp|svg|avif|bmp)$/i.test(row.filename)
+  if (mime.startsWith('image/') && !mime.includes('svg')) return true
+  return /\.(jpe?g|png|gif|webp|avif|bmp)$/i.test(row.filename)
+}
+
+type SniffResult = { mime: string; kind: 'jpeg' | 'png' | 'gif' | 'webp' | 'pdf' | null }
+
+function sniffFileType(bytes: Uint8Array): SniffResult {
+  if (bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) {
+    return { mime: 'image/jpeg', kind: 'jpeg' }
+  }
+  if (bytes.length >= 8 && bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47) {
+    return { mime: 'image/png', kind: 'png' }
+  }
+  if (bytes.length >= 6 && bytes[0] === 0x47 && bytes[1] === 0x49 && bytes[2] === 0x46) {
+    return { mime: 'image/gif', kind: 'gif' }
+  }
+  if (
+    bytes.length >= 12 &&
+    bytes[0] === 0x52 &&
+    bytes[1] === 0x49 &&
+    bytes[2] === 0x46 &&
+    bytes[3] === 0x46 &&
+    bytes[8] === 0x57 &&
+    bytes[9] === 0x45 &&
+    bytes[10] === 0x42 &&
+    bytes[11] === 0x50
+  ) {
+    return { mime: 'image/webp', kind: 'webp' }
+  }
+  if (bytes.length >= 5 && bytes[0] === 0x25 && bytes[1] === 0x50 && bytes[2] === 0x44 && bytes[3] === 0x46) {
+    return { mime: 'application/pdf', kind: 'pdf' }
+  }
+  return { mime: 'application/octet-stream', kind: null }
 }
 
 export function isAllowedAssetUpload(file: File): { ok: true } | { ok: false; error: string } {
-  const type = (file.type || '').toLowerCase()
   const name = file.name || 'file'
-  const isPdf = type === 'application/pdf' || /\.pdf$/i.test(name)
-  const isImage = type.startsWith('image/') || /\.(jpe?g|png|gif|webp|svg|avif|bmp)$/i.test(name)
+  if (/\.svg$/i.test(name)) {
+    return { ok: false, error: `${name}: SVG uploads are not allowed` }
+  }
+  const isPdf = /\.pdf$/i.test(name)
+  const isImage = /\.(jpe?g|png|gif|webp|avif|bmp)$/i.test(name)
 
   if (!isPdf && !isImage) {
-    return { ok: false, error: `${name}: only images and PDFs are allowed` }
+    return { ok: false, error: `${name}: only JPEG, PNG, GIF, WebP, and PDFs are allowed` }
   }
   if (isPdf && file.size > ASSET_PDF_MAX_BYTES) {
     return { ok: false, error: `${name}: PDFs must be ${formatBytes(ASSET_PDF_MAX_BYTES)} or smaller` }
@@ -148,11 +181,21 @@ export async function uploadR2Asset(
   const check = isAllowedAssetUpload(file)
   if (!check.ok) throw new Error(check.error)
 
+  const buffer = await file.arrayBuffer()
+  const sniffed = sniffFileType(new Uint8Array(buffer))
+  if (!sniffed.kind) throw new Error(`${file.name}: file content does not match an allowed image or PDF type`)
+  if (sniffed.kind === 'pdf' && !/\.pdf$/i.test(file.name)) {
+    throw new Error(`${file.name}: PDF content must use a .pdf extension`)
+  }
+  if (sniffed.kind !== 'pdf' && /\.pdf$/i.test(file.name)) {
+    throw new Error(`${file.name}: file content is not a valid PDF`)
+  }
+
   const safeName = file.name.replace(/[^a-zA-Z0-9._-]+/g, '-').replace(/^-+|-+$/g, '') || 'file'
   const key = `uploads/${Date.now()}-${safeName}`
   const id = crypto.randomUUID()
-  await r2.put(key, await file.arrayBuffer(), {
-    httpMetadata: { contentType: file.type || 'application/octet-stream' },
+  await r2.put(key, buffer, {
+    httpMetadata: { contentType: sniffed.mime },
   })
   await db
     .prepare(
@@ -163,7 +206,7 @@ export async function uploadR2Asset(
          mime_type = excluded.mime_type,
          uploaded_by = excluded.uploaded_by`,
     )
-    .bind(id, key, file.name, file.type || null, uploadedBy)
+    .bind(id, key, file.name, sniffed.mime, uploadedBy)
     .run()
   return { key, filename: file.name }
 }

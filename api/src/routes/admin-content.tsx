@@ -4,6 +4,7 @@ import type { AdminContext } from '../lib/admin-context'
 import { canAccessContentSection, canManageAllContent } from '../config/roles'
 import { pageSlugsForCommittees } from '../config/committee-content'
 import { escapeHtml } from '../lib/admin-context'
+import { sanitizeCmsHtml, sanitizeRegionsJson } from '../lib/html-sanitize'
 import {
   canEditCommitteeTagged,
   canEditPageSlug,
@@ -709,7 +710,7 @@ export function registerAdminContentRoutes(
     if (denied) return denied
     if (c.req.method === 'POST') {
       const body = await c.req.parseBody()
-      await upsertPage(c.env.DB, parsePageForm(body as Record<string, string | File>))
+      await upsertPage(c.env.DB, parsePageForm(body as Record<string, string | File>, c.env.API_ORIGIN))
       return redirect(c, '/admin/content/pages')
     }
     const formInboxes = await listFormInboxes(c.env.DB, true)
@@ -732,7 +733,7 @@ export function registerAdminContentRoutes(
         await c.env.DB.prepare('DELETE FROM pages WHERE id = ?').bind(page.id).run()
         return redirect(c, '/admin/content/pages')
       }
-      await upsertPage(c.env.DB, parsePageForm(body as Record<string, string | File>), page.id as string)
+      await upsertPage(c.env.DB, parsePageForm(body as Record<string, string | File>, c.env.API_ORIGIN), page.id as string)
       return redirect(c, '/admin/content/pages')
     }
     const formInboxes = await listFormInboxes(c.env.DB, true)
@@ -780,15 +781,18 @@ const DEFAULT_HOME_CONTACT = `<h2>Get in Touch</h2>
     </div>
 </div>`
 
-function parsePageForm(body: Record<string, string | File>) {
+function parsePageForm(body: Record<string, string | File>, apiOrigin: string) {
   const slug = String(body.slug ?? '')
   let regionsJson: string | null = body.regions_json ? String(body.regions_json) : null
   if (slug === 'home') {
-    const hero = body.hero_html != null ? String(body.hero_html) : ''
-    const contact = body.contact_html != null ? String(body.contact_html) : ''
+    const hero = body.hero_html != null ? sanitizeCmsHtml(String(body.hero_html), apiOrigin) : ''
+    const contact = body.contact_html != null ? sanitizeCmsHtml(String(body.contact_html), apiOrigin) : ''
     regionsJson = JSON.stringify({ hero_html: hero, contact_html: contact })
   }
-  const bodyHtml = body.body_html != null ? String(body.body_html).trim() : ''
+  if (regionsJson && slug !== 'home') {
+    regionsJson = sanitizeRegionsJson(regionsJson, apiOrigin)
+  }
+  const bodyHtml = body.body_html != null ? sanitizeCmsHtml(String(body.body_html).trim(), apiOrigin) : ''
   return {
     slug,
     title: String(body.title ?? ''),

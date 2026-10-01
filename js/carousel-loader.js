@@ -1,6 +1,14 @@
 // Front Page Loader
 // Loads and displays carousel images and breaking news popup from CSV files
 
+function carouselEsc(value) {
+    return window.NRCGA_safeDom ? window.NRCGA_safeDom.escapeHtml(value) : String(value ?? '');
+}
+
+function carouselSafeHref(value) {
+    return window.NRCGA_safeDom ? window.NRCGA_safeDom.safeHref(value) : '#';
+}
+
 let carouselCurrentIndex = 0;
 let carouselInterval = null;
 let carouselData = []; // Store carousel data globally
@@ -48,6 +56,7 @@ async function loadCarousel() {
         // Generate carousel HTML
         const carouselHTML = generateCarouselHTML(activeImages);
         container.innerHTML = carouselHTML;
+        bindCarouselControls(container);
 
         // Initialize carousel functionality
         initializeCarousel(activeImages.length);
@@ -61,23 +70,24 @@ function generateCarouselHTML(images) {
     let trackHTML = '<div style="position: relative; overflow: hidden; border-radius: 12px;">';
     trackHTML += '<div class="carousel-track" style="display: flex; transition: transform 0.5s ease;">';
 
-    images.forEach((image, index) => {
-        // Create image with caption container
+    images.forEach((image) => {
+        const linkUrl = image.link_url && image.link_url.trim() !== '' ? carouselSafeHref(image.link_url) : '';
+        const hasLink = linkUrl && linkUrl !== '#';
         const slideContainer = `
             <div style="width: 100%; flex-shrink: 0; display: flex; flex-direction: column; position: relative;">
-                ${image.link_url && image.link_url.trim() !== '' 
-                    ? `<a href="${image.link_url}" target="_blank" rel="noopener noreferrer" style="display: block; width: 100%; text-decoration: none; cursor: pointer; position: relative; z-index: 1;">`
+                ${hasLink
+                    ? `<a href="${carouselEsc(linkUrl)}" target="_blank" rel="noopener noreferrer" style="display: block; width: 100%; text-decoration: none; cursor: pointer; position: relative; z-index: 1;">`
                     : '<div style="display: block; width: 100%;">'
                 }
                     <img 
-                        src="${image.image_url}" 
-                        alt="${image.alt_text || 'Carousel image'}" 
+                        src="${carouselEsc(image.image_url)}" 
+                        alt="${carouselEsc(image.alt_text || 'Carousel image')}" 
                         style="width: 100%; height: 400px; object-fit: cover; display: block;"
                         loading="lazy"
                     >
-                ${image.link_url && image.link_url.trim() !== '' ? '</a>' : '</div>'}
+                ${hasLink ? '</a>' : '</div>'}
                 ${image.alt_text && image.alt_text.trim() !== '' 
-                    ? `<div style="background: rgba(0,0,0,0.7); color: white; padding: 0.75rem 1rem; text-align: center; font-size: 0.9375rem; position: absolute; bottom: 0; left: 0; right: 0; z-index: 2;">${image.alt_text}</div>`
+                    ? `<div style="background: rgba(0,0,0,0.7); color: white; padding: 0.75rem 1rem; text-align: center; font-size: 0.9375rem; position: absolute; bottom: 0; left: 0; right: 0; z-index: 2;">${carouselEsc(image.alt_text)}</div>`
                     : ''
                 }
             </div>
@@ -91,21 +101,17 @@ function generateCarouselHTML(images) {
     // Navigation buttons
     if (images.length > 1) {
         trackHTML += `
-            <button class="carousel-prev" onclick="carouselPrev()" 
+            <button type="button" class="carousel-prev" 
                 style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); 
                 background: rgba(255,255,255,0.8); border: none; border-radius: 50%; 
                 width: 40px; height: 40px; cursor: pointer; font-size: 1.5rem; z-index: 20;
                 transition: background 0.3s ease;"
-                onmouseover="this.style.background='rgba(255,255,255,0.95)'"
-                onmouseout="this.style.background='rgba(255,255,255,0.8)'"
                 aria-label="Previous image">‹</button>
-            <button class="carousel-next" onclick="carouselNext()" 
+            <button type="button" class="carousel-next" 
                 style="position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); 
                 background: rgba(255,255,255,0.8); border: none; border-radius: 50%; 
                 width: 40px; height: 40px; cursor: pointer; font-size: 1.5rem; z-index: 20;
                 transition: background 0.3s ease;"
-                onmouseover="this.style.background='rgba(255,255,255,0.95)'"
-                onmouseout="this.style.background='rgba(255,255,255,0.8)'"
                 aria-label="Next image">›</button>
         `;
 
@@ -113,7 +119,7 @@ function generateCarouselHTML(images) {
         trackHTML += '<div class="carousel-dots" style="position: absolute; bottom: 3.5rem; left: 50%; transform: translateX(-50%); display: flex; gap: 0.5rem; z-index: 20;">';
         images.forEach((_, index) => {
             trackHTML += `
-                <button onclick="carouselGoTo(${index})" class="carousel-dot" 
+                <button type="button" class="carousel-dot" data-carousel-index="${index}"
                     style="width: 10px; height: 10px; border-radius: 50%; border: none; 
                     background: ${index === 0 ? 'white' : 'rgba(255,255,255,0.5)'}; 
                     cursor: pointer; transition: background 0.3s ease;"
@@ -125,6 +131,28 @@ function generateCarouselHTML(images) {
 
     trackHTML += '</div>';
     return trackHTML;
+}
+
+function bindCarouselControls(container) {
+    if (!container) return;
+    const prev = container.querySelector('.carousel-prev');
+    const next = container.querySelector('.carousel-next');
+    if (prev) {
+        prev.addEventListener('click', carouselPrev);
+        prev.addEventListener('mouseenter', () => { prev.style.background = 'rgba(255,255,255,0.95)'; });
+        prev.addEventListener('mouseleave', () => { prev.style.background = 'rgba(255,255,255,0.8)'; });
+    }
+    if (next) {
+        next.addEventListener('click', carouselNext);
+        next.addEventListener('mouseenter', () => { next.style.background = 'rgba(255,255,255,0.95)'; });
+        next.addEventListener('mouseleave', () => { next.style.background = 'rgba(255,255,255,0.8)'; });
+    }
+    container.querySelectorAll('.carousel-dot').forEach((dot) => {
+        dot.addEventListener('click', () => {
+            const index = Number(dot.getAttribute('data-carousel-index'));
+            if (Number.isFinite(index)) carouselGoTo(index);
+        });
+    });
 }
 
 function initializeCarousel(imageCount) {
@@ -287,7 +315,7 @@ function renderBreakingNewsItem(index) {
     }
 
     if (readMoreBtn) {
-        if (breakingNews.read_more_url) {
+        if (breakingNews.read_more_url && window.NRCGA_safeDom && window.NRCGA_safeDom.isSafeHttpUrl(breakingNews.read_more_url)) {
             readMoreBtn.style.display = 'inline-block';
             readMoreBtn.onclick = () => {
                 window.location.href = breakingNews.read_more_url;
