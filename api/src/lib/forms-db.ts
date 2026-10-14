@@ -109,6 +109,29 @@ export function builtinFormPublicSchema(formType: FormType) {
   }
 }
 
+export type FormPickerOption = { slug: string; title: string }
+
+/** Inboxes the page editor can insert: custom schemas first, then built-in site forms. */
+export async function listFormPickerOptions(db: D1Database): Promise<FormPickerOption[]> {
+  const custom = await listFormInboxes(db)
+  const seen = new Set<string>()
+  const options: FormPickerOption[] = []
+  for (const row of custom) {
+    const slug = String(row.slug ?? '').trim()
+    if (!slug) continue
+    seen.add(slug)
+    const title = String(row.title ?? slug)
+    const inactive = Number(row.active) === 0 ? ' (inactive)' : ''
+    options.push({ slug, title: `${title}${inactive}` })
+  }
+  for (const type of FORM_TYPES) {
+    if (seen.has(type)) continue
+    const schema = builtinFormPublicSchema(type)
+    options.push({ slug: schema.slug, title: `${schema.title} (built-in)` })
+  }
+  return options
+}
+
 export const RESERVED_INBOX_SLUGS = [
   ...FORM_TYPES,
   'contact',

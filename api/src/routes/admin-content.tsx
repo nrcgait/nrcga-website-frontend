@@ -44,7 +44,7 @@ import {
   QA_SORT_COLUMNS,
   ZERO_DAMAGE_SORT_COLUMNS,
 } from '../lib/content-db'
-import { listFormInboxes } from '../lib/forms-db'
+import { listFormPickerOptions } from '../lib/forms-db'
 import { AdminShell } from '../views/AdminShell'
 import { AssetUrlField, Pagination, CommitteeSelect, SortableHead } from '../views/AdminComponents'
 
@@ -713,7 +713,7 @@ export function registerAdminContentRoutes(
       await upsertPage(c.env.DB, parsePageForm(body as Record<string, string | File>, c.env.API_ORIGIN))
       return redirect(c, '/admin/content/pages')
     }
-    const formInboxes = await listFormInboxes(c.env.DB, true)
+    const formInboxes = await listFormPickerOptions(c.env.DB)
     return c.html(
       <AdminShell ctx={ctx} title="Add page" activePath="/admin/content" publicSiteOrigin={c.env.PUBLIC_SITE_ORIGIN}>
         <PageForm publicSiteOrigin={c.env.PUBLIC_SITE_ORIGIN} formInboxes={formInboxes} />
@@ -736,7 +736,7 @@ export function registerAdminContentRoutes(
       await upsertPage(c.env.DB, parsePageForm(body as Record<string, string | File>, c.env.API_ORIGIN), page.id as string)
       return redirect(c, '/admin/content/pages')
     }
-    const formInboxes = await listFormInboxes(c.env.DB, true)
+    const formInboxes = await listFormPickerOptions(c.env.DB)
     return c.html(
       <AdminShell ctx={ctx} title="Edit page" activePath="/admin/content" publicSiteOrigin={c.env.PUBLIC_SITE_ORIGIN}>
         <PageForm page={page} publicSiteOrigin={c.env.PUBLIC_SITE_ORIGIN} formInboxes={formInboxes} />
@@ -964,7 +964,7 @@ function PageForm({
 }: {
   page?: Record<string, unknown>
   publicSiteOrigin: string
-  formInboxes?: Array<Record<string, unknown>>
+  formInboxes?: Array<{ slug?: unknown; title?: unknown }>
 }) {
   const slug = String(page?.slug ?? '')
   const isHome = slug === 'home'
@@ -1038,7 +1038,11 @@ function PageForm({
           data-form-inboxes={inboxPickerData}
           data-initial={bodyHtml}
           data-fallback-json={bodyJsonFallback || undefined}
-        ></div>
+        >
+          <textarea class="nrcga-form-inboxes-json admin-hidden-field" hidden readOnly aria-hidden="true">
+            {inboxPickerData}
+          </textarea>
+        </div>
         <textarea name="body_html" id="body_html" class="admin-hidden-field">{bodyHtml}</textarea>
         {page?.body_json ? <input type="hidden" name="body_json" value={String(page.body_json)} /> : null}
       </div>

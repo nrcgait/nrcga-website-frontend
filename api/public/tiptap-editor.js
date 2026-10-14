@@ -894,22 +894,38 @@
     positionMenu(menu, x, y)
   }
 
-  function parseFormInboxes(host) {
-    const raw = host?.getAttribute('data-form-inboxes')
-    if (!raw) return []
-    try {
-      const parsed = JSON.parse(raw)
-      return Array.isArray(parsed)
-        ? parsed
-            .map((item) => ({
-              slug: String(item.slug || '').trim(),
-              title: String(item.title || item.slug || '').trim(),
-            }))
-            .filter((item) => item.slug)
-        : []
-    } catch {
-      return []
+  function decodeInboxJson(raw) {
+    const text = String(raw || '').trim()
+    if (!text) return []
+    const candidates = [
+      text,
+      text.replace(/&quot;/g, '"').replace(/&#34;/g, '"').replace(/&amp;/g, '&'),
+    ]
+    for (const candidate of candidates) {
+      try {
+        const parsed = JSON.parse(candidate)
+        if (!Array.isArray(parsed)) continue
+        return parsed
+          .map((item) => ({
+            slug: String(item.slug || '').trim(),
+            title: String(item.title || item.slug || '').trim(),
+          }))
+          .filter((item) => item.slug)
+      } catch {
+        /* try next encoding */
+      }
     }
+    return []
+  }
+
+  function parseFormInboxes(host) {
+    if (!host) return []
+    const fromTextarea = host.querySelector('.nrcga-form-inboxes-json')
+    if (fromTextarea) {
+      const parsed = decodeInboxJson(fromTextarea.value || fromTextarea.textContent)
+      if (parsed.length) return parsed
+    }
+    return decodeInboxJson(host.getAttribute('data-form-inboxes'))
   }
 
   function createFormBlockHtml(slug, title, defaults) {
@@ -964,7 +980,9 @@
   function showFormPicker(inboxes, callback) {
     const list = Array.isArray(inboxes) ? inboxes.filter((item) => item.slug) : []
     if (!list.length) {
-      window.alert('No form inboxes yet. Create one under Admin → Inboxes, then try again.')
+      window.alert(
+        'No forms are available to insert. Reload this page after creating an inbox under Admin → Inboxes, or pick a built-in form such as Contact or Award nomination.',
+      )
       return
     }
     if (list.length === 1) {
