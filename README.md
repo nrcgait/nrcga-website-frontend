@@ -55,5 +55,5 @@ Create a page in admin with **Custom page** checked. Public URL: `page.html?slug
 
 1. Create production D1 + R2; set `database_id` in [`api/wrangler.jsonc`](api/wrangler.jsonc)
 2. Secrets: `JWT_SECRET`, `ADMIN_PASSWORD`
-3. Connect the repo to Cloudflare for automatic Worker deploys on `main` (see **`api/README.md`**), or apply migrations + seed + `npm run deploy` in `api/` manually
+3. Connect the repo to Cloudflare for automatic Worker deploys on `main` (see **`api/README.md`**). Production deploys apply D1 migrations then deploy; seed data is still optional via `node scripts/seed-from-repo.mjs --remote`.
 4. Point `api.nrcga.org` at the Worker; deploy Pages for the static site

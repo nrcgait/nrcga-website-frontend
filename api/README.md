@@ -25,7 +25,7 @@ npm run dev
 
 All Workers, D1, and R2 resources live under the **Nrcga.it@gmail.com** Cloudflare account (`account_id` in [`wrangler.jsonc`](wrangler.jsonc)).
 
-Pushing to GitHub **does not** deploy the Worker by itself. Either connect the repo in Cloudflare (below) or run `wrangler deploy` manually.
+Pushing to GitHub **does not** deploy the Worker by itself. Either connect the repo in Cloudflare (below) or run `npm run deploy` manually.
 
 ### Deploy from Git (recommended)
 
@@ -40,7 +40,8 @@ Connect this monorepo so merges to `main` deploy automatically.
 | Production branch | `main` |
 | Root directory | `api` |
 | Build command | `npm ci && npm run check` |
-| Deploy command | `npx wrangler deploy` |
+| Deploy command | `npm run deploy` |
+| Preview command | `npx wrangler preview` |
 
 4. Confirm bindings match [`wrangler.jsonc`](wrangler.jsonc): D1 `nrcga-cms`, R2 `nrcga-media`, rate limiters, `EMAIL`, and `ASSETS`.
 5. Set secrets once in the dashboard (or via CLI): `JWT_SECRET`, `ADMIN_PASSWORD`.
@@ -50,13 +51,18 @@ Connect this monorepo so merges to `main` deploy automatically.
 
 The public HTML site is separate from the API Worker. Connect the same repo to a **Pages** project with the repo root as the project directory (static files at the project root).
 
+**What Git deploy runs**
+
+Production deploys (`main`) run `npm run deploy`, which applies pending D1 migrations to **`nrcga-cms`** then deploys the Worker. Preview/branch builds use `npx wrangler preview` and **do not** apply migrations, so a PR cannot change production schema.
+
+If the Worker is already Git-connected, set **Settings → Build → Deploy command** to `npm run deploy` once. Until that is saved, Cloudflare will keep running `npx wrangler deploy` and skip migrations.
+
 **What Git deploy does not run**
 
-Schema changes and seed data still require manual steps when needed:
+Seed data is still manual when you want to reload CSV/HTML into D1:
 
 ```bash
 cd api
-npx wrangler d1 migrations apply nrcga-cms --remote
 node scripts/seed-from-repo.mjs --remote
 ```
 
@@ -67,9 +73,8 @@ Use when Git builds are not connected, or you need an immediate one-off deploy.
 1. D1 `nrcga-cms` and R2 `nrcga-media` are configured in [`wrangler.jsonc`](wrangler.jsonc).
 2. Secrets: `npx wrangler secret put JWT_SECRET` and `npx wrangler secret put ADMIN_PASSWORD`.
 3. Route `api.nrcga.org/*` to the Worker (Cloudflare dashboard → Workers → `nrcga-api` → Custom domains).
-4. `npx wrangler d1 migrations apply nrcga-cms --remote`
-5. `node scripts/seed-from-repo.mjs --remote`
-6. `npm run deploy`
+4. `node scripts/seed-from-repo.mjs --remote` (optional; reloads CSV/HTML seeds)
+5. `npm run deploy` (applies pending D1 migrations, then deploys)
 
 - **API (workers.dev):** https://nrcga-api.nrcga-it.workers.dev
 - **API (production hostname):** https://api.nrcga.org (after custom domain is attached)
