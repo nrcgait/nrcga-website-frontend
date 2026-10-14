@@ -46,16 +46,41 @@
     return siteKeyPromise
   }
 
+  function removeWidget(container) {
+    if (!container || !global.turnstile) return
+    const existingId = container.dataset.turnstileWidgetId
+    if (existingId) {
+      try {
+        global.turnstile.remove(existingId)
+      } catch {
+        /* widget already gone */
+      }
+      delete container.dataset.turnstileWidgetId
+    }
+    container.removeAttribute('data-turnstile-mounted')
+  }
+
+  function removeIn(root) {
+    const scope = root && root.querySelectorAll ? root : document
+    scope.querySelectorAll('[data-turnstile-widget]').forEach((el) => removeWidget(el))
+  }
+
   async function mountWidget(container) {
     const siteKey = await getSiteKey()
     if (!siteKey || !container) return null
     await loadScript()
     if (!global.turnstile) return null
+    removeWidget(container)
     container.innerHTML = ''
-    return global.turnstile.render(container, {
+    const widgetId = global.turnstile.render(container, {
       sitekey: siteKey,
       theme: 'auto',
     })
+    if (widgetId) {
+      container.dataset.turnstileWidgetId = String(widgetId)
+      container.setAttribute('data-turnstile-mounted', '1')
+    }
+    return widgetId
   }
 
   function readToken(container) {
@@ -66,6 +91,8 @@
 
   global.NRCGA_turnstile = {
     mountWidget,
+    removeWidget,
+    removeIn,
     readToken,
     getSiteKey,
   }

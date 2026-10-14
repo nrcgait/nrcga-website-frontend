@@ -141,6 +141,9 @@ async function loadPageContent() {
       bodyHtml += staticEnrollmentCta;
     }
     if (bodyHtml) {
+      if (window.NRCGA_turnstile && window.NRCGA_turnstile.removeIn) {
+        window.NRCGA_turnstile.removeIn(bodyContainer);
+      }
       bodyContainer.innerHTML = bodyHtml;
       window.NRCGA_pageBlocks.initParallaxFigures(bodyContainer);
     }

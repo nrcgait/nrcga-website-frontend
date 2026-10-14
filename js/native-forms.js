@@ -46,8 +46,18 @@
     return data;
   }
 
+  function turnstileWrap(form) {
+    return form ? form.querySelector('[data-turnstile-widget]') : null;
+  }
+
+  function hasMountedTurnstile(form) {
+    const wrap = turnstileWrap(form);
+    if (!wrap) return false;
+    return wrap.getAttribute('data-turnstile-mounted') === '1' || !!wrap.querySelector('[name="cf-turnstile-response"], iframe');
+  }
+
   async function ensureTurnstileOnForm(form) {
-    if (!form || form.querySelector('[data-turnstile-widget]')) return;
+    if (!form || hasMountedTurnstile(form)) return;
     try {
       await loadTurnstileHelper();
     } catch {
@@ -56,16 +66,35 @@
     if (!window.NRCGA_turnstile) return;
     const siteKey = await window.NRCGA_turnstile.getSiteKey();
     if (!siteKey) return;
-    const wrap = document.createElement('div');
-    wrap.className = 'turnstile-widget-wrap';
-    wrap.setAttribute('data-turnstile-widget', '1');
-    const submit = form.querySelector('[type="submit"]');
-    if (submit && submit.parentNode) {
-      submit.parentNode.insertBefore(wrap, submit);
-    } else {
-      form.appendChild(wrap);
+    let wrap = turnstileWrap(form);
+    if (!wrap) {
+      wrap = document.createElement('div');
+      wrap.className = 'turnstile-widget-wrap';
+      wrap.setAttribute('data-turnstile-widget', '1');
+      const submit = form.querySelector('[type="submit"]');
+      if (submit && submit.parentNode) {
+        submit.parentNode.insertBefore(wrap, submit);
+      } else {
+        form.appendChild(wrap);
+      }
     }
     await window.NRCGA_turnstile.mountWidget(wrap);
+  }
+
+  function sleep(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  async function waitForTurnstileToken(form, timeoutMs) {
+    const wrap = turnstileWrap(form);
+    if (!wrap || !window.NRCGA_turnstile) return '';
+    const started = Date.now();
+    while (Date.now() - started < timeoutMs) {
+      const token = window.NRCGA_turnstile.readToken(wrap);
+      if (token) return token;
+      await sleep(200);
+    }
+    return window.NRCGA_turnstile.readToken(wrap) || '';
   }
 
   async function onSubmit(event) {
@@ -88,6 +117,12 @@
     try {
       await ensureTurnstileOnForm(form);
       const payload = serializeForm(form);
+      if (!payload.turnstile_token) {
+        payload.turnstile_token = await waitForTurnstileToken(form, 8000);
+      }
+      if (window.NRCGA_turnstile && (await window.NRCGA_turnstile.getSiteKey()) && !payload.turnstile_token) {
+        throw new Error('Verification is still loading. Please wait a moment and try again.');
+      }
       const result = await window.NRCGA_API.post(`/forms/${encodeURIComponent(type)}`, payload);
       if (!result.success) throw new Error(result.error || 'Submission failed');
       form.reset();
