@@ -219,7 +219,7 @@
           ${hiddenFieldsHtml(defaults)}
           ${fieldsHtml}
           <div data-turnstile-widget></div>
-          <button type="submit">${submitLabel}</button>
+          <button type="submit" class="btn btn-primary">${submitLabel}</button>
           <p class="form-status" data-form-status></p>
         </form>
       `;
