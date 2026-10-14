@@ -91,6 +91,14 @@ describe('html sanitize', () => {
     expect(html).not.toContain('<textarea')
     expect(html).not.toContain('<button')
   })
+  it('preserves CMS form mount placeholders so the public page can hydrate fields', () => {
+    const raw =
+      '<div class="page-block-form" data-nrcga-form-mount="award_application" data-form-title="Award nomination" data-form-defaults="{&quot;award&quot;:&quot;Craig Rogers Award&quot;}"><p class="page-block-form-label">Form: Award nomination</p></div>'
+    const html = sanitizeCmsHtml(raw, 'https://api.nrcga.org')
+    expect(html).toContain('data-nrcga-form-mount="award_application"')
+    expect(html).toContain('data-form-title="Award nomination"')
+    expect(html).toContain('Craig Rogers Award')
+  })
 })
 
 describe('email', () => {

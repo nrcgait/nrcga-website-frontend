@@ -4682,6 +4682,11 @@ body {
   margin: 2rem 0;
 }
 
+/* CMS editor chrome — never show the placeholder label on the public site */
+.page-block-form-label {
+  display: none;
+}
+
 .nrcga-form .honeypot {
   position: absolute;
   left: -9999px;

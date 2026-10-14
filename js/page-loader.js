@@ -42,6 +42,58 @@ async function ensureNativeFormsScript() {
   });
 }
 
+const PAGE_FORM_FALLBACKS = {
+  'craig-rogers-award': {
+    slug: 'award_application',
+    defaults: { award: 'Craig Rogers Award' },
+  },
+};
+
+function applyFormFallback(el, fallback) {
+  if (!el || !fallback) return;
+  if (!el.getAttribute('data-nrcga-form-mount')) {
+    el.setAttribute('data-nrcga-form-mount', fallback.slug);
+  }
+  if (fallback.defaults && !el.getAttribute('data-form-defaults')) {
+    el.setAttribute('data-form-defaults', JSON.stringify(fallback.defaults));
+  }
+}
+
+function hasRenderableFormControls(container) {
+  if (!container) return false;
+  if (container.querySelector('form[data-nrcga-form] input, form[data-nrcga-form] textarea')) return true;
+  return !!container.querySelector('[data-nrcga-form-mount]');
+}
+
+function repairCmsFormPlaceholders(container, pageSlug) {
+  if (!container) return;
+  const fallback = PAGE_FORM_FALLBACKS[pageSlug];
+
+  container.querySelectorAll('.page-block-form').forEach((el) => {
+    if (el.getAttribute('data-nrcga-form-mount')) return;
+    if (fallback) applyFormFallback(el, fallback);
+  });
+
+  if (!fallback || hasRenderableFormControls(container)) return;
+
+  const orphanGroups = [...container.querySelectorAll('.form-group')].filter(
+    (group) => group.querySelector('label') && !group.querySelector('input, textarea, select'),
+  );
+  const editorLabel = container.querySelector('.page-block-form-label');
+  if (!orphanGroups.length && !editorLabel) return;
+
+  const mount = document.createElement('div');
+  mount.className = 'page-block-form';
+  applyFormFallback(mount, fallback);
+
+  if (orphanGroups.length) {
+    orphanGroups[0].parentNode.insertBefore(mount, orphanGroups[0]);
+    orphanGroups.forEach((group) => group.remove());
+    return;
+  }
+  editorLabel.replaceWith(mount);
+}
+
 async function mountPageForms(container) {
   if (!container) return;
   const needsForms = container.querySelector('[data-nrcga-form-mount], form[data-nrcga-form]');
@@ -92,6 +144,8 @@ async function loadPageContent() {
       bodyContainer.innerHTML = bodyHtml;
       window.NRCGA_pageBlocks.initParallaxFigures(bodyContainer);
     }
+
+    repairCmsFormPlaceholders(bodyContainer, slug);
 
     const regions = parseRegions(page);
     if (regions) {

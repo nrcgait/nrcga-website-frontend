@@ -912,10 +912,53 @@
     }
   }
 
-  function createFormBlockHtml(slug, title) {
+  function createFormBlockHtml(slug, title, defaults) {
     const safeSlug = escapeHtml(slug)
     const safeTitle = escapeHtml(title || slug)
-    return `<div class="page-block-form" data-nrcga-form-mount="${safeSlug}" data-form-title="${safeTitle}"><p class="page-block-form-label">Form: ${safeTitle}</p></div>`
+    const defaultEntries =
+      defaults && typeof defaults === 'object' && !Array.isArray(defaults)
+        ? Object.entries(defaults).filter(
+            ([key, value]) => /^[a-z][a-z0-9_]*$/i.test(key) && typeof value === 'string',
+          )
+        : []
+    const defaultsAttr = defaultEntries.length
+      ? ` data-form-defaults="${escapeHtml(JSON.stringify(Object.fromEntries(defaultEntries)))}"`
+      : ''
+    return `<div class="page-block-form" contenteditable="false" data-nrcga-form-mount="${safeSlug}" data-form-title="${safeTitle}"${defaultsAttr}><p class="page-block-form-label">Form: ${safeTitle}</p></div>`
+  }
+
+  function nativeFormsToPlaceholders(html) {
+    const wrap = document.createElement('div')
+    wrap.innerHTML = String(html || '')
+    wrap.querySelectorAll('form[data-nrcga-form], form.nrcga-form').forEach((form) => {
+      const slug = form.getAttribute('data-nrcga-form') || ''
+      if (!slug) return
+      const defaults = {}
+      form.querySelectorAll('input[type="hidden"][name]').forEach((input) => {
+        const name = input.getAttribute('name')
+        if (!name || name === 'website_url') return
+        defaults[name] = input.value || ''
+      })
+      const holder = document.createElement('div')
+      holder.innerHTML = createFormBlockHtml(slug, slug, defaults)
+      const block = holder.firstElementChild
+      if (block) form.replaceWith(block)
+    })
+    return wrap.innerHTML
+  }
+
+  function lockFormBlocks(editor) {
+    editor.querySelectorAll('.page-block-form[data-nrcga-form-mount]').forEach((el) => {
+      el.setAttribute('contenteditable', 'false')
+      const slug = el.getAttribute('data-nrcga-form-mount') || ''
+      const title = el.getAttribute('data-form-title') || slug
+      if (!el.querySelector('.page-block-form-label')) {
+        el.insertAdjacentHTML(
+          'afterbegin',
+          `<p class="page-block-form-label">Form: ${escapeHtml(title)}</p>`,
+        )
+      }
+    })
   }
 
   function showFormPicker(inboxes, callback) {
@@ -1310,9 +1353,12 @@
   }
 
   function setFormInbox(el, slug, title) {
+    const defaults = el.getAttribute('data-form-defaults')
     el.setAttribute('data-nrcga-form-mount', slug)
     el.setAttribute('data-form-title', title || slug)
+    el.setAttribute('contenteditable', 'false')
     el.innerHTML = `<p class="page-block-form-label">Form: ${escapeHtml(title || slug)}</p>`
+    if (defaults) el.setAttribute('data-form-defaults', defaults)
   }
 
   function showFormMenu(x, y, el) {
@@ -1618,7 +1664,8 @@
     const editor = document.createElement('div')
     editor.className = 'tiptap-surface'
     editor.contentEditable = 'true'
-    editor.innerHTML = initial
+    editor.innerHTML = nativeFormsToPlaceholders(initial)
+    lockFormBlocks(editor)
 
     host.appendChild(toolbar)
     host.appendChild(editor)

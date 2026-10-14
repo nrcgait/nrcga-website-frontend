@@ -68,6 +68,8 @@ import {
 
   inboxToPublicSchema,
 
+  builtinFormPublicSchema,
+
   isFormType,
 
   parseFormFields,
@@ -471,21 +473,7 @@ export function registerPublicApiRoutes(app: Hono<{ Bindings: Env }>) {
 
     if (isFormType(formType)) {
 
-      return cachedJson(c, {
-
-        slug: formType,
-
-        title: formType.replace(/_/g, ' '),
-
-        builtin: true,
-
-        fields: null,
-
-        submit_label: 'Submit',
-
-        success_message: 'Thank you — your submission was received.',
-
-      })
+      return cachedJson(c, builtinFormPublicSchema(formType))
 
     }
 

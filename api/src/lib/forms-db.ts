@@ -13,6 +13,102 @@ export const FORM_TYPES = [
 
 export type FormType = (typeof FORM_TYPES)[number]
 
+const BUILTIN_FORM_SCHEMAS: Record<
+  FormType,
+  { title: string; submit_label: string; fields: FormFieldDef[] }
+> = {
+  contact: {
+    title: 'Contact',
+    submit_label: 'Send Message',
+    fields: [
+      { name: 'name', label: 'Name', type: 'text', required: true },
+      { name: 'email', label: 'Email', type: 'email', required: true },
+      { name: 'organization', label: 'Organization', type: 'text' },
+      { name: 'phone', label: 'Phone', type: 'tel' },
+      {
+        name: 'subject',
+        label: 'Subject',
+        type: 'select',
+        options: ['membership', 'training', 'events', 'committee', 'general', 'media'],
+      },
+      { name: 'message', label: 'Message', type: 'textarea', required: true },
+    ],
+  },
+  newsletter: {
+    title: 'Newsletter',
+    submit_label: 'Subscribe',
+    fields: [
+      { name: 'name', label: 'Name', type: 'text' },
+      { name: 'email', label: 'Email', type: 'email', required: true },
+    ],
+  },
+  member_application: {
+    title: 'Membership application',
+    submit_label: 'Submit application',
+    fields: [
+      { name: 'company_name', label: 'Company name', type: 'text', required: true },
+      { name: 'contact_name', label: 'Contact name', type: 'text', required: true },
+      { name: 'email', label: 'Email', type: 'email', required: true },
+      { name: 'phone', label: 'Phone', type: 'tel' },
+      {
+        name: 'membership_type',
+        label: 'Membership type',
+        type: 'select',
+        required: true,
+        options: ['stakeholder', 'associate', 'affiliate'],
+      },
+      { name: 'notes', label: 'Notes', type: 'textarea' },
+    ],
+  },
+  award_application: {
+    title: 'Award nomination',
+    submit_label: 'Submit nomination',
+    fields: [
+      { name: 'nominee_name', label: 'Nominee name', type: 'text', required: true },
+      { name: 'nominator_name', label: 'Your name', type: 'text' },
+      { name: 'email', label: 'Email', type: 'email', required: true },
+      { name: 'organization', label: 'Organization', type: 'text' },
+      { name: 'phone', label: 'Phone', type: 'tel' },
+      { name: 'statement', label: 'Nomination statement', type: 'textarea' },
+    ],
+  },
+  training_registration: {
+    title: 'Training request',
+    submit_label: 'Request Training',
+    fields: [
+      { name: 'name', label: 'Name', type: 'text', required: true },
+      { name: 'email', label: 'Email', type: 'email', required: true },
+      { name: 'phone', label: 'Phone', type: 'tel' },
+      { name: 'organization', label: 'Organization / Company', type: 'text' },
+      { name: 'notes', label: 'Notes / preferred dates', type: 'textarea' },
+    ],
+  },
+  training_signin: {
+    title: 'Training attendance',
+    submit_label: 'Submit attendance',
+    fields: [
+      { name: 'name', label: 'Name', type: 'text', required: true },
+      { name: 'email', label: 'Email', type: 'email', required: true },
+      { name: 'phone', label: 'Phone', type: 'tel' },
+      { name: 'company', label: 'Company', type: 'text' },
+      { name: 'training_date', label: 'Training date', type: 'text' },
+      { name: 'notes', label: 'Notes', type: 'textarea' },
+    ],
+  },
+}
+
+export function builtinFormPublicSchema(formType: FormType) {
+  const schema = BUILTIN_FORM_SCHEMAS[formType]
+  return {
+    slug: formType,
+    title: schema.title,
+    builtin: true,
+    fields: schema.fields,
+    submit_label: schema.submit_label,
+    success_message: 'Thank you — your submission was received.',
+  }
+}
+
 export const RESERVED_INBOX_SLUGS = [
   ...FORM_TYPES,
   'contact',

@@ -131,6 +131,32 @@
     return `<div class="form-group"><label for="nrcga-${name}">${label}${reqMark}</label><input id="nrcga-${name}" type="${inputType}" name="${name}" ${required} ${placeholder} /></div>`;
   }
 
+  function parseFormDefaults(el) {
+    const raw = el.getAttribute('data-form-defaults');
+    if (!raw) return {};
+    try {
+      const parsed = JSON.parse(raw);
+      if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return {};
+      const out = {};
+      for (const [key, value] of Object.entries(parsed)) {
+        if (/^[a-z][a-z0-9_]*$/i.test(key) && typeof value === 'string') out[key] = value;
+      }
+      return out;
+    } catch {
+      return {};
+    }
+  }
+
+  function hiddenFieldsHtml(defaults) {
+    const { escapeHtml } = sd();
+    return Object.entries(defaults)
+      .map(
+        ([name, value]) =>
+          `<input type="hidden" name="${escapeHtml(name)}" value="${escapeHtml(value)}">`,
+      )
+      .join('');
+  }
+
   async function mountSchemaForm(el) {
     const { escapeHtml } = sd();
     const slug = el.getAttribute('data-nrcga-form-mount');
@@ -138,6 +164,7 @@
       el.textContent = 'Form unavailable.';
       return;
     }
+    const defaults = parseFormDefaults(el);
     el.innerHTML = '<p class="form-status">Loading form…</p>';
     try {
       const schema = await window.NRCGA_API.get(`/forms/${encodeURIComponent(slug)}`);
@@ -154,6 +181,7 @@
           <div class="honeypot" aria-hidden="true">
             <label>Website<input type="text" name="website_url" tabindex="-1" autocomplete="off"></label>
           </div>
+          ${hiddenFieldsHtml(defaults)}
           ${fieldsHtml}
           <div data-turnstile-widget></div>
           <button type="submit">${submitLabel}</button>

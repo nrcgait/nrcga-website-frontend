@@ -1839,6 +1839,7 @@
 }
 
 .tiptap-surface .page-block-form-label {
+  display: block;
   margin: 0;
   color: #2b6cb0;
   font-weight: 600;
