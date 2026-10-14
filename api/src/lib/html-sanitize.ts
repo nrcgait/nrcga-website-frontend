@@ -30,6 +30,16 @@ export function isAllowedResourceUrl(url: string, apiOrigin?: string): boolean {
   return sanitizeHttpUrl(trimmed) !== null
 }
 
+const NRCGA_NATIVE_INPUT_TYPES = new Set(['text', 'email', 'tel', 'url', 'hidden'])
+
+/** Site forms posted via POST /api/v1/forms/:type (data-nrcga-form). */
+export function isNativeNrcgaFormElement(attribs: Record<string, string>): boolean {
+  const formType = attribs['data-nrcga-form']?.trim()
+  if (formType && /^[a-z][a-z0-9_]*$/i.test(formType)) return true
+  const cls = attribs.class ?? ''
+  return cls.split(/\s+/).includes('nrcga-form')
+}
+
 function sanitizeOptions(apiOrigin?: string): sanitizeHtml.IOptions {
   return {
     allowedTags: sanitizeHtml.defaults.allowedTags.concat([
@@ -44,20 +54,34 @@ function sanitizeOptions(apiOrigin?: string): sanitizeHtml.IOptions {
       'h4',
       'h5',
       'h6',
+      'form',
+      'input',
+      'textarea',
+      'button',
+      'label',
+      'select',
+      'option',
     ]),
     allowedAttributes: {
       ...sanitizeHtml.defaults.allowedAttributes,
       a: ['href', 'name', 'target', 'rel', 'class', 'title'],
       img: ['src', 'alt', 'width', 'height', 'class', 'loading', 'title'],
       iframe: ['src', 'width', 'height', 'title', 'allow', 'allowfullscreen', 'loading', 'referrerpolicy', 'sandbox'],
-      div: ['class', 'id', 'style'],
+      div: ['class', 'id', 'style', 'aria-hidden'],
       span: ['class', 'id', 'style'],
-      p: ['class', 'style'],
+      p: ['class', 'style', 'data-form-status'],
       section: ['class', 'style'],
       figure: ['class', 'style'],
       table: ['class'],
       td: ['class', 'colspan', 'rowspan'],
       th: ['class', 'colspan', 'rowspan'],
+      form: ['class', 'style', 'data-nrcga-form', 'data-success-message'],
+      input: ['type', 'name', 'id', 'value', 'required', 'style', 'autocomplete', 'tabindex', 'placeholder'],
+      textarea: ['name', 'id', 'rows', 'required', 'style', 'placeholder'],
+      button: ['type', 'class'],
+      label: ['for', 'class'],
+      select: ['name', 'id', 'required', 'class'],
+      option: ['value'],
     },
     allowedSchemes: ['http', 'https', 'mailto'],
     allowedSchemesByTag: {
@@ -90,6 +114,42 @@ function sanitizeOptions(apiOrigin?: string): sanitizeHtml.IOptions {
         attribs.referrerpolicy = 'strict-origin-when-cross-origin'
         if (/forms\.(office|microsoft)\.com|google\.com\/forms|typeform|jotform/i.test(src)) {
           attribs.sandbox = 'allow-scripts allow-forms allow-popups allow-same-origin'
+        }
+        return { tagName, attribs }
+      },
+      form: (tagName, attribs) => {
+        if (!isNativeNrcgaFormElement(attribs)) {
+          return { tagName: 'div', attribs: {}, text: '' }
+        }
+        delete attribs.action
+        delete attribs.method
+        delete attribs.enctype
+        return { tagName, attribs }
+      },
+      input: (tagName, attribs) => {
+        const type = String(attribs.type ?? 'text').toLowerCase()
+        if (!NRCGA_NATIVE_INPUT_TYPES.has(type)) {
+          return { tagName: 'div', attribs: {}, text: '' }
+        }
+        if (type === 'hidden' && attribs.name === 'website_url') {
+          return { tagName, attribs }
+        }
+        const name = attribs.name?.trim()
+        if (!name || !/^[a-z][a-z0-9_]*$/i.test(name)) {
+          return { tagName: 'div', attribs: {}, text: '' }
+        }
+        return { tagName, attribs }
+      },
+      textarea: (tagName, attribs) => {
+        const name = attribs.name?.trim()
+        if (!name || !/^[a-z][a-z0-9_]*$/i.test(name)) {
+          return { tagName: 'div', attribs: {}, text: '' }
+        }
+        return { tagName, attribs }
+      },
+      button: (tagName, attribs) => {
+        if (attribs.type !== 'submit') {
+          return { tagName: 'div', attribs: {}, text: '' }
         }
         return { tagName, attribs }
       },

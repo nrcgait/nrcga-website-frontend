@@ -1,0 +1,264 @@
+-- Restore Craig Rogers Award nomination form when CMS JSON only had label text or HTML lost inputs.
+INSERT OR REPLACE INTO pages (id, slug, title, section_label, subtitle, body_md, body_json, body_html, regions_json, published, is_custom)
+     VALUES ('00000000-0000-4000-8000-00002d73d4e9', 'craig-rogers-award', 'Craig Rogers Award', 'NRCGA Programs', 'Honoring Excellence in Damage Prevention in memory of our dear friend & colleague', NULL, '[{"type":"section","bg":"default","padding":"md","children":[{"type":"grid","columns":3,"gap":"md","items":[{"icon":"✓","title":"","body":"\"I just want to do what is right.\""}]}]},{"type":"section","bg":"light","padding":"md","children":[{"type":"heading","level":2,"text":"Why This Award Exists","style":{"align":"left","textSize":"lg","textColor":"default"}},{"type":"text","body":"The Craig Rogers Award celebrates leaders who:","style":{"align":"left","textSize":"md","textColor":"default"}},{"type":"grid","columns":4,"gap":"md","items":[{"icon":"🛡️","title":"","body":"Demonstrate exceptional dedication"},{"icon":"🔨","title":"","body":"Deliver tangible improvements"},{"icon":"📖","title":"","body":"Share knowledge generously"},{"icon":"🤝","title":"","body":"Uphold integrity and character"}]},{"type":"text","body":"This recognition is not only about past achievements—it sets the standard for the future of damage prevention in Nevada.","style":{"align":"left","textSize":"md","textColor":"default"}}]},{"type":"section","bg":"default","padding":"md","children":[{"type":"heading","level":2,"text":"Hall of Heroes","style":{"align":"left","textSize":"lg","textColor":"default"}},{"type":"heading","level":3,"text":"Kristen Garcia","style":{"align":"left","textSize":"md","textColor":"default"}},{"type":"text","body":"Winner of the 2026!.","style":{"align":"left","textSize":"md","textColor":"default"}},{"type":"image","url":"assets/images/programs/craig rogers/kristenwon.jpg","alt":"The Rogers Cup","caption":"","width":"full","align":"left"},{"type":"heading","level":3,"text":"The First of Many","style":{"align":"left","textSize":"md","textColor":"default"}},{"type":"text","body":"Kristen Garcia has made history as the first-ever recipient of the Craig Rogers Award. This honor recognizes an individual whose dedication to damage prevention and the 811 community reflects the very values Craig Rogers stood for. Kristen, we are so proud to celebrate you.","style":{"align":"left","textSize":"md","textColor":"default"}}]},{"type":"section","bg":"default","padding":"md","children":[{"type":"heading","level":2,"text":"Who Was Craig Rogers?","style":{"align":"left","textSize":"lg","textColor":"default"}},{"type":"image","url":"assets/images/programs/craig rogers/CraigInField.png","alt":"Craig Rogers in the field","caption":"","width":"full","align":"left"},{"type":"text","body":"Video courtesy of USA North 811. https://www.youtube.com/@usanorth811","style":{"align":"left","textSize":"md","textColor":"default"}},{"type":"text","body":"Craig Rogers exemplified the best of Nevada''s damage prevention community—integrity, mentorship, and a relentless focus on doing the right thing. He built bridges across stakeholders and raised the bar for safety culture. This award honors professionals who continue that legacy and inspire others to follow.","style":{"align":"left","textSize":"md","textColor":"default"}},{"type":"text","body":"\"When we get there, we are going to look at the entire piece. What are you doing as an excavator? What are you doing as a utility operator? And trying to figure out how we can make things better.\"","style":{"align":"left","textSize":"md","textColor":"default"}},{"type":"text","body":"— Craig Rogers","style":{"align":"left","textSize":"md","textColor":"default"}}]},{"type":"section","bg":"default","padding":"md","children":[{"type":"heading","level":2,"text":"Nominate a Champion","style":{"align":"left","textSize":"lg","textColor":"default"}},{"type":"text","body":"Know someone who exemplifies Craig Rogers'' legacy? Nominate them for the Craig Rogers Award.","style":{"align":"left","textSize":"md","textColor":"default"}},{"type":"html","content":"<form class=\"nrcga-form\" data-nrcga-form=\"award_application\" style=\"margin-top: 2rem;\">\n                <div style=\"position:absolute;left:-9999px;\" aria-hidden=\"true\">\n                    <input type=\"text\" name=\"website_url\" tabindex=\"-1\" autocomplete=\"off\">\n                </div>\n                <input type=\"hidden\" name=\"award\" value=\"Craig Rogers Award\">\n                <div class=\"form-group\" style=\"margin-bottom:1rem;\">\n                    <label for=\"aw-nominee\">Nominee name *</label>\n                    <input id=\"aw-nominee\" name=\"nominee_name\" required=\"\" style=\"width:100%;padding:0.75rem;border-radius:8px;border:1px solid var(--border);\">\n                </div>\n                <div class=\"form-group\" style=\"margin-bottom:1rem;\">\n                    <label for=\"aw-nominator\">Your name</label>\n                    <input id=\"aw-nominator\" name=\"nominator_name\" style=\"width:100%;padding:0.75rem;border-radius:8px;border:1px solid var(--border);\">\n                </div>\n                <div class=\"form-group\" style=\"margin-bottom:1rem;\">\n                    <label for=\"aw-email\">Email *</label>\n                    <input id=\"aw-email\" name=\"email\" type=\"email\" required=\"\" style=\"width:100%;padding:0.75rem;border-radius:8px;border:1px solid var(--border);\">\n                </div>\n                <div class=\"form-group\" style=\"margin-bottom:1rem;\">\n                    <label for=\"aw-org\">Organization</label>\n                    <input id=\"aw-org\" name=\"organization\" style=\"width:100%;padding:0.75rem;border-radius:8px;border:1px solid var(--border);\">\n                </div>\n                <div class=\"form-group\" style=\"margin-bottom:1rem;\">\n                    <label for=\"aw-statement\">Nomination statement</label>\n                    <textarea id=\"aw-statement\" name=\"statement\" rows=\"5\" style=\"width:100%;padding:0.75rem;border-radius:8px;border:1px solid var(--border);\"></textarea>\n                </div>\n                <button type=\"submit\" class=\"btn btn-primary\">Submit nomination</button>\n                <p data-form-status=\"\"></p>\n            </form>"}]},{"type":"section","bg":"light","padding":"md","children":[{"type":"heading","level":2,"text":"Get Involved","style":{"align":"left","textSize":"lg","textColor":"default"}},{"type":"text","body":"Click here to view your committee enrollment.","style":{"align":"left","textSize":"md","textColor":"default"}},{"type":"cta_button","label":"Committee Enrollment","url":"committee-enrollment.html","style":{"align":"left"}},{"type":"text","body":"Interested in participating in this committee?","style":{"align":"left","textSize":"md","textColor":"default"}},{"type":"cta_button","label":"Contact Us","url":"contact.html","style":{"align":"left"}}]}]', '<!-- Quote Section with Photo -->
+    <section class="content-section">
+        <div class="container">
+            <div style="max-width: 900px; margin: 0 auto;">
+                <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 2rem; align-items: center; margin-bottom: 2rem;">
+                    <div style="text-align: center;">
+                        <img src="assets/images/programs/craig rogers/craig1.jpg" alt="Craig Rogers" style="width: 100%; max-width: 300px; border-radius: 12px; box-shadow: var(--shadow-md);" onerror="this.style.display=''none''">
+                    </div>
+                    <div style="padding: 2rem; background: var(--bg-light); border-radius: 12px; border-left: 4px solid var(--primary);">
+                        <p style="font-size: 1.5rem; font-style: italic; color: var(--text-primary); margin-bottom: 1rem;">
+                            "I just want to do what is right."
+                        </p>
+                        <p style="color: var(--text-light);">— Craig Rogers</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Why This Award Exists -->
+    <section class="content-section bg-light">
+        <div class="container">
+            <div class="content-text" style="max-width: 900px; margin: 0 auto;">
+                <h2>Why This Award Exists</h2>
+                <p style="font-size: 1.125rem; line-height: 1.8; margin-bottom: 2rem;">
+                    The Craig Rogers Award celebrates leaders who:
+                </p>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-top: 2rem;">
+                    <div style="padding: 1.5rem; background: white; border-radius: 8px; text-align: center;">
+                        <div style="font-size: 2rem; margin-bottom: 0.5rem;">🛡️</div>
+                        <p style="font-weight: 600; margin-bottom: 0.5rem;">Demonstrate exceptional dedication</p>
+                        <p style="font-size: 0.9375rem; color: var(--text-light);">to preventing utility damages</p>
+                    </div>
+                    <div style="padding: 1.5rem; background: white; border-radius: 8px; text-align: center;">
+                        <div style="font-size: 2rem; margin-bottom: 0.5rem;">🔨</div>
+                        <p style="font-weight: 600; margin-bottom: 0.5rem;">Deliver tangible improvements</p>
+                        <p style="font-size: 0.9375rem; color: var(--text-light);">in safety and performance</p>
+                    </div>
+                    <div style="padding: 1.5rem; background: white; border-radius: 8px; text-align: center;">
+                        <div style="font-size: 2rem; margin-bottom: 0.5rem;">📖</div>
+                        <p style="font-weight: 600; margin-bottom: 0.5rem;">Share knowledge generously</p>
+                        <p style="font-size: 0.9375rem; color: var(--text-light);">raising the skills of peers</p>
+                    </div>
+                    <div style="padding: 1.5rem; background: white; border-radius: 8px; text-align: center;">
+                        <div style="font-size: 2rem; margin-bottom: 0.5rem;">🤝</div>
+                        <p style="font-weight: 600; margin-bottom: 0.5rem;">Uphold integrity and character</p>
+                        <p style="font-size: 0.9375rem; color: var(--text-light);">in every decision</p>
+                    </div>
+                </div>
+                <p style="margin-top: 2rem; font-style: italic; color: var(--text-light);">
+                    <strong>This recognition is not only about past achievements—it sets the standard for the future of damage prevention in Nevada.</strong>
+                </p>
+            </div>
+        </div>
+    </section>
+
+<!-- Several sections commented out to minimize site fluff -->
+    <!-- 
+     Guidelines & Eligibility 
+    <section class="content-section">
+        <div class="container">
+            <div class="content-text" style="max-width: 900px; margin: 0 auto;">
+                <h2>Guidelines & Eligibility</h2>
+                
+                <div style="margin-top: 2rem;">
+                    <h3 style="margin-bottom: 1rem; color: var(--primary);">Who can be nominated</h3>
+                    <p style="margin-bottom: 1.5rem;">Any Nevada-based professional active in damage prevention (excavators, operators, locators, engineers, public officials, etc.).</p>
+                </div>
+
+                <div style="margin-top: 2rem;">
+                    <h3 style="margin-bottom: 1rem; color: var(--primary);">Nominee Experience</h3>
+                    <p style="margin-bottom: 1.5rem;">Minimum 3 years in Nevada damage prevention or closely related roles.</p>
+                </div>
+
+                <div style="margin-top: 2rem;">
+                    <h3 style="margin-bottom: 1rem; color: var(--primary);">What to include</h3>
+                    <p style="margin-bottom: 1.5rem;">Specific examples of contributions, measurable outcomes, and a brief statement on mentorship and character.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works 
+    <section class="content-section bg-light">
+        <div class="container">
+            <div class="content-text" style="max-width: 900px; margin: 0 auto;">
+                <h2>The Process</h2>
+                
+                <div style="display: grid; gap: 2rem; margin-top: 2rem;">
+                    <div style="padding: 1.5rem; background: white; border-radius: 8px; border-left: 4px solid var(--primary);">
+                        <h3 style="margin-bottom: 0.5rem; color: var(--primary);">Submission Deadline</h3>
+                        <p>Nominations accepted Oct. 1 – Dec. 31, 2026.</p>
+                    </div>
+                    <div style="padding: 1.5rem; background: white; border-radius: 8px; border-left: 4px solid var(--primary);">
+                        <h3 style="margin-bottom: 0.5rem; color: var(--primary);">Committee Review</h3>
+                        <p>The Award Committee will review all submissions in January 2027.</p>
+                    </div>
+                    <div style="padding: 1.5rem; background: white; border-radius: 8px; border-left: 4px solid var(--primary);">
+                        <h3 style="margin-bottom: 0.5rem; color: var(--primary);">Finalist Interviews</h3>
+                        <p>Finalists will be asked to sit for in-person interviews with the Award Committee.</p>
+                    </div>
+                    <div style="padding: 1.5rem; background: white; border-radius: 8px; border-left: 4px solid var(--primary);">
+                        <h3 style="margin-bottom: 0.5rem; color: var(--primary);">Selection & Board Approval</h3>
+                        <p>The NRCGA Board of Directors will approve the Award Committee''s choice.</p>
+                    </div>
+                </div>
+<Button to nominate someone
+                <div style="text-align: center; margin-top: 3rem;">
+                    <a href="contact.html" class="btn btn-primary">Nominate a Damage Prevention Champion</a>
+                </div> 
+            </div>
+        </div>
+    </section> -->
+
+    <!-- Award Presentation -->
+    <section class="content-section">
+        <div class="container">
+            <div class="content-text" style="max-width: 900px; margin: 0 auto;">
+                <h2>Hall of Heroes</h2>
+
+                <div style="margin-top: 2rem;">
+                    <h3 style="margin-bottom: 1rem; color: var(--primary);">Kristen Garcia</h3>
+                    <p style="margin-bottom: 1.5rem;">Winner of the 2026!</strong>.</p>
+                    <div style="text-align: center; margin-top: 1.5rem;">
+                        <img src="assets/images/programs/craig rogers/kristenwon.jpg" alt="The Rogers Cup" style="max-width: 1200px; width: 100%; height: auto;" onerror="this.style.display=''none''">
+                    </div>
+                </div>
+
+                <div style="margin-top: 2rem;">
+                    <h3 style="margin-bottom: 1rem; color: var(--primary);">The First of Many</h3>
+                    <p style="margin-bottom: 1.5rem;">Kristen Garcia has made history as the first-ever recipient of the Craig Rogers Award. This honor recognizes an individual whose dedication to damage prevention and the 811 community reflects the very values Craig Rogers stood for. Kristen, we are so proud to celebrate you.</p>
+                </div>
+            </div>
+        </div>
+    </section> 
+
+    <!-- Core Values 
+    <section class="content-section bg-light">
+        <div class="container">
+            <div class="content-text" style="max-width: 900px; margin: 0 auto;">
+                <h2>Core Values & Evaluation Criteria</h2>
+                <p style="margin-bottom: 2rem; color: var(--text-light);">
+                    Nominees are evaluated on these four core values reflecting Craig Rogers'' legacy.
+                </p>
+
+                <div style="display: grid; gap: 2rem; margin-top: 2rem;">
+                    <div style="padding: 2rem; background: white; border-radius: 8px;">
+                        <h3 style="margin-bottom: 1rem; color: var(--primary);">Value 1 — Experience & Expertise</h3>
+                        <p>3+ years in Nevada damage prevention. Leadership roles, organizational involvement (e.g., NRCGA, CGA, NUCA, NULCA, etc.). Demonstrated knowledge of best practices, laws, and safe work methods.</p>
+                    </div>
+                    <div style="padding: 2rem; background: white; border-radius: 8px;">
+                        <h3 style="margin-bottom: 1rem; color: var(--primary);">Value 2 — Tangible Contributions</h3>
+                        <p>Programs/innovations that <strong>reduced damages</strong> or improved safety performance. Process, training, or technology that created <strong>measurable, lasting impact</strong>. Examples: new safety programs, training expansions, cross‑stakeholder partnerships, tech platforms.</p>
+                    </div>
+                    <div style="padding: 2rem; background: white; border-radius: 8px;">
+                        <h3 style="margin-bottom: 1rem; color: var(--primary);">Value 3 — Coaching & Mentorship</h3>
+                        <p>Known as a go‑to resource; builds capability in others. Trains peers, mentors new professionals, strengthens collaboration.</p>
+                    </div>
+                    <div style="padding: 2rem; background: white; border-radius: 8px;">
+                        <h3 style="margin-bottom: 1rem; color: var(--primary);">Value 4 — Character & Integrity</h3>
+                        <p>Honesty, respect, fairness; does what''s right for true prevention (not mere liability avoidance). Trusted reputation across stakeholder groups.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section> -->
+
+    <!-- Who Was Craig Rogers -->
+    <section class="content-section">
+        <div class="container">
+            <div class="content-text" style="max-width: 900px; margin: 0 auto;">
+                <h2>Who Was Craig Rogers?</h2>
+                <div style="margin: 2rem 0; text-align: center;">
+                    <img src="assets/images/programs/craig rogers/CraigInField.png" alt="Craig Rogers in the field" style="max-width: 500px; width: 100%; border-radius: 12px; box-shadow: var(--shadow-md);" onerror="this.style.display=''none''">
+                </div>
+                <p style="font-size: 1.125rem; line-height: 1.8; margin-top: 1.5rem; margin-bottom: 1.5rem;">
+                    <strong>Video courtesy of USA North 811.</strong> <a href="https://www.youtube.com/@usanorth811" target="_blank" rel="noopener noreferrer">https://www.youtube.com/@usanorth811</a>
+                </p>
+                <p style="font-size: 1.125rem; line-height: 1.8; margin-bottom: 2rem;">
+                    Craig Rogers exemplified the best of Nevada''s damage prevention community—integrity, mentorship, and a relentless focus on doing the right thing. He built bridges across stakeholders and raised the bar for safety culture. This award honors professionals who continue that legacy and inspire others to follow.
+                </p>
+                
+                <!-- Video Embed -->
+                <div style="margin: 2rem 0; position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 12px; box-shadow: var(--shadow-md);">
+                    <iframe 
+                        width="560" 
+                        height="315" 
+                        src="https://www.youtube.com/embed/QgH7O_1RlT4?si=MrVA5qP42cs9FvZv" 
+                        title="YouTube video player" 
+                        frameborder="0" 
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                        referrerpolicy="strict-origin-when-cross-origin" 
+                        allowfullscreen
+                        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;">
+                    </iframe>
+                </div>
+                
+                <div style="padding: 2rem; background: var(--bg-light); border-radius: 12px; border-left: 4px solid var(--primary); margin-top: 2rem;">
+                    <p style="font-size: 1.125rem; font-style: italic; color: var(--text-primary);">
+                        "When we get there, we are going to look at the entire piece. What are you doing as an excavator? What are you doing as a utility operator? And trying to figure out how we can make things better."
+                    </p>
+                    <p style="margin-top: 1rem; color: var(--text-light);">— Craig Rogers</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Nominate CTA -->
+    <section class="content-section">
+        <div class="container" style="max-width: 640px;">
+            <div class="cta-content">
+                <h2>Nominate a Champion</h2>
+                <p>Know someone who exemplifies Craig Rogers'' legacy? Nominate them for the Craig Rogers Award.</p>
+            </div>
+            <form class="nrcga-form" data-nrcga-form="award_application" style="margin-top: 2rem;">
+                <div style="position:absolute;left:-9999px;" aria-hidden="true">
+                    <input type="text" name="website_url" tabindex="-1" autocomplete="off">
+                </div>
+                <input type="hidden" name="award" value="Craig Rogers Award">
+                <div class="form-group" style="margin-bottom:1rem;">
+                    <label for="aw-nominee">Nominee name *</label>
+                    <input id="aw-nominee" name="nominee_name" required style="width:100%;padding:0.75rem;border-radius:8px;border:1px solid var(--border);">
+                </div>
+                <div class="form-group" style="margin-bottom:1rem;">
+                    <label for="aw-nominator">Your name</label>
+                    <input id="aw-nominator" name="nominator_name" style="width:100%;padding:0.75rem;border-radius:8px;border:1px solid var(--border);">
+                </div>
+                <div class="form-group" style="margin-bottom:1rem;">
+                    <label for="aw-email">Email *</label>
+                    <input id="aw-email" name="email" type="email" required style="width:100%;padding:0.75rem;border-radius:8px;border:1px solid var(--border);">
+                </div>
+                <div class="form-group" style="margin-bottom:1rem;">
+                    <label for="aw-org">Organization</label>
+                    <input id="aw-org" name="organization" style="width:100%;padding:0.75rem;border-radius:8px;border:1px solid var(--border);">
+                </div>
+                <div class="form-group" style="margin-bottom:1rem;">
+                    <label for="aw-statement">Nomination statement</label>
+                    <textarea id="aw-statement" name="statement" rows="5" style="width:100%;padding:0.75rem;border-radius:8px;border:1px solid var(--border);"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Submit nomination</button>
+                <p data-form-status></p>
+            </form>
+        </div>
+    </section>
+
+    <!-- Get Involved CTA -->
+    <section class="content-section bg-light">
+        <div class="container">
+            <div class="cta-content" style="text-align: center;">
+                <h2>Get Involved</h2>
+                <p>Click here to view your committee enrollment.</p>
+                <div style="display: flex; justify-content: center; gap: 1.5rem; margin-top: 3rem; flex-wrap: wrap;">
+                    <a href="committee-enrollment.html" class="btn btn-primary">Committee Enrollment</a>
+                </div>
+                <br>
+                <p>Interested in participating in this committee?</p>
+                <div style="display: flex; justify-content: center; gap: 1.5rem; margin-top: 3rem; flex-wrap: wrap;">
+                    <a href="contact.html" class="btn btn-primary">Contact Us</a>
+                </div>
+            </div>
+        </div>
+    </section>', NULL, 1, 0);

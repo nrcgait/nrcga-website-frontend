@@ -130,6 +130,9 @@ function nodeToBlocks($el) {
   if ($el.is('a.btn')) {
     return [{ type: 'cta_button', label: textOf($el), url: $el.attr('href') || '#', style: { align: inferAlign($el) } }]
   }
+  if (tag === 'form' && ($el.attr('data-nrcga-form') || ($el.attr('class') || '').includes('nrcga-form'))) {
+    return [{ type: 'html', content: $el.toString() }]
+  }
 
   const blocks = []
   $el.children().each((_, child) => {

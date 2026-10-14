@@ -55,6 +55,30 @@ describe('html sanitize', () => {
   it('allows media paths', () => {
     expect(isAllowedIframeSrc('/api/v1/media/uploads/x.pdf', 'https://api.nrcga.org')).toBe(true)
   })
+  it('preserves native award nomination forms', () => {
+    const raw =
+      '<form class="nrcga-form" data-nrcga-form="award_application">' +
+      '<input type="hidden" name="award" value="Craig Rogers Award">' +
+      '<label for="aw-nominee">Nominee name *</label>' +
+      '<input id="aw-nominee" name="nominee_name" required>' +
+      '<input id="aw-email" name="email" type="email" required>' +
+      '<textarea name="statement" rows="5"></textarea>' +
+      '<button type="submit" class="btn btn-primary">Submit nomination</button>' +
+      '<p data-form-status></p></form>'
+    const html = sanitizeCmsHtml(raw, 'https://api.nrcga.org')
+    expect(html).toContain('data-nrcga-form="award_application"')
+    expect(html).toContain('name="nominee_name"')
+    expect(html).toContain('type="email"')
+    expect(html).toContain('type="submit"')
+  })
+  it('strips arbitrary external form actions', () => {
+    const html = sanitizeCmsHtml(
+      '<form action="https://evil.example/post" method="post"><input name="x" type="text"></form>',
+      'https://api.nrcga.org',
+    )
+    expect(html).not.toContain('<form')
+    expect(html).not.toContain('evil.example')
+  })
 })
 
 describe('email', () => {
