@@ -78,6 +78,18 @@ describe('html sanitize', () => {
     )
     expect(html).not.toContain('<form')
     expect(html).not.toContain('evil.example')
+    expect(html).not.toContain('name="x"')
+  })
+  it('strips form controls that are not inside a native NRCGA form', () => {
+    const html = sanitizeCmsHtml(
+      '<p>Hello</p><input name="email" type="email"><textarea name="statement"></textarea>' +
+        '<button type="submit">Go</button>',
+      'https://api.nrcga.org',
+    )
+    expect(html).toContain('Hello')
+    expect(html).not.toContain('<input')
+    expect(html).not.toContain('<textarea')
+    expect(html).not.toContain('<button')
   })
 })
 

@@ -13,6 +13,10 @@ const IFRAME_HOST_PATTERNS = [
   /^https:\/\/form\.jotform\.com\//i,
 ]
 
+const NRCGA_NATIVE_INPUT_TYPES = new Set(['text', 'email', 'tel', 'url', 'hidden'])
+const FORM_CONTROL_TAGS = ['form', 'input', 'textarea', 'button', 'label', 'select', 'option'] as const
+const FORM_SLOT_TOKEN = (index: number) => `NRCGAFORMPSLOT${index}END`
+
 export function isAllowedIframeSrc(src: string, apiOrigin?: string): boolean {
   const trimmed = src.trim()
   if (!trimmed) return false
@@ -30,8 +34,6 @@ export function isAllowedResourceUrl(url: string, apiOrigin?: string): boolean {
   return sanitizeHttpUrl(trimmed) !== null
 }
 
-const NRCGA_NATIVE_INPUT_TYPES = new Set(['text', 'email', 'tel', 'url', 'hidden'])
-
 /** Site forms posted via POST /api/v1/forms/:type (data-nrcga-form). */
 export function isNativeNrcgaFormElement(attribs: Record<string, string>): boolean {
   const formType = attribs['data-nrcga-form']?.trim()
@@ -40,7 +42,62 @@ export function isNativeNrcgaFormElement(attribs: Record<string, string>): boole
   return cls.split(/\s+/).includes('nrcga-form')
 }
 
-function sanitizeOptions(apiOrigin?: string): sanitizeHtml.IOptions {
+function parseTagAttribs(openTag: string): Record<string, string> {
+  const attribs: Record<string, string> = {}
+  const inner = openTag.replace(/^<[^>\s]+/i, '').replace(/\/?>$/, '')
+  const re = /([^\s=<>/]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+)))?/g
+  let match: RegExpExecArray | null
+  while ((match = re.exec(inner))) {
+    attribs[match[1].toLowerCase()] = match[2] ?? match[3] ?? match[4] ?? ''
+  }
+  return attribs
+}
+
+function isFormTagStart(html: string, index: number): boolean {
+  const after = index + 5
+  return after >= html.length || /[\s>/]/.test(html[after] ?? '')
+}
+
+function extractNativeNrcgaForms(html: string): { html: string; forms: string[] } {
+  const forms: string[] = []
+  let out = ''
+  let i = 0
+  const lower = html.toLowerCase()
+  while (i < html.length) {
+    const start = lower.indexOf('<form', i)
+    if (start === -1) {
+      out += html.slice(i)
+      break
+    }
+    if (!isFormTagStart(html, start)) {
+      out += html.slice(i, start + 5)
+      i = start + 5
+      continue
+    }
+    const tagEnd = html.indexOf('>', start)
+    if (tagEnd === -1) {
+      out += html.slice(i)
+      break
+    }
+    const openTag = html.slice(start, tagEnd + 1)
+    const closeIdx = lower.indexOf('</form>', tagEnd + 1)
+    const end = closeIdx === -1 ? html.length : closeIdx + 7
+    if (isNativeNrcgaFormElement(parseTagAttribs(openTag))) {
+      out += html.slice(i, start) + FORM_SLOT_TOKEN(forms.length)
+      forms.push(html.slice(start, end))
+    } else {
+      out += html.slice(i, end)
+    }
+    i = end
+  }
+  return { html: out, forms }
+}
+
+function droppedNode() {
+  return { tagName: 'span', attribs: { class: 'nrcga-dropped' }, text: '' }
+}
+
+function baseOptions(apiOrigin?: string): sanitizeHtml.IOptions {
   return {
     allowedTags: sanitizeHtml.defaults.allowedTags.concat([
       'img',
@@ -54,13 +111,6 @@ function sanitizeOptions(apiOrigin?: string): sanitizeHtml.IOptions {
       'h4',
       'h5',
       'h6',
-      'form',
-      'input',
-      'textarea',
-      'button',
-      'label',
-      'select',
-      'option',
     ]),
     allowedAttributes: {
       ...sanitizeHtml.defaults.allowedAttributes,
@@ -75,13 +125,6 @@ function sanitizeOptions(apiOrigin?: string): sanitizeHtml.IOptions {
       table: ['class'],
       td: ['class', 'colspan', 'rowspan'],
       th: ['class', 'colspan', 'rowspan'],
-      form: ['class', 'style', 'data-nrcga-form', 'data-success-message'],
-      input: ['type', 'name', 'id', 'value', 'required', 'style', 'autocomplete', 'tabindex', 'placeholder'],
-      textarea: ['name', 'id', 'rows', 'required', 'style', 'placeholder'],
-      button: ['type', 'class'],
-      label: ['for', 'class'],
-      select: ['name', 'id', 'required', 'class'],
-      option: ['value'],
     },
     allowedSchemes: ['http', 'https', 'mailto'],
     allowedSchemesByTag: {
@@ -117,50 +160,76 @@ function sanitizeOptions(apiOrigin?: string): sanitizeHtml.IOptions {
         }
         return { tagName, attribs }
       },
-      form: (tagName, attribs) => {
-        if (!isNativeNrcgaFormElement(attribs)) {
-          return { tagName: 'div', attribs: {}, text: '' }
-        }
-        delete attribs.action
-        delete attribs.method
-        delete attribs.enctype
+    },
+    exclusiveFilter: (frame) => frame.tag === 'span' && frame.attribs?.class === 'nrcga-dropped',
+  }
+}
+
+function remainderOptions(apiOrigin?: string): sanitizeHtml.IOptions {
+  return baseOptions(apiOrigin)
+}
+
+function nativeFormOptions(apiOrigin?: string): sanitizeHtml.IOptions {
+  const options = baseOptions(apiOrigin)
+  const allowedTags = Array.isArray(options.allowedTags) ? options.allowedTags : []
+  options.allowedTags = allowedTags.concat([...FORM_CONTROL_TAGS])
+  options.allowedAttributes = {
+    ...options.allowedAttributes,
+    form: ['class', 'style', 'data-nrcga-form', 'data-success-message'],
+    input: ['type', 'name', 'id', 'value', 'required', 'style', 'autocomplete', 'tabindex', 'placeholder'],
+    textarea: ['name', 'id', 'rows', 'required', 'style', 'placeholder'],
+    button: ['type', 'class'],
+    label: ['for', 'class'],
+    select: ['name', 'id', 'required', 'class'],
+    option: ['value'],
+  }
+  options.transformTags = {
+    ...options.transformTags,
+    form: (tagName, attribs) => {
+      if (!isNativeNrcgaFormElement(attribs)) return droppedNode()
+      delete attribs.action
+      delete attribs.method
+      delete attribs.enctype
+      return { tagName, attribs }
+    },
+    input: (tagName, attribs) => {
+      const type = String(attribs.type ?? 'text').toLowerCase()
+      if (!NRCGA_NATIVE_INPUT_TYPES.has(type)) return droppedNode()
+      if (type === 'hidden' && attribs.name === 'website_url') {
         return { tagName, attribs }
-      },
-      input: (tagName, attribs) => {
-        const type = String(attribs.type ?? 'text').toLowerCase()
-        if (!NRCGA_NATIVE_INPUT_TYPES.has(type)) {
-          return { tagName: 'div', attribs: {}, text: '' }
-        }
-        if (type === 'hidden' && attribs.name === 'website_url') {
-          return { tagName, attribs }
-        }
-        const name = attribs.name?.trim()
-        if (!name || !/^[a-z][a-z0-9_]*$/i.test(name)) {
-          return { tagName: 'div', attribs: {}, text: '' }
-        }
-        return { tagName, attribs }
-      },
-      textarea: (tagName, attribs) => {
-        const name = attribs.name?.trim()
-        if (!name || !/^[a-z][a-z0-9_]*$/i.test(name)) {
-          return { tagName: 'div', attribs: {}, text: '' }
-        }
-        return { tagName, attribs }
-      },
-      button: (tagName, attribs) => {
-        if (attribs.type !== 'submit') {
-          return { tagName: 'div', attribs: {}, text: '' }
-        }
-        return { tagName, attribs }
-      },
+      }
+      const name = attribs.name?.trim()
+      if (!name || !/^[a-z][a-z0-9_]*$/i.test(name)) return droppedNode()
+      return { tagName, attribs }
+    },
+    textarea: (tagName, attribs) => {
+      const name = attribs.name?.trim()
+      if (!name || !/^[a-z][a-z0-9_]*$/i.test(name)) return droppedNode()
+      return { tagName, attribs }
+    },
+    button: (tagName, attribs) => {
+      if (attribs.type !== 'submit') return droppedNode()
+      return { tagName, attribs }
+    },
+    select: (tagName, attribs) => {
+      const name = attribs.name?.trim()
+      if (!name || !/^[a-z][a-z0-9_]*$/i.test(name)) return droppedNode()
+      return { tagName, attribs }
     },
   }
+  return options
 }
 
 /** Strip scripts and unsafe markup; allow rich text + vetted embeds. */
 export function sanitizeCmsHtml(html: string | null | undefined, apiOrigin?: string): string {
   if (!html) return ''
-  return sanitizeHtml(String(html), sanitizeOptions(apiOrigin))
+  const { html: remainder, forms } = extractNativeNrcgaForms(String(html))
+  let out = sanitizeHtml(remainder, remainderOptions(apiOrigin))
+  for (let i = 0; i < forms.length; i++) {
+    const sanitizedForm = sanitizeHtml(forms[i], nativeFormOptions(apiOrigin))
+    out = out.replace(FORM_SLOT_TOKEN(i), sanitizedForm)
+  }
+  return out
 }
 
 export function sanitizeRegionsJson(raw: string | null | undefined, apiOrigin?: string): string | null {
