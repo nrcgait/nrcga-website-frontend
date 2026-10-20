@@ -1,6 +1,6 @@
-import { EmailMessage } from 'cloudflare:email'
 import type { Env } from '../env'
 import type { EventRecord } from './event-repeat'
+import { isValidEmailAddress } from './email-address'
 import { inboxKeyForFormType } from './inbox-access'
 import { formatInNevada, formatNevadaDateParam } from './nevada-time'
 import { listStaffEmailsForEvent, listStaffEmailsForInbox } from './notification-prefs'
@@ -21,62 +21,37 @@ export function formatEventEmailWhen(
   return { dateLabel, timeLabel: timeLabel || startsAt }
 }
 
-function mailFrom(env: Env): string {
-  return `NRCGA <noreply@${new URL(env.PUBLIC_SITE_ORIGIN).hostname}>`
+function mailFromAddress(env: Env): string {
+  return `noreply@${new URL(env.PUBLIC_SITE_ORIGIN).hostname}`
 }
-
-function extractAddress(value: string): string {
-  const match = value.match(/<([^>]+)>/)
-  return (match?.[1] || value).trim()
-}
-
-function encodeHeaderValue(value: string): string {
-  if (/^[\x20-\x7E]*$/.test(value)) return value
-  const bytes = new TextEncoder().encode(value)
-  let bin = ''
-  for (const b of bytes) bin += String.fromCharCode(b)
-  return `=?UTF-8?B?${btoa(bin)}?=`
-}
-
-function buildRawMime(opts: {
-  from: string
-  to: string
-  subject: string
-  text: string
-  replyTo?: string
-}): string {
-  const headers = [`From: ${opts.from}`, `To: ${opts.to}`]
-  if (opts.replyTo) headers.push(`Reply-To: ${opts.replyTo}`)
-  headers.push(`Subject: ${encodeHeaderValue(opts.subject)}`)
-  headers.push('MIME-Version: 1.0')
-  headers.push('Content-Type: text/plain; charset=utf-8')
-  headers.push('Content-Transfer-Encoding: 8bit')
-  return `${headers.join('\r\n')}\r\n\r\n${opts.text.replace(/\n/g, '\r\n')}`
-}
-
-import { isValidEmailAddress } from './email-address'
 
 export async function sendMail(
   env: Env,
   opts: { to: string; subject: string; text: string; replyTo?: string },
 ): Promise<boolean> {
-  if (!env.EMAIL) return false
+  if (!env.EMAIL) {
+    console.error('email send skipped: EMAIL binding missing')
+    return false
+  }
   const to = opts.to.trim()
   if (!isValidEmailAddress(to)) return false
   if (opts.replyTo && !isValidEmailAddress(opts.replyTo)) return false
-  const from = mailFrom(env)
-  const fromAddr = extractAddress(from)
-  const raw = buildRawMime({
-    from,
-    to,
-    subject: opts.subject,
-    text: opts.text,
-    replyTo: opts.replyTo?.trim() || undefined,
-  })
   try {
-    await env.EMAIL.send(new EmailMessage(fromAddr, to, raw) as unknown as Parameters<SendEmail['send']>[0])
+    await env.EMAIL.send({
+      from: { email: mailFromAddress(env), name: 'NRCGA' },
+      to,
+      subject: opts.subject,
+      text: opts.text,
+      replyTo: opts.replyTo?.trim() || undefined,
+    } as Parameters<SendEmail['send']>[0])
     return true
-  } catch {
+  } catch (error) {
+    const code = error && typeof error === 'object' && 'code' in error ? String((error as { code: unknown }).code) : ''
+    console.error('email send failed', {
+      to,
+      code,
+      message: error instanceof Error ? error.message : String(error),
+    })
     return false
   }
 }
