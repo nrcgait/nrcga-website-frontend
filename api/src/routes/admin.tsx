@@ -1592,6 +1592,10 @@ function EventForm({
 
       <fieldset class="admin-fieldset">
         <legend>End date & time (optional)</legend>
+        <p class="muted">
+          Meeting length for this occurrence (Pacific Time). For repeating events, use the same calendar day as the
+          start. Use Repeat until below for the last date in the series.
+        </p>
         <div class="admin-datetime-row">
           <label>
             Date
@@ -1688,6 +1692,7 @@ function EventForm({
       <input name="repeat_interval_days" type="number" value={event?.repeat_interval_days ?? ''} />
       <label>Repeat until</label>
       <input name="repeat_until" type="date" value={toDateInputValue(event?.repeat_until)} />
+      <p class="muted">Last date the series should appear. This is not the meeting end time.</p>
       <label>
         <input type="checkbox" name="registration_enabled" value="1" checked={event?.registration_enabled === 1} /> Enable
         registration

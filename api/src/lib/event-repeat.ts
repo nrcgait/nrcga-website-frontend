@@ -1,9 +1,11 @@
 import {
   addNevadaCalendarDays,
   addNevadaCalendarMonths,
+  fromNevadaParts,
   nevadaDateParam,
   nevadaEndOfDay,
   parseToInstant,
+  toNevadaParts,
 } from './nevada-time'
 
 export type EventRepeatRule = 'weekly' | 'biweekly' | 'monthly' | 'custom'
@@ -76,17 +78,51 @@ function nextOccurrence(current: Date, rule: EventRepeatRule, intervalDays: numb
   }
 }
 
-function eventDurationMs(event: EventRecord): number {
-  if (!event.ends_at) return 0
-  const start = parseToInstant(event.starts_at)?.getTime()
-  const end = parseToInstant(event.ends_at)?.getTime()
-  if (start == null || end == null || end < start) return 0
-  return end - start
+function occurrenceEndOfDay(occurrenceStart: Date): Date {
+  return nevadaEndOfDay(nevadaDateParam(occurrenceStart)) ?? occurrenceStart
 }
 
-function occurrenceFilterEnd(occurrenceStart: Date, durationMs: number): Date {
-  if (durationMs > 0) return new Date(occurrenceStart.getTime() + durationMs)
-  return nevadaEndOfDay(nevadaDateParam(occurrenceStart)) ?? occurrenceStart
+function repeatingSameDayEnd(event: EventRecord, occurrenceStart: Date): Date | null {
+  if (!event.ends_at) return null
+  const seriesEnd = parseToInstant(event.ends_at)
+  if (!seriesEnd) return null
+  const endParts = toNevadaParts(seriesEnd)
+  const startParts = toNevadaParts(occurrenceStart)
+  const sameDayEnd = fromNevadaParts({
+    year: startParts.year,
+    month: startParts.month,
+    day: startParts.day,
+    hour: endParts.hour,
+    minute: endParts.minute,
+    second: endParts.second,
+  })
+  if (sameDayEnd.getTime() <= occurrenceStart.getTime()) return null
+  return sameDayEnd
+}
+
+/** Filter end and optional display duration. Repeating series never inherit a multi-day span. */
+function occurrenceTiming(
+  event: EventRecord,
+  occurrenceStart: Date,
+  repeating: boolean,
+): { filterEnd: Date; durationMs: number } {
+  const eod = occurrenceEndOfDay(occurrenceStart)
+
+  if (!repeating) {
+    if (!event.ends_at) return { filterEnd: eod, durationMs: 0 }
+    const seriesStart = parseToInstant(event.starts_at)
+    const seriesEnd = parseToInstant(event.ends_at)
+    if (seriesStart && seriesEnd && seriesEnd.getTime() > seriesStart.getTime()) {
+      return { filterEnd: seriesEnd, durationMs: seriesEnd.getTime() - occurrenceStart.getTime() }
+    }
+    return { filterEnd: eod, durationMs: 0 }
+  }
+
+  const sameDayEnd = repeatingSameDayEnd(event, occurrenceStart)
+  if (sameDayEnd) {
+    return { filterEnd: sameDayEnd, durationMs: sameDayEnd.getTime() - occurrenceStart.getTime() }
+  }
+  return { filterEnd: eod, durationMs: 0 }
 }
 
 function repeatHorizonEnd(event: EventRecord, fallback: Date): Date {
@@ -102,7 +138,7 @@ function makeOccurrence(
 ): ExpandedEventRecord {
   const starts_at = occurrenceStart.toISOString()
   const ends_at =
-    durationMs > 0 ? new Date(occurrenceStart.getTime() + durationMs).toISOString() : event.ends_at
+    durationMs > 0 ? new Date(occurrenceStart.getTime() + durationMs).toISOString() : null
   const occurrence_date = nevadaDateParam(occurrenceStart)
   return {
     ...event,
@@ -118,9 +154,9 @@ function makeOccurrence(
 export function expandEventOccurrences(
   events: EventRecord[],
   cancelledByEvent: Map<string, Set<string>>,
-  options: { from?: Date; to?: Date; upcomingOnly?: boolean } = {},
+  options: { from?: Date; to?: Date; upcomingOnly?: boolean; now?: Date } = {},
 ): ExpandedEventRecord[] {
-  const now = new Date()
+  const now = options.now ?? new Date()
   const from = options.from ?? addNevadaCalendarMonths(now, -12)
   const to = options.to ?? addNevadaCalendarMonths(now, 24)
   const upcomingOnly = options.upcomingOnly ?? false
@@ -130,14 +166,14 @@ export function expandEventOccurrences(
     if (event.cancelled_at) continue
     const cancelledDates = cancelledByEvent.get(event.id) ?? new Set<string>()
     const rule = parseRepeatRule(event.repeat_rule)
-    const durationMs = eventDurationMs(event)
+    const repeating = Boolean(rule)
     const seriesStart = parseToInstant(event.starts_at)
     if (!seriesStart) continue
 
     if (!rule) {
-      const occurrenceEnd = occurrenceFilterEnd(seriesStart, durationMs)
-      if (upcomingOnly && occurrenceEnd < now) continue
-      if (seriesStart > to || occurrenceEnd < from) continue
+      const { filterEnd, durationMs } = occurrenceTiming(event, seriesStart, false)
+      if (upcomingOnly && filterEnd < now) continue
+      if (seriesStart > to || filterEnd < from) continue
       occurrences.push(makeOccurrence(event, seriesStart, durationMs, cancelledDates))
       continue
     }
@@ -148,9 +184,9 @@ export function expandEventOccurrences(
 
     while (current <= repeatEnd && current <= to && guard < 500) {
       guard += 1
-      const occurrenceEnd = occurrenceFilterEnd(current, durationMs)
-      const inRange = current <= to && occurrenceEnd >= from
-      const isUpcoming = occurrenceEnd >= now
+      const { filterEnd, durationMs } = occurrenceTiming(event, current, repeating)
+      const inRange = current <= to && filterEnd >= from
+      const isUpcoming = filterEnd >= now
       if (inRange && (!upcomingOnly || isUpcoming)) {
         occurrences.push(makeOccurrence(event, current, durationMs, cancelledDates))
       }
