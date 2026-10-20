@@ -69,6 +69,8 @@ import {
   deleteRegistration,
   getRegistrationById,
   listRegistrationsPaginated,
+  formatUpcomingRegistrationCount,
+  listUpcomingOccurrenceCounts,
   REGISTRATION_SORT_COLUMNS,
 } from '../lib/event-registrations'
 import {
@@ -961,6 +963,7 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>) {
       ?? parseSortParam(c.req.query('sort'), c.req.query('dir'), CANCELLATION_SORT_COLUMNS)
     const result = await listRegistrationsPaginated(c.env.DB, event.id, page, sort)
     const cancelledOccurrences = await listCancelledOccurrences(c.env.DB, event.id, sort)
+    const upcomingOccurrences = await listUpcomingOccurrenceCounts(c.env.DB, event)
     const basePath = `/admin/events/${event.id}/registrations`
     const listParams = sortParams(sort)
     return c.html(
@@ -971,6 +974,36 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>) {
             <a href={`/admin/events/${event.id}/edit`}>Uncancel the series</a> to restore it on the public calendar.
           </p>
         ) : null}
+        <h3>Upcoming occurrences</h3>
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Registered</th>
+            </tr>
+          </thead>
+          <tbody>
+            {upcomingOccurrences.length === 0 ? (
+              <tr>
+                <td colspan={2} class="muted">
+                  No upcoming occurrences in the next 3 months.
+                </td>
+              </tr>
+            ) : (
+              upcomingOccurrences.map((occ) => (
+                <tr>
+                  <td>
+                    {escapeHtml(formatEventDateTime(occ.starts_at))}
+                    {occ.cancelled ? <span class="muted"> (Cancelled)</span> : null}
+                  </td>
+                  <td>
+                    {formatUpcomingRegistrationCount(occ)}
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
         {cancelledOccurrences.length ? (
           <>
             <h3>Cancelled occurrences</h3>

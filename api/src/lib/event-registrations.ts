@@ -2,8 +2,10 @@ import type { Env } from '../env'
 import type { EventRecord } from './event-repeat'
 import { expandEventOccurrences } from './event-repeat'
 import { getCancelledOccurrenceMap } from './events-db'
-import { instantOnNevadaDate, parseToInstant } from './nevada-time'
+import { addNevadaCalendarMonths, instantOnNevadaDate, parseToInstant } from './nevada-time'
 import { sendRegistrationConfirmation, sendStaffRegistrationNotices } from './email'
+
+export const UPCOMING_REGISTRATION_WINDOW_MONTHS = 3
 
 export type RegistrationInput = {
   guest_name: string
@@ -44,6 +46,78 @@ export async function isValidOccurrence(
   const cancelled = await getCancelledOccurrenceMap(db)
   const expanded = expandEventOccurrences([event], cancelled, { upcomingOnly: false })
   return expanded.some((o) => o.occurrence_date === occurrenceDate && !o.cancelled)
+}
+
+export type UpcomingOccurrenceCount = {
+  occurrence_date: string
+  starts_at: string
+  registered: number
+  filled: number
+  capacity: number | null
+  capacity_scope: EventRecord['capacity_scope']
+  cancelled: boolean
+}
+
+export function formatUpcomingRegistrationCount(occ: UpcomingOccurrenceCount): string {
+  if (occ.capacity == null) return String(occ.registered)
+  if (occ.capacity_scope === 'series') {
+    return `${occ.registered} this date · ${occ.filled} / ${occ.capacity}`
+  }
+  return `${occ.registered} / ${occ.capacity}`
+}
+
+export function buildUpcomingOccurrenceCounts(
+  event: EventRecord,
+  cancelledDates: Set<string>,
+  registeredByDate: Map<string, number>,
+  now: Date = new Date(),
+): UpcomingOccurrenceCount[] {
+  const expanded = expandEventOccurrences([event], new Map([[event.id, cancelledDates]]), {
+    upcomingOnly: true,
+    now,
+    from: now,
+    to: addNevadaCalendarMonths(now, UPCOMING_REGISTRATION_WINDOW_MONTHS),
+  })
+  const capacity = event.registration_enabled ? event.capacity : null
+  let seriesTotal = 0
+  for (const count of registeredByDate.values()) seriesTotal += count
+  return expanded.map((occ) => {
+    const registered = registeredByDate.get(occ.occurrence_date) ?? 0
+    return {
+      occurrence_date: occ.occurrence_date,
+      starts_at: occ.starts_at,
+      registered,
+      filled: event.capacity_scope === 'series' ? seriesTotal : registered,
+      capacity,
+      capacity_scope: event.capacity_scope,
+      cancelled: occ.cancelled,
+    }
+  })
+}
+
+export async function listUpcomingOccurrenceCounts(
+  db: D1Database,
+  event: EventRecord,
+  now: Date = new Date(),
+): Promise<UpcomingOccurrenceCount[]> {
+  const cancelledMap = await getCancelledOccurrenceMap(db)
+  const { results } = await db
+    .prepare(
+      `SELECT occurrence_date, COALESCE(SUM(spot_count), 0) as total
+       FROM event_registrations WHERE event_id = ? GROUP BY occurrence_date`,
+    )
+    .bind(event.id)
+    .all<{ occurrence_date: string; total: number }>()
+  const registeredByDate = new Map<string, number>()
+  for (const row of results ?? []) {
+    registeredByDate.set(row.occurrence_date, Number(row.total) || 0)
+  }
+  return buildUpcomingOccurrenceCounts(
+    event,
+    cancelledMap.get(event.id) ?? new Set(),
+    registeredByDate,
+    now,
+  )
 }
 
 export async function getRegisteredSpots(
