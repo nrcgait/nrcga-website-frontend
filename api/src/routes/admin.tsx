@@ -295,9 +295,12 @@ function eventListFilter(ctx: AdminContext): EventListFilter | undefined {
 }
 
 function formStringList(value: unknown): string[] {
-  if (Array.isArray(value)) return value.filter((v): v is string => typeof v === 'string' && v.length > 0)
-  if (typeof value === 'string' && value) return [value]
-  return []
+  const items = Array.isArray(value) ? value : value == null || value === '' ? [] : [value]
+  return items.filter((v): v is string => typeof v === 'string' && v.length > 0)
+}
+
+function formFlag(value: unknown): boolean {
+  return formStringList(value).some((item) => item === '1' || item === 'on' || item === 'true')
 }
 
 function prefsFromBody(body: { event_mode?: unknown; form_mode?: unknown; event_ids?: unknown; inbox_keys?: unknown }): NotificationPrefs {
@@ -1222,7 +1225,7 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>) {
     const showNotify = canReceiveStaffNotifications(ctx.user.role)
     let prefs = showNotify ? await getNotificationPrefs(c.env.DB, ctx.user.id) : null
     if (c.req.method === 'POST') {
-      const body = await c.req.parseBody()
+      const body = await c.req.parseBody({ all: true })
       const action = String(body._action ?? 'password')
       if (action === 'notifications' && showNotify) {
         await saveNotificationPrefs(c.env.DB, ctx.user.id, prefsFromBody(body))
@@ -1426,7 +1429,7 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>) {
     const notifyOptions = await adminNotificationOptions(c.env.DB)
     let error: string | undefined
     if (c.req.method === 'POST') {
-      const body = await c.req.parseBody()
+      const body = await c.req.parseBody({ all: true })
       const memberId = String(body.member_id ?? '') || null
       if (memberId) {
         const linked = await findUserLinkedToMember(c.env.DB, memberId)
@@ -1483,7 +1486,7 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>) {
     let prefs = await getNotificationPrefs(c.env.DB, userId)
     let error: string | undefined
     if (c.req.method === 'POST') {
-      const body = await c.req.parseBody()
+      const body = await c.req.parseBody({ all: true })
       if (body._action === 'delete') {
         if (userId === ctx.user.id) {
           error = 'You cannot delete your own account.'
@@ -1504,8 +1507,10 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>) {
           const role: UserRole = (USER_ROLES as readonly string[]).includes(roleRaw)
             ? (roleRaw as UserRole)
             : user.role
-          const newPassword = typeof body.password === 'string' && body.password ? body.password : undefined
-          if (newPassword && newPassword.length < 8) {
+          const wantsPassword = formFlag(body.set_password)
+          const passwordValue = formStringList(body.password)[0] ?? ''
+          const newPassword = wantsPassword ? passwordValue : undefined
+          if (wantsPassword && newPassword.length < 8) {
             error = 'Password must be at least 8 characters.'
           } else {
             await updateUser(c.env.DB, userId, {
@@ -1521,6 +1526,19 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>) {
               await assignChairCommittees(c.env.DB, userId, [])
             }
             await saveManagedNotificationPrefs(c.env.DB, userId, role, body)
+            if (newPassword && userId === ctx.user.id) {
+              const sv = await getUserSessionVersion(c.env.DB, userId)
+              if (sv) {
+                const token = await createSessionToken(userId, role, sv, c.env)
+                return new Response(null, {
+                  status: 303,
+                  headers: {
+                    Location: '/admin/users',
+                    'Set-Cookie': sessionCookieHeader(token, isHttpsRequest(c.req.url)),
+                  },
+                })
+              }
+            }
             return redirect(c, '/admin/users')
           }
         }

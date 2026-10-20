@@ -224,12 +224,24 @@ export function UserForm({
 }) {
   const isEdit = Boolean(user)
   return (
-    <form method="post" class="admin-form">
+    <form method="post" class="admin-form" autoComplete="off">
       {error ? <div class="error">{escapeHtml(error)}</div> : null}
       <label>Email</label>
-      <input name="email" type="email" required value={user?.email ?? ''} />
-      <label>Password{isEdit ? ' (leave blank to keep current)' : ''}</label>
-      <input name="password" type="password" required={!isEdit} />
+      <input name="email" type="email" required value={user?.email ?? ''} autoComplete="off" />
+      {isEdit ? (
+        <label>
+          <input type="checkbox" name="set_password" value="1" /> Set a new password
+        </label>
+      ) : (
+        <label>Password</label>
+      )}
+      <input
+        name="password"
+        type="password"
+        required={!isEdit}
+        autoComplete="new-password"
+        placeholder={isEdit ? 'Only used if “Set a new password” is checked' : undefined}
+      />
       <label>Display name</label>
       <input name="display_name" value={user?.display_name ?? ''} />
       <label>Role</label>
