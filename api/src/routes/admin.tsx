@@ -1510,7 +1510,7 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>) {
           const wantsPassword = formFlag(body.set_password)
           const passwordValue = formStringList(body.password)[0] ?? ''
           const newPassword = wantsPassword ? passwordValue : undefined
-          if (wantsPassword && newPassword.length < 8) {
+          if (wantsPassword && passwordValue.length < 8) {
             error = 'Password must be at least 8 characters.'
           } else {
             await updateUser(c.env.DB, userId, {
