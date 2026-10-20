@@ -35,14 +35,18 @@ export async function sendMail(
   }
   const to = opts.to.trim()
   if (!isValidEmailAddress(to)) return false
-  if (opts.replyTo && !isValidEmailAddress(opts.replyTo)) return false
+  const replyTo = opts.replyTo?.trim()
+  const safeReplyTo = replyTo && isValidEmailAddress(replyTo) ? replyTo : undefined
+  if (replyTo && !safeReplyTo) {
+    console.error('email send omitting invalid replyTo', { to, replyTo })
+  }
   try {
     await env.EMAIL.send({
       from: { email: mailFromAddress(env), name: 'NRCGA' },
       to,
       subject: opts.subject,
       text: opts.text,
-      replyTo: opts.replyTo?.trim() || undefined,
+      replyTo: safeReplyTo,
     } as Parameters<SendEmail['send']>[0])
     return true
   } catch (error) {
