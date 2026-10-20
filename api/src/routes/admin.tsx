@@ -65,7 +65,12 @@ import {
   validateEventAssignment,
 } from '../lib/permissions'
 import { registerAdminAssetRoutes } from './admin-assets'
-import { deleteRegistration, listRegistrationsPaginated, REGISTRATION_SORT_COLUMNS } from '../lib/event-registrations'
+import {
+  deleteRegistration,
+  getRegistrationById,
+  listRegistrationsPaginated,
+  REGISTRATION_SORT_COLUMNS,
+} from '../lib/event-registrations'
 import {
   getBreakingNews,
   getContactInfo,
@@ -242,6 +247,19 @@ async function memberValidationError(
   }
 
   return undefined
+}
+
+function displayRegistrationValue(value: string | number | null | undefined): string {
+  if (value == null) return '—'
+  const text = String(value).trim()
+  return text || '—'
+}
+
+function formatRegisteredAt(value: string | null | undefined): string {
+  if (!value?.trim()) return '—'
+  const trimmed = value.trim()
+  const asUtc = /(?:Z|[+-]\d{2}:?\d{2})$/i.test(trimmed) ? trimmed : `${trimmed.replace(' ', 'T')}Z`
+  return formatEventDateTime(asUtc) || trimmed
 }
 
 function parseMeetingUrlField(body: Record<string, string | File>): {
@@ -1015,6 +1033,8 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>) {
                 <td>{escapeHtml(r.guest_email)}</td>
                 <td>{r.spot_count}</td>
                 <td>
+                  <a href={`/admin/registrations/${r.id}`}>View</a>
+                  {' '}
                   <form method="post" action={`/admin/registrations/${r.id}/delete`} class="admin-form-inline">
                     <button class="btn btn-secondary" type="submit">
                       Remove
@@ -1036,11 +1056,75 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>) {
     )
   })
 
+  app.get('/admin/registrations/:id', async (c) => {
+    const ctx = await requireAdmin(c)
+    if (!ctx || !canViewEvents(ctx)) return redirect(c, '/admin/login')
+    const registration = await getRegistrationById(c.env.DB, c.req.param('id'))
+    if (!registration) return c.text('Not found', 404)
+    const event = await getEventById(c.env.DB, registration.event_id)
+    if (!event) return c.text('Not found', 404)
+    if (!canEditEvent(ctx, event)) return c.text('Forbidden', 403)
+    const notes = displayRegistrationValue(registration.notes)
+    const notesLong = notes !== '—' && (notes.length > 120 || notes.includes('\n'))
+    const registeredAt = formatRegisteredAt(registration.registered_at)
+    return c.html(
+      <AdminShell
+        ctx={ctx}
+        title={`Registration — ${registration.guest_name}`}
+        activePath="/admin/events"
+        publicSiteOrigin={c.env.PUBLIC_SITE_ORIGIN}
+      >
+        <p>
+          <a class="btn btn-secondary" href={`/admin/events/${event.id}/registrations`}>
+            Back to registrations
+          </a>
+        </p>
+        <div class="submission-meta">
+          <div>
+            <span class="submission-meta-label">Event</span>
+            <strong>{escapeHtml(event.title)}</strong>
+          </div>
+          <div>
+            <span class="submission-meta-label">Date</span>
+            <strong>{escapeHtml(registration.occurrence_date)}</strong>
+          </div>
+          <div>
+            <span class="submission-meta-label">Registered</span>
+            <strong>{escapeHtml(registeredAt)}</strong>
+          </div>
+        </div>
+        <dl class="submission-fields">
+          <dt>Name</dt>
+          <dd>{escapeHtml(displayRegistrationValue(registration.guest_name))}</dd>
+          <dt>Email</dt>
+          <dd>{escapeHtml(displayRegistrationValue(registration.guest_email))}</dd>
+          <dt>Phone</dt>
+          <dd>{escapeHtml(displayRegistrationValue(registration.guest_phone))}</dd>
+          <dt>Organization</dt>
+          <dd>{escapeHtml(displayRegistrationValue(registration.organization))}</dd>
+          <dt>Spots</dt>
+          <dd>{escapeHtml(displayRegistrationValue(registration.spot_count))}</dd>
+          <dt>Notes</dt>
+          <dd class={notesLong ? 'submission-field-long' : undefined}>{escapeHtml(notes)}</dd>
+        </dl>
+        <form method="post" action={`/admin/registrations/${registration.id}/delete`} class="admin-form">
+          <button class="btn btn-danger" type="submit">
+            Remove
+          </button>
+        </form>
+      </AdminShell>,
+    )
+  })
+
   app.post('/admin/registrations/:id/delete', async (c) => {
     const ctx = await requireAdmin(c)
     if (!ctx || !canViewEvents(ctx)) return redirect(c, '/admin/login')
-    await deleteRegistration(c.env.DB, c.req.param('id'))
-    return redirect(c, c.req.header('Referer') ?? '/admin/events')
+    const registration = await getRegistrationById(c.env.DB, c.req.param('id'))
+    if (registration) {
+      await deleteRegistration(c.env.DB, registration.id)
+      return redirect(c, `/admin/events/${registration.event_id}/registrations`)
+    }
+    return redirect(c, '/admin/events')
   })
 
   app.get('/admin/content', async (c) => {

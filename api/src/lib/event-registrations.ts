@@ -14,6 +14,19 @@ export type RegistrationInput = {
   notes?: string
 }
 
+export type EventRegistrationRow = {
+  id: string
+  event_id: string
+  guest_name: string
+  guest_email: string
+  guest_phone: string | null
+  organization: string | null
+  notes: string | null
+  spot_count: number
+  occurrence_date: string
+  registered_at: string
+}
+
 export type Availability = {
   registered: number
   capacity: number | null
@@ -196,18 +209,7 @@ export async function listRegistrations(
   db: D1Database,
   eventId: string,
   occurrenceDate?: string,
-): Promise<
-  Array<{
-    id: string
-    guest_name: string
-    guest_email: string
-    guest_phone: string | null
-    organization: string | null
-    spot_count: number
-    occurrence_date: string
-    registered_at: string
-  }>
-> {
+): Promise<EventRegistrationRow[]> {
   let query = 'SELECT * FROM event_registrations WHERE event_id = ?'
   const binds: string[] = [eventId]
   if (occurrenceDate) {
@@ -216,16 +218,7 @@ export async function listRegistrations(
   }
   query += ' ORDER BY registered_at DESC'
   const { results } = await db.prepare(query).bind(...binds).all()
-  return (results ?? []) as Array<{
-    id: string
-    guest_name: string
-    guest_email: string
-    guest_phone: string | null
-    organization: string | null
-    spot_count: number
-    occurrence_date: string
-    registered_at: string
-  }>
+  return (results ?? []) as EventRegistrationRow[]
 }
 
 import { paginateQuery } from './pagination'
@@ -245,22 +238,18 @@ export async function listRegistrationsPaginated(
   sort?: SortSpec | null,
 ) {
   const order = sqlOrderBy(sort, REGISTRATION_SORT_COLUMNS, 'ORDER BY registered_at DESC')
-  return paginateQuery<{
-    id: string
-    guest_name: string
-    guest_email: string
-    guest_phone: string | null
-    organization: string | null
-    spot_count: number
-    occurrence_date: string
-    registered_at: string
-  }>(
+  return paginateQuery<EventRegistrationRow>(
     db,
     'SELECT COUNT(*) as c FROM event_registrations WHERE event_id = ?',
     `SELECT * FROM event_registrations WHERE event_id = ? ${order}`,
     page,
     [eventId],
   )
+}
+
+export async function getRegistrationById(db: D1Database, id: string): Promise<EventRegistrationRow | null> {
+  const row = await db.prepare('SELECT * FROM event_registrations WHERE id = ?').bind(id).first<EventRegistrationRow>()
+  return row ?? null
 }
 
 export async function deleteRegistration(db: D1Database, id: string): Promise<void> {
