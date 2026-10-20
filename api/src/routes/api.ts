@@ -439,7 +439,7 @@ export function registerPublicApiRoutes(app: Hono<{ Bindings: Env }>) {
 
         occurrence_date: body.occurrence_date,
 
-        starts_at: event.starts_at,
+        starts_at: result.startsAt,
 
         location: event.location,
 

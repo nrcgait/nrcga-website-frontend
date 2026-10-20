@@ -612,11 +612,20 @@ async function showRegistrationModal(seriesId, occurrenceDate, eventTitle, sourc
     await window.NRCGA_turnstile.mountWidget(turnstileEl);
   }
 
+  let submitting = false;
   registrationForm.addEventListener('submit', async (e) => {
     e.preventDefault();
+    if (submitting) return;
     const form = e.target;
     const errEl = document.getElementById('event-registration-error');
+    const submitBtn = form.querySelector('button[type="submit"]');
     errEl.style.display = 'none';
+    submitting = true;
+    form.setAttribute('aria-busy', 'true');
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Saving…';
+    }
     const payload = {
       occurrence_date: form.occurrence_date.value,
       guest_name: form.guest_name.value,
@@ -632,6 +641,12 @@ async function showRegistrationModal(seriesId, occurrenceDate, eventTitle, sourc
       if (!data.success) {
         errEl.textContent = data.error || 'Registration failed.';
         errEl.style.display = 'block';
+        submitting = false;
+        form.removeAttribute('aria-busy');
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Register';
+        }
         return;
       }
       data.registration.guest_email = payload.guest_email;
@@ -640,6 +655,12 @@ async function showRegistrationModal(seriesId, occurrenceDate, eventTitle, sourc
     } catch (err) {
       errEl.textContent = err.message || 'Registration failed. Please try again.';
       errEl.style.display = 'block';
+      submitting = false;
+      form.removeAttribute('aria-busy');
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Register';
+      }
     }
   });
 

@@ -113,6 +113,7 @@ export async function registerGuest(
       registrationId: string
       emailSent: boolean
       availability: Availability
+      startsAt: string
     }
   | { ok: false; error: string }
 > {
@@ -202,7 +203,7 @@ export async function registerGuest(
     organization: input.organization?.trim(),
   })
 
-  return { ok: true, registrationId, emailSent, availability: updatedAvailability }
+  return { ok: true, registrationId, emailSent, availability: updatedAvailability, startsAt }
 }
 
 export async function listRegistrations(

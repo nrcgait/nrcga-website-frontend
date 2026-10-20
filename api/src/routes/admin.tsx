@@ -107,6 +107,7 @@ import {
 } from '../lib/session'
 import { isHttpsRequest } from '../lib/security-headers'
 import { combineDateTime, formatEventDateTime, splitDateTime, toDateInputValue } from '../lib/event-datetime'
+import { parseRepeatRule } from '../lib/event-repeat'
 import { parsePageParam, parseSearchParam } from '../lib/pagination'
 import { parseSortParam, sortParams } from '../lib/sort'
 import {
@@ -789,7 +790,11 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>) {
                   {escapeHtml(e.title)}
                   {e.cancelled_at ? <span class="muted"> (Cancelled)</span> : null}
                 </td>
-                <td>{escapeHtml(formatEventDateTime(e.starts_at))}</td>
+                <td>
+                  {parseRepeatRule(e.repeat_rule)
+                    ? 'Multiple'
+                    : escapeHtml(formatEventDateTime(e.starts_at))}
+                </td>
                 <td>{escapeHtml(e.committee_slug ?? '—')}</td>
                 <td>{escapeHtml(e.category)}</td>
                 <td>{e.registration_enabled ? 'Yes' : 'No'}</td>
