@@ -11,6 +11,7 @@ import {
   canManageUsers,
   ROLE_LABELS,
 } from '../config/roles'
+import { formatDeployTime } from '../lib/deploy-info'
 import type { UserRole } from '../config/roles'
 
 type NavItem = { href: string; label: string; badge?: number }
@@ -113,6 +114,7 @@ export function AdminShell({
             </ul>
             <div class="admin-sidebar-footer">
               <a href={publicSiteOrigin}>View public site</a>
+              <p class="admin-deploy-info">Server last updated: {formatDeployTime()}</p>
               <form method="post" action="/admin/logout" class="admin-logout-form">
                 <button type="submit" class="admin-logout-btn">Sign out</button>
               </form>

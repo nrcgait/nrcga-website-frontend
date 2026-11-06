@@ -2,6 +2,7 @@ import { Hono } from 'hono'
 import type { Env } from './env'
 import { registerPublicApiRoutes } from './routes/api'
 import { registerAdminRoutes } from './routes/admin'
+import { setDeployInfo } from './lib/deploy-info'
 import { applySecurityHeaders, isHttpsRequest, type SecurityHeaderMode } from './lib/security-headers'
 
 const app = new Hono<{ Bindings: Env }>()
@@ -15,6 +16,7 @@ function securityMode(path: string): SecurityHeaderMode {
 }
 
 app.use('*', async (c, next) => {
+  setDeployInfo(c.env.CF_VERSION_METADATA)
   await next()
   const mode = securityMode(c.req.path)
   const https = isHttpsRequest(c.req.url)

@@ -7,6 +7,7 @@ export type Env = {
   R2: R2Bucket
   ASSETS: Fetcher
   EMAIL?: SendEmail
+  CF_VERSION_METADATA?: { id: string; tag?: string; timestamp: string }
   JWT_SECRET: string
   ADMIN_PASSWORD: string
   ADMIN_EMAIL: string

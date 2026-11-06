@@ -2089,3 +2089,10 @@
   gap: 0.5rem;
   margin-top: 1rem;
 }
+
+.admin-sidebar-footer .admin-deploy-info {
+  margin: 0;
+  padding: 0 0.5rem;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.5);
+}
