@@ -25,6 +25,48 @@
     return origin ? `${origin}${raw}` : raw
   }
 
+  function publicSiteOrigin() {
+    if (global.NRCGA_PUBLIC_SITE_ORIGIN) {
+      return String(global.NRCGA_PUBLIC_SITE_ORIGIN).replace(/\/$/, '')
+    }
+    if (typeof document !== 'undefined') {
+      const host = document.querySelector('[data-public-site-origin]')
+      const fromHost = host && host.getAttribute('data-public-site-origin')
+      if (fromHost) return String(fromHost).replace(/\/$/, '')
+    }
+    return ''
+  }
+
+  function resolveEditorMediaUrl(url, siteOrigin) {
+    const raw = String(url || '').trim()
+    if (!raw) return ''
+    if (/^https?:\/\//i.test(raw) || raw.startsWith('data:')) return raw
+    if (raw.startsWith('/api/v1/')) return resolveMediaUrl(raw)
+    const origin = String(siteOrigin || publicSiteOrigin() || '').replace(/\/$/, '')
+    if (origin) {
+      const path = raw.replace(/^\.\//, '').replace(/^\/+/, '')
+      return `${origin}/${path}`
+    }
+    try {
+      return new URL(raw, document.baseURI || window.location.href).href
+    } catch {
+      return raw
+    }
+  }
+
+  function canonicalizeEditorMediaUrl(url, siteOrigin) {
+    const raw = String(url || '').trim()
+    if (!raw) return raw
+    const origin = String(siteOrigin || publicSiteOrigin() || '').replace(/\/$/, '')
+    if (!origin) return raw
+    const prefix = `${origin}/`
+    if (raw.startsWith(prefix)) {
+      const rest = raw.slice(prefix.length)
+      if (rest.startsWith('assets/') || rest.startsWith('css/') || rest.startsWith('js/')) return rest
+    }
+    return raw
+  }
+
   function normalizeEmbedUrl(url) {
     const raw = String(url || '').trim()
     if (!raw) return ''
@@ -68,15 +110,7 @@
     const raw = String(img.getAttribute('src') || img.currentSrc || '').trim()
     if (!raw) return ''
     if (/^https?:\/\//i.test(raw) || raw.startsWith('data:')) return raw
-    if (raw.startsWith('/api/v1/')) {
-      const origin = apiOrigin()
-      return origin ? `${origin}${raw}` : raw
-    }
-    try {
-      return new URL(raw, document.baseURI || window.location.href).href
-    } catch {
-      return raw
-    }
+    return resolveEditorMediaUrl(raw)
   }
 
   function syncParallaxFigure(figure) {
@@ -447,6 +481,9 @@ body { margin: 0; }
     escapeHtml,
     resolveMediaUrl,
     resolveMediaUrlsInHtml,
+    resolveEditorMediaUrl,
+    canonicalizeEditorMediaUrl,
+    resolveFigureImageUrl,
     syncParallaxFigure,
     initParallaxFigures,
     styleClasses,

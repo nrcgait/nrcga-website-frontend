@@ -55,6 +55,18 @@ describe('html sanitize', () => {
   it('allows media paths', () => {
     expect(isAllowedIframeSrc('/api/v1/media/uploads/x.pdf', 'https://api.nrcga.org')).toBe(true)
   })
+  it('allows site-relative asset image paths', () => {
+    expect(isAllowedResourceUrl('assets/images/programs/golf/NRCGAGolf.jpg')).toBe(true)
+    expect(isAllowedResourceUrl('/assets/images/logo.png')).toBe(true)
+    const html = sanitizeCmsHtml(
+      '<figure class="page-block-image"><img src="assets/images/foo.jpg" alt=""></figure>',
+      'https://api.nrcga.org',
+    )
+    expect(html).toContain('src="assets/images/foo.jpg"')
+  })
+  it('rejects traversal in asset paths', () => {
+    expect(isAllowedResourceUrl('assets/../secret.jpg')).toBe(false)
+  })
   it('preserves native award nomination forms', () => {
     const raw =
       '<form class="nrcga-form" data-nrcga-form="award_application">' +

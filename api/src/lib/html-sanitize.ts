@@ -26,11 +26,19 @@ export function isAllowedIframeSrc(src: string, apiOrigin?: string): boolean {
   return IFRAME_HOST_PATTERNS.some((re) => re.test(trimmed))
 }
 
+function isAllowedSiteAssetPath(url: string): boolean {
+  const trimmed = url.trim()
+  if (!trimmed || trimmed.includes('\\') || trimmed.includes('..') || /[?#:]/.test(trimmed)) return false
+  const path = trimmed.replace(/^\/+/, '')
+  return path.startsWith('assets/')
+}
+
 export function isAllowedResourceUrl(url: string, apiOrigin?: string): boolean {
   const trimmed = url.trim()
   if (!trimmed) return false
   if (trimmed.startsWith('/api/v1/media/')) return true
   if (apiOrigin && trimmed.startsWith(`${apiOrigin}/api/v1/media/`)) return true
+  if (trimmed.replace(/^\/+/, '').startsWith('assets/')) return isAllowedSiteAssetPath(trimmed)
   return sanitizeHttpUrl(trimmed) !== null
 }
 

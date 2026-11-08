@@ -1542,7 +1542,7 @@
 .tiptap-host {
   border: 1px solid var(--admin-border, #d0d7e2);
   border-radius: 8px;
-  overflow: hidden;
+  overflow: visible;
   margin-bottom: 1rem;
 }
 
@@ -1553,6 +1553,10 @@
   padding: 0.5rem;
   background: #f1f5f9;
   border-bottom: 1px solid #d0d7e2;
+  border-radius: 8px 8px 0 0;
+  position: sticky;
+  top: 0;
+  z-index: 8;
 }
 
 .tiptap-toolbar button {
@@ -1579,6 +1583,7 @@
   min-height: 220px;
   padding: 0.85rem 1rem;
   background: #fff;
+  border-radius: 0 0 8px 8px;
 }
 
 .tiptap-surface .pb-font-default { font-family: inherit; }

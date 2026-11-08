@@ -108,6 +108,63 @@
       .replace(/"/g, '&quot;')
   }
 
+  function publicSiteOriginFrom(host) {
+    return String(host?.getAttribute('data-public-site-origin') || '').replace(/\/$/, '')
+  }
+
+  function resolveEditorMediaUrl(url, siteOrigin) {
+    if (window.NRCGA_pageBlocks?.resolveEditorMediaUrl) {
+      return window.NRCGA_pageBlocks.resolveEditorMediaUrl(url, siteOrigin)
+    }
+    return String(url || '').trim()
+  }
+
+  function canonicalizeEditorMediaUrl(url, siteOrigin) {
+    if (window.NRCGA_pageBlocks?.canonicalizeEditorMediaUrl) {
+      return window.NRCGA_pageBlocks.canonicalizeEditorMediaUrl(url, siteOrigin)
+    }
+    return String(url || '').trim()
+  }
+
+  function canonicalizeStyleUrls(style, siteOrigin) {
+    return String(style || '').replace(/url\((['"]?)([^'")]+)\1\)/gi, (match, quote, src) => {
+      const next = canonicalizeEditorMediaUrl(src, siteOrigin)
+      if (next === src) return match
+      const q = quote || '"'
+      return `url(${q}${next}${q})`
+    })
+  }
+
+  function rewriteEditorMedia(root, siteOrigin) {
+    if (!root) return
+    root.querySelectorAll('img[src]').forEach((img) => {
+      const raw = img.getAttribute('src') || ''
+      const resolved = resolveEditorMediaUrl(raw, siteOrigin)
+      if (resolved && resolved !== raw) img.setAttribute('src', resolved)
+    })
+    if (window.NRCGA_pageBlocks?.initParallaxFigures) {
+      window.NRCGA_pageBlocks.initParallaxFigures(root)
+    } else {
+      root.querySelectorAll('figure.page-block-image.pb-img-layout-parallax').forEach(syncParallaxBackground)
+    }
+  }
+
+  function serializeEditorHtml(editor, siteOrigin) {
+    const wrap = document.createElement('div')
+    wrap.innerHTML = editor.innerHTML
+    wrap.querySelectorAll('img[src]').forEach((img) => {
+      const raw = img.getAttribute('src') || ''
+      const canonical = canonicalizeEditorMediaUrl(raw, siteOrigin)
+      if (canonical !== raw) img.setAttribute('src', canonical)
+    })
+    wrap.querySelectorAll('[style]').forEach((el) => {
+      const next = canonicalizeStyleUrls(el.getAttribute('style'), siteOrigin)
+      if (next) el.setAttribute('style', next)
+      else el.removeAttribute('style')
+    })
+    return wrap.innerHTML
+  }
+
   function stripBlockWrappers(html) {
     if (!html || typeof document === 'undefined') return html || ''
     const div = document.createElement('div')
@@ -1682,15 +1739,18 @@
     const editor = document.createElement('div')
     editor.className = 'tiptap-surface'
     editor.contentEditable = 'true'
+    const siteOrigin = publicSiteOriginFrom(host)
     editor.innerHTML = nativeFormsToPlaceholders(initial)
     lockFormBlocks(editor)
+    rewriteEditorMedia(editor, siteOrigin)
 
     host.appendChild(toolbar)
     host.appendChild(editor)
     host.dataset.richMounted = '1'
 
     const sync = () => {
-      field.value = editor.innerHTML
+      rewriteEditorMedia(editor, siteOrigin)
+      field.value = serializeEditorHtml(editor, siteOrigin)
     }
 
     toolbar.addEventListener('click', (e) => {

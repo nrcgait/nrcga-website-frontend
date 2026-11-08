@@ -1017,6 +1017,7 @@ function PageForm({
             data-rich-editor
             data-field="hero_html"
             data-form="page-form"
+            data-public-site-origin={publicSiteOrigin}
             data-initial={heroHtml}
           ></div>
           <textarea name="hero_html" id="hero_html" class="admin-hidden-field">{heroHtml}</textarea>
@@ -1036,6 +1037,7 @@ function PageForm({
           data-field="body_html"
           data-form="page-form"
           data-form-inboxes={inboxPickerData}
+          data-public-site-origin={publicSiteOrigin}
           data-initial={bodyHtml}
           data-fallback-json={bodyJsonFallback || undefined}
         >
@@ -1056,6 +1058,7 @@ function PageForm({
             data-rich-editor
             data-field="contact_html"
             data-form="page-form"
+            data-public-site-origin={publicSiteOrigin}
             data-initial={contactHtml}
           ></div>
           <textarea name="contact_html" id="contact_html" class="admin-hidden-field">{contactHtml}</textarea>
